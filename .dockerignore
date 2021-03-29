@@ -1,0 +1,7 @@
+.idea
+.vscode
+.github
+.git
+dist
+node_modules
+LICENSE

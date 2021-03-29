@@ -1,0 +1,94 @@
+openapi: 3.0.3
+info:
+  version: 1.0.0
+  title: APISuite Billing Extension
+  description: APISuite Billing Extension REST API
+  license:
+    name: MPL-2.0
+paths:
+  /users/{id}:
+    get:
+      tags: [ users ]
+      description: Returns a user based on the ID
+      security:
+        - cookieAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: ID of user to fetch
+          required: true
+          schema:
+            type: number
+      responses:
+        '200':
+          description: User model
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        picture:
+          type: string
+    Error:
+      type: object
+      required:
+        - errors
+      properties:
+        errors:
+          type: array
+          items:
+            type: string
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Internal:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: access_token
