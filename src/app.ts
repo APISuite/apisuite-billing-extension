@@ -1,5 +1,12 @@
-import express from 'express'
+import express, {
+  Application,
+  NextFunction,
+  Request,
+  Response
+} from 'express'
+import helmet from 'helmet'
 import morgan from 'morgan'
+import { v4 } from 'uuid'
 import { Pool } from 'pg'
 import log from './log'
 import config from './config'
@@ -8,17 +15,16 @@ import { UsersController } from './controllers'
 import { version } from '../package.json'
 
 export default class App {
-  private readonly app: express.Application
+  private readonly app: Application
   private readonly dbPool: Pool
 
   constructor() {
-    log.info('connecting to PostgreSQL database')
     this.dbPool = new Pool({
       max: 20,
       connectionString: config.get('dbURI'),
-      idleTimeoutMillis: 30000
+      idleTimeoutMillis: 30000,
+      ssl: false,
     })
-    log.info('connected to database')
 
     this.app = express()
     this.setupMiddleware()
@@ -35,9 +41,10 @@ export default class App {
   }
 
   private setupMiddleware() {
+    this.app.use(helmet())
     this.app.use(express.json())
 
-    morgan.token('body', (req: express.Request, res: express.Response) => JSON.stringify(req.body))
+    morgan.token('body', (req: Request, res: Response) => JSON.stringify(req.body))
     this.app.use(morgan(':method :url :status - :body'))
   }
 
@@ -45,14 +52,31 @@ export default class App {
     const ur = new models.UsersRepository(this.dbPool)
     const uh = new UsersController(ur)
 
-    this.app.use('/users/:id', uh.getUserDetails)
+    this.app.get('/users/:id', uh.getUserDetails)
 
-    this.app.use('*', (req: express.Request, res: express.Response) => {
+    this.app.get('/health', async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        await this.dbPool.connect()
+      } catch (err) {
+        return next(err)
+      }
+      return res.send({ message: 'ok' })
+    })
+
+    this.app.use('/', (req: Request, res: Response) => {
+      res.send({ version })
+    })
+
+    this.app.use('*', (req: Request, res: Response) => {
       res.status(404).send({ error: 'route not found' })
     })
 
-    this.app.use('/', (req: express.Request, res: express.Response) => {
-      res.send({ version })
+    this.app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+      const errorId = v4()
+      log.error({ err, error_id: errorId })
+      res.status(500).send({
+        error: `Oops! Something went wrong on our side. Error reference code: ${errorId}`
+      })
     })
   }
 }
