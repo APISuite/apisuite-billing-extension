@@ -14,6 +14,12 @@ Every new image is tagged with:
 Depending on your goals, you could use a fixed version like `1.0.0` or
 `latest` to simply get the most recent version every time you pull the image.
 
+## Monitoring
+
+This API server provides two monitoring endpoints:
+- `GET /health` for general health checking (of the server and major dependencies such as database connection)
+- `GET /metrics` provides Prometheus ready metrics concerning requests time and status codes
+
 ## Development
 
 - Commits should follow [conventional commits](https://www.conventionalcommits.org) spec
