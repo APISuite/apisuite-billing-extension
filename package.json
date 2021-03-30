@@ -7,7 +7,8 @@
     "start": "ts-node dist/index.js",
     "dev": "nodemon --watch 'src/**/*.ts' --exec \"ts-node\" src/index.ts",
     "build": "tsc -p .",
-    "test": "mocha -r ts-node/register src/**/*.spec.ts"
+    "test": "mocha -r ts-node/register src/**/*.spec.ts",
+    "migrate": "./migrations/migrator -source file://migrations -database \"$DB_URI\" up"
   },
   "license": "MPL-2.0",
   "dependencies": {
