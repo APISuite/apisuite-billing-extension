@@ -6,6 +6,7 @@ import express, {
 } from 'express'
 import helmet from 'helmet'
 import morgan from 'morgan'
+import promBundle from 'express-prom-bundle'
 import { v4 } from 'uuid'
 import { Pool } from 'pg'
 import log from './log'
@@ -53,24 +54,12 @@ export default class App {
     this.app.use(morgan(':method :url :status - :body'))
   }
 
-  private setupRoutes() {
-    this.app.get('/users/:id', this.usersController.getUserDetails)
+  private setupMetricsMiddleware() {
+    const metricsMiddleware = promBundle({ includeMethod: true })
+    this.app.use(metricsMiddleware)
+  }
 
-    this.app.get('/health', async (req: Request, res: Response, next: NextFunction) => {
-      try {
-        const client = await this.dbPool.connect()
-        await client.query('SELECT NOW();')
-        client.release()
-      } catch (err) {
-        return next(err)
-      }
-
-      return res.send({
-        status: 'ok',
-        time: new Date().toISOString(),
-      })
-    })
-
+  private setupSystemRoutes() {
     this.app.use('/', (req: Request, res: Response) => {
       res.send({ version })
     })
@@ -86,5 +75,29 @@ export default class App {
         error: `Oops! Something went wrong on our side. Error reference code: ${errorId}`
       })
     })
+  }
+
+  private setupHealthCheckRoute() {
+    this.app.get('/health', async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const client = await this.dbPool.connect()
+        await client.query('SELECT NOW();')
+        client.release()
+      } catch (err) {
+        return next(err)
+      }
+
+      return res.send({
+        status: 'ok',
+        time: new Date().toISOString(),
+      })
+    })
+  }
+
+  private setupRoutes() {
+    this.setupHealthCheckRoute()
+    this.setupMetricsMiddleware()
+    this.app.get('/users/:id', this.usersController.getUserDetails)
+    this.setupSystemRoutes()
   }
 }

@@ -22,6 +22,17 @@ paths:
                 $ref: '#/components/schemas/Health'
         '500':
           $ref: '#/components/responses/Internal'
+  /metrics:
+    get:
+      tags: [ system ]
+      summary: System metrics for Prometheus scraping
+      responses:
+        '200':
+          description: Prometheus metrics
+          content:
+            text/plain:
+              schema:
+                type: string
   /users/{id}:
     get:
       tags: [ users ]
