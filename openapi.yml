@@ -6,6 +6,22 @@ info:
   license:
     name: MPL-2.0
 paths:
+  /health:
+    get:
+      tags: [ system ]
+      summary: Healthcheck endpoint
+      description: >
+        Checks the general health status of the app servers.
+        This usually means verifying connectivity to external dependencies.
+      responses:
+        '200':
+          description: Healthcheck result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+        '500':
+          $ref: '#/components/responses/Internal'
   /users/{id}:
     get:
       tags: [ users ]
@@ -45,6 +61,14 @@ components:
           type: string
         picture:
           type: string
+    Health:
+      type: object
+      properties:
+        status:
+          type: string
+        time:
+          type: string
+          format: date-time
     Error:
       type: object
       required:

@@ -13,10 +13,12 @@ import config from './config'
 import * as models from './models'
 import { UsersController } from './controllers'
 import { version } from '../package.json'
+import { UsersRepository } from './models'
 
 export default class App {
   private readonly app: Application
   private readonly dbPool: Pool
+  private readonly usersController: UsersController
 
   constructor() {
     this.dbPool = new Pool({
@@ -25,6 +27,9 @@ export default class App {
       idleTimeoutMillis: 30000,
       ssl: false,
     })
+
+    const ur = new models.UsersRepository(this.dbPool)
+    this.usersController = new UsersController(ur)
 
     this.app = express()
     this.setupMiddleware()
@@ -49,18 +54,21 @@ export default class App {
   }
 
   private setupRoutes() {
-    const ur = new models.UsersRepository(this.dbPool)
-    const uh = new UsersController(ur)
-
-    this.app.get('/users/:id', uh.getUserDetails)
+    this.app.get('/users/:id', this.usersController.getUserDetails)
 
     this.app.get('/health', async (req: Request, res: Response, next: NextFunction) => {
       try {
-        await this.dbPool.connect()
+        const client = await this.dbPool.connect()
+        await client.query('SELECT NOW();')
+        client.release()
       } catch (err) {
         return next(err)
       }
-      return res.send({ message: 'ok' })
+
+      return res.send({
+        status: 'ok',
+        time: new Date().toISOString(),
+      })
     })
 
     this.app.use('/', (req: Request, res: Response) => {
