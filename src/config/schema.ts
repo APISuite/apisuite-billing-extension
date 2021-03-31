@@ -8,7 +8,7 @@ export const schema = {
   port: {
     doc: 'Server listen port',
     format: Number,
-    default: 6001,
+    default: 6007,
     env: 'API_PORT',
   },
   dbURI: {
