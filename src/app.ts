@@ -14,7 +14,7 @@ import config from './config'
 import * as models from './models'
 import { UsersController } from './controllers'
 import { version } from '../package.json'
-import { introspect, authenticated } from './middleware/auth'
+import { authenticated, introspect } from './middleware/'
 
 export default class App {
   private readonly app: Application
@@ -52,12 +52,9 @@ export default class App {
     morgan.token('body', (req: Request, res: Response) => JSON.stringify(req.body))
     this.app.use(morgan(':method :url :status - :body'))
 
-    this.app.use(introspect)
-  }
+    this.app.use(promBundle({ includeMethod: true }))
 
-  private setupMetricsMiddleware() {
-    const metricsMiddleware = promBundle({ includeMethod: true })
-    this.app.use(metricsMiddleware)
+    this.app.use(introspect)
   }
 
   private setupSystemRoutes() {
@@ -97,7 +94,6 @@ export default class App {
 
   private setupRoutes() {
     this.setupHealthCheckRoute()
-    this.setupMetricsMiddleware()
     this.app.get('/users/:id', authenticated, this.usersController.getUserDetails)
     this.setupSystemRoutes()
   }
