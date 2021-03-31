@@ -65,14 +65,6 @@ export default class App {
     this.app.use('*', (req: Request, res: Response) => {
       res.status(404).send({ error: 'route not found' })
     })
-
-    this.app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-      const errorId = v4()
-      log.error({ err, error_id: errorId })
-      res.status(500).send({
-        error: `Oops! Something went wrong on our side. Error reference code: ${errorId}`
-      })
-    })
   }
 
   private setupHealthCheckRoute() {
@@ -92,9 +84,20 @@ export default class App {
     })
   }
 
+  private setupErrorHandler() {
+    this.app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+      const errorId = v4()
+      log.error({ err, error_id: errorId })
+      res.status(500).send({
+        error: `Oops! Something went wrong on our side. Error reference code: ${errorId}`
+      })
+    })
+  }
+
   private setupRoutes() {
     this.setupHealthCheckRoute()
     this.app.get('/users/:id', authenticated, this.usersController.getUserDetails)
     this.setupSystemRoutes()
+    this.setupErrorHandler()
   }
 }
