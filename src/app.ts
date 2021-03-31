@@ -14,7 +14,7 @@ import config from './config'
 import * as models from './models'
 import { UsersController } from './controllers'
 import { version } from '../package.json'
-import { UsersRepository } from './models'
+import { introspect, authenticated } from './middleware/auth'
 
 export default class App {
   private readonly app: Application
@@ -42,7 +42,6 @@ export default class App {
   }
 
   public terminate() {
-    log.info('closing PostgreSQL pool connection')
     this.dbPool.end()
   }
 
@@ -52,6 +51,8 @@ export default class App {
 
     morgan.token('body', (req: Request, res: Response) => JSON.stringify(req.body))
     this.app.use(morgan(':method :url :status - :body'))
+
+    this.app.use(introspect)
   }
 
   private setupMetricsMiddleware() {
@@ -97,7 +98,7 @@ export default class App {
   private setupRoutes() {
     this.setupHealthCheckRoute()
     this.setupMetricsMiddleware()
-    this.app.get('/users/:id', this.usersController.getUserDetails)
+    this.app.get('/users/:id', authenticated, this.usersController.getUserDetails)
     this.setupSystemRoutes()
   }
 }

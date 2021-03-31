@@ -8,7 +8,7 @@ export const schema = {
   port: {
     doc: 'Server listen port',
     format: Number,
-    default: 6006,
+    default: 6001,
     env: 'API_PORT',
   },
   dbURI: {
@@ -16,6 +16,20 @@ export const schema = {
     format: String,
     default: 'postgresql://dbuser:secretpassword@database.server.com:3211/mydb',
     env: 'DB_URI',
+  },
+  apisuite: {
+    api: {
+      doc: 'APISuite API url',
+      format: String,
+      default: 'http://localhost:6001',
+      env: 'APISUITE_API_URL',
+    },
+    introspectEndpoint: {
+      doc: 'APISuite introspect endpoint',
+      format: String,
+      default: '/auth/introspect',
+      env: 'INTROSPECT_ENDPOINT',
+    },
   },
   msgBroker: {
     url: {
