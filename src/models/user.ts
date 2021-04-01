@@ -18,7 +18,7 @@ export class UsersRepository implements IUsersRepository {
     this.dbPool = dbPool
   }
 
-  async findById(id: number): Promise<User | null> {
+  public findById = async(id: number): Promise<User | null> => {
     const { rows } = await this.dbPool.query({
       text: sql.selectById,
       values: [id]

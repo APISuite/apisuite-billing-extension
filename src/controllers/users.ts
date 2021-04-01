@@ -1,14 +1,23 @@
-import express from 'express'
+import { Request, Response, Router } from 'express'
+import { BaseController } from './base'
 import { IUsersRepository } from '../models'
+import { authenticated } from '../middleware/'
 
-export class UsersController {
+export class UsersController implements BaseController {
+  private readonly path = '/users'
   private readonly repo: IUsersRepository
 
   constructor(repo: IUsersRepository) {
     this.repo = repo
   }
 
-  public async getUserDetails(req: express.Request, res: express.Response) {
+  public getRouter(): Router {
+    const router = Router()
+    router.get(`${this.path}/:id`, authenticated, this.getUserDetails)
+    return router
+  }
+
+  public async getUserDetails(req: Request, res: Response) {
     const user = await this.repo.findById(Number(req.params.id))
 
     if (!user) {

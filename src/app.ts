@@ -1,25 +1,23 @@
 import express, {
   Application,
-  NextFunction,
   Request,
-  Response
+  Response,
 } from 'express'
 import helmet from 'helmet'
 import morgan from 'morgan'
 import promBundle from 'express-prom-bundle'
-import { v4 } from 'uuid'
 import { Pool } from 'pg'
-import log from './log'
 import config from './config'
 import * as models from './models'
 import { UsersController } from './controllers'
 import { version } from '../package.json'
-import { authenticated, introspect } from './middleware/'
+import { introspect, error } from './middleware/'
+import { BaseController } from './controllers/base'
+import { HealthController } from './controllers/health'
 
 export default class App {
   private readonly app: Application
   private readonly dbPool: Pool
-  private readonly usersController: UsersController
 
   constructor() {
     this.dbPool = new Pool({
@@ -28,9 +26,6 @@ export default class App {
       idleTimeoutMillis: 30000,
       ssl: false,
     })
-
-    const ur = new models.UsersRepository(this.dbPool)
-    this.usersController = new UsersController(ur)
 
     this.app = express()
     this.setupMiddleware()
@@ -67,37 +62,20 @@ export default class App {
     })
   }
 
-  private setupHealthCheckRoute() {
-    this.app.get('/health', async (req: Request, res: Response, next: NextFunction) => {
-      try {
-        const client = await this.dbPool.connect()
-        await client.query('SELECT NOW();')
-        client.release()
-      } catch (err) {
-        return next(err)
-      }
-
-      return res.send({
-        status: 'ok',
-        time: new Date().toISOString(),
-      })
-    })
-  }
-
-  private setupErrorHandler() {
-    this.app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-      const errorId = v4()
-      log.error({ err, error_id: errorId })
-      res.status(500).send({
-        error: `Oops! Something went wrong on our side. Error reference code: ${errorId}`
-      })
-    })
-  }
-
   private setupRoutes() {
-    this.setupHealthCheckRoute()
-    this.app.get('/users/:id', authenticated, this.usersController.getUserDetails)
+    const controllers = this.initControllers()
+    controllers.forEach((c) => this.app.use(c.getRouter()))
+
     this.setupSystemRoutes()
-    this.setupErrorHandler()
+    this.app.use(error)
+  }
+
+  private initControllers(): Array<BaseController> {
+    const health = new HealthController(this.dbPool)
+
+    const ur = new models.UsersRepository(this.dbPool)
+    const users = new UsersController(ur)
+
+    return [health, users]
   }
 }

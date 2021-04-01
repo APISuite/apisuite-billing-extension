@@ -52,7 +52,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -82,13 +85,9 @@ components:
           format: date-time
     Error:
       type: object
-      required:
-        - errors
       properties:
-        errors:
-          type: array
-          items:
-            type: string
+        error:
+          type: string
 
   responses:
     BadRequest:

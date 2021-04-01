@@ -25,6 +25,9 @@ This API server provides two monitoring endpoints:
 - Commits should follow [conventional commits](https://www.conventionalcommits.org) spec
 - `package.json` contains the necessary scripts and dependencies to run the components of this project
 - Typescript is configured to produce source maps, which makes debugger usage possible
+- API first development is preferred, so that we can keep the API solid and consistent
+- Database migrations should be planed/created in a gradual way to avoid breaking changes
+  (example: renaming a column can be done in 2 steps: create new column; change code to start using new column; delete old column when code no longer references it)
 
 ### Environment variables
 
