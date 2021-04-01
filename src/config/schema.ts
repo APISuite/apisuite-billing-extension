@@ -11,6 +11,12 @@ export const schema = {
     default: 6007,
     env: 'API_PORT',
   },
+  logLevel: {
+    doc: 'Logger verbosity level',
+    format: String,
+    default: 'debug',
+    env: 'LOG_LEVEL',
+  },
   dbURI: {
     doc: 'Database connection string',
     format: String,

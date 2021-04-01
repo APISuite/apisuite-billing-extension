@@ -11,11 +11,9 @@ import { HandlerResponse } from '../types'
 export const error = (err: Error, req: Request, res: Response, next: NextFunction): HandlerResponse => {
   const errorId = v4()
 
-  if (!testMode()) log.error({ err, error_id: errorId })
+  log.error({ err, error_id: errorId })
 
   res.status(500).json({
     error: `Oops! Something went wrong on our side. Error reference code: ${errorId}`,
   })
 }
-
-const testMode = (): boolean => process.env.NODE_ENV === 'test'
