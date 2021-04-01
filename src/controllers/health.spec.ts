@@ -1,5 +1,5 @@
 import express from 'express'
-const request = require('supertest')
+import request from 'supertest'
 import { HealthController } from './health'
 import { error } from '../middleware'
 import { MockPool, MockBadPool } from './health.mock'

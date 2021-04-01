@@ -1,7 +1,9 @@
 import { NextFunction, Request, Response, Router } from 'express'
+import { AsyncHandlerResponse } from '../types'
 import { BaseController } from './base'
 
 export interface DBPoolClient {
+  // eslint-disable-next-line  @typescript-eslint/no-explicit-any
   query(sql: string): Promise<any>
   release(): void
 }
@@ -24,7 +26,7 @@ export class HealthController implements BaseController {
     return router
   }
 
-  public getHealth = async (req: Request, res: Response, next: NextFunction) => {
+  public getHealth = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
     try {
       const client = await this.pool.connect()
       await client.query('SELECT NOW();')
@@ -33,7 +35,7 @@ export class HealthController implements BaseController {
       return next(err)
     }
 
-    return res.send({
+    return res.status(200).json({
       status: 'ok',
       time: new Date().toISOString(),
     })

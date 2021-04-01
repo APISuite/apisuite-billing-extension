@@ -1,13 +1,13 @@
 import { DBPool, DBPoolClient } from './health'
 
 class MockPoolClient implements DBPoolClient {
-  constructor() {}
-
-  query(sql: string): Promise<any> {
+  async query() {
     return Promise.resolve(undefined)
   }
 
-  release(): void {}
+  release(): void {
+    return
+  }
 }
 
 export class MockPool implements DBPool {

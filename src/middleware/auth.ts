@@ -6,8 +6,9 @@ import {
 import fetch from 'node-fetch'
 import config from '../config'
 import log from '../log'
+import { AsyncHandlerResponse, HandlerResponse } from '../types'
 
-export const introspect = async (req: Request, res: Response, next: NextFunction) => {
+export const introspect = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
   res.locals.authenticatedUser = null
 
   if (req.headers.cookie && req.headers.cookie.length) {
@@ -37,7 +38,7 @@ export const introspect = async (req: Request, res: Response, next: NextFunction
   next()
 }
 
-export const authenticated = (req: Request, res: Response, next: NextFunction) => {
+export const authenticated = (req: Request, res: Response, next: NextFunction): HandlerResponse => {
   if (!res.locals.authenticatedUser) {
     return res.status(401).json({ errors: ['invalid authentication cookie'] })
   }

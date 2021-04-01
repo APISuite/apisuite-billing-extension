@@ -32,19 +32,19 @@ export default class App {
     this.setupRoutes()
   }
 
-  public getApp() {
+  public getApp(): Application {
     return this.app
   }
 
-  public terminate() {
+  public terminate(): void {
     this.dbPool.end()
   }
 
-  private setupMiddleware() {
+  private setupMiddleware(): void {
     this.app.use(helmet())
     this.app.use(express.json())
 
-    morgan.token('body', (req: Request, res: Response) => JSON.stringify(req.body))
+    morgan.token('body', (req: Request) => JSON.stringify(req.body))
     this.app.use(morgan(':method :url :status - :body'))
 
     this.app.use(promBundle({ includeMethod: true }))
@@ -52,17 +52,17 @@ export default class App {
     this.app.use(introspect)
   }
 
-  private setupSystemRoutes() {
+  private setupSystemRoutes(): void {
     this.app.use('/', (req: Request, res: Response) => {
-      res.send({ version })
+      res.json({ version })
     })
 
     this.app.use('*', (req: Request, res: Response) => {
-      res.status(404).send({ error: 'route not found' })
+      res.status(404).json({ error: 'route not found' })
     })
   }
 
-  private setupRoutes() {
+  private setupRoutes(): void {
     const controllers = this.initControllers()
     controllers.forEach((c) => this.app.use(c.getRouter()))
 

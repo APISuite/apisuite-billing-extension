@@ -11,7 +11,7 @@ describe('users controller', () => {
 
     it('should return 404 when the user cannot be found', async () => {
       const req = mockRequest({
-        params: { id: 1 }
+        params: { id: 1 },
       })
       const res = mockResponse()
 
@@ -30,7 +30,7 @@ describe('users controller', () => {
         planId: 1,
       }
       const req = mockRequest({
-        params: { id: 1 }
+        params: { id: 1 },
       })
       const res = mockResponse()
 

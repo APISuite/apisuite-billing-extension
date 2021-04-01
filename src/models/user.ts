@@ -21,7 +21,7 @@ export class UsersRepository implements IUsersRepository {
   public findById = async(id: number): Promise<User | null> => {
     const { rows } = await this.dbPool.query({
       text: sql.selectById,
-      values: [id]
+      values: [id],
     })
 
     if (rows.length) {

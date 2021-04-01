@@ -1,4 +1,5 @@
 import { Request, Response, Router } from 'express'
+import { AsyncHandlerResponse } from '../types'
 import { BaseController } from './base'
 import { IUsersRepository } from '../models'
 import { authenticated } from '../middleware/'
@@ -17,17 +18,17 @@ export class UsersController implements BaseController {
     return router
   }
 
-  public async getUserDetails(req: Request, res: Response) {
+  public getUserDetails = async (req: Request, res: Response): AsyncHandlerResponse => {
     const user = await this.repo.findById(Number(req.params.id))
 
     if (!user) {
-      return res.status(404).send({
-        error: 'user not found'
+      return res.status(404).json({
+        error: 'user not found',
       })
     }
 
-    return res.status(200).send({
-      data: user
+    return res.status(200).json({
+      data: user,
     })
   }
 }
