@@ -33,6 +33,12 @@ This API server provides two monitoring endpoints:
 
 All variables used in code are documented in `src/config/schema.js`.
 
+For tests, the following environment variables should be set:
+```
+NODE_ENV=test
+LOG_LEVEL=silent
+```
+
 ## Database migrations
 
 Migrator tool: https://github.com/golang-migrate/migrate. A binary of this tool is packed with the project.
