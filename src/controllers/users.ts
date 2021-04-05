@@ -1,12 +1,13 @@
 import { Request, Response, Router } from 'express'
-import mollie from '@mollie/api-client'
+import mollie, { SequenceType } from '@mollie/api-client'
 import { db } from '../db'
 import log from '../log'
 import config from '../config'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController } from './base'
-import { IUsersRepository, IPlansRepository } from '../models'
+import { IPlansRepository, IUsersRepository } from '../models'
 import { authenticated, isSelf } from '../middleware/'
+import { findValidMandate } from '../payment-processing'
 
 export class UsersController implements BaseController {
   private readonly path = '/users'
@@ -73,10 +74,25 @@ export class UsersController implements BaseController {
           email: res.locals.authenticatedUser.email,
           name: res.locals.authenticatedUser.name,
         })
-        // TODO update user
+        user = await this.usersRepo.update(trx, user.id, {
+          customerId: customer.id,
+        })
       }
 
-      // TODO first payment
+      const mandateId = await findValidMandate(user.customerId)
+
+      const payment = await mollieClient.payments.create({
+        amount: {
+          currency: 'eur',
+          value: '0.00',
+        },
+        mandateId: mandateId,
+        description: 'API Suite marketplace subscription setup',  // TODO config this
+        sequenceType: SequenceType.first,
+        webhookUrl: config.get('mollie.webhookUrl'),
+        redirectUrl: config.get('mollie.paymentRedirectUrl'),
+      })
+
       // TODO create subscription
 
       await trx.commit()
