@@ -33,7 +33,7 @@ paths:
             text/plain:
               schema:
                 type: string
-  /users/{id}:
+  /users/{id}/plans/{planId}:
     get:
       tags: [ users ]
       description: Returns a user based on the ID
@@ -62,6 +62,35 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+    post:
+      tags: [ users ]
+      description: >
+        Subscribe a user to a billing plan.
+        If the user has no billing information yet, this will essentially set up a user in the billing extension system.
+        This action will trigger an initial zero amount payment in order to setup the user in the payment provider.
+        Only the user can trigger this for itself.
+      security:
+        - cookieAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: User ID
+          required: true
+          schema:
+            type: number
+        - name: planId
+          in: path
+          description: ID of the plan being subscribed
+          required: true
+          schema:
+            type: number
+      responses:
+        '302':
+          description: OIDC provider login page redirect
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 components:
   schemas:
     User:

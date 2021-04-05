@@ -23,6 +23,26 @@ export const schema = {
     default: 'postgresql://dbuser:secretpassword@database.server.com:3211/mydb',
     env: 'DB_URI',
   },
+  mollie: {
+    apiKey: {
+      doc: 'Mollie API key',
+      format: String,
+      default: 'your-api-key-here',
+      env: 'MOLLIE_API_KEY',
+    },
+    paymentRedirectUrl: {
+      doc: 'Mollie payment redirect URL',
+      format: String,
+      default: 'http://localhost:3001/',
+      env: 'PAYMENT_REDIRECT_URL',
+    },
+    webhookUrl: {
+      doc: 'Mollie payment webhook URL',
+      format: String,
+      default: 'http://localhost:6001/payments/webhook',
+      env: 'PAYMENTS_WEBHOOK_URL',
+    },
+  },
   apisuite: {
     api: {
       doc: 'APISuite API url',

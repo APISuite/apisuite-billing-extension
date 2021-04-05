@@ -45,3 +45,11 @@ export const authenticated = (req: Request, res: Response, next: NextFunction): 
 
   next()
 }
+
+export const isSelf = (req: Request, res: Response, next: NextFunction): HandlerResponse => {
+  if (Number(res.locals.authenticatedUser.id) !== Number(req.params.id)) {
+    return res.status(403).json({ errors: ['forbidden'] })
+  }
+
+  next()
+}

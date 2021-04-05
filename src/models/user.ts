@@ -1,33 +1,57 @@
-import { Pool } from 'pg'
-import * as sql from './user.sql'
+import { db, OptTransaction } from '../db'
 
 export interface User {
   id: number
   credits: number
   planId: number
+  customerId?: number | null
 }
 
+export type UserBase = Omit<User, 'customerId'>
+
 export interface IUsersRepository {
-  findById: (id: number) => Promise<User | null>
+  findById: (trx: OptTransaction, id: number) => Promise<User | null>
+  create: (trx: OptTransaction, user: UserBase) => Promise<User>
 }
 
 export class UsersRepository implements IUsersRepository {
-  private readonly dbPool: Pool
+  public findById = async(trx: OptTransaction, id: number): Promise<User | null> => {
+    const _db = trx ? trx : db
 
-  constructor(dbPool: Pool) {
-    this.dbPool = dbPool
-  }
-
-  public findById = async(id: number): Promise<User | null> => {
-    const { rows } = await this.dbPool.query({
-      text: sql.selectById,
-      values: [id],
-    })
+    const rows = await _db
+      .select()
+      .from('users')
+      .where('id', id)
 
     if (rows.length) {
-      return rows[0]
+      return {
+        id: rows[0].id,
+        credits: rows[0].credits,
+        planId: rows[0].plan_id,
+        customerId: rows[0].costumer_id,
+      }
     }
 
     return null
+  }
+
+  public create = async (trx: OptTransaction, user: UserBase): Promise<User> => {
+    const _db = trx ? trx : db
+
+    const rows = await _db
+      .insert({
+        id: user.id,
+        credits: user.credits,
+        plan_id: user.planId,
+      })
+      .into('users')
+      .returning('*')
+
+    return {
+      id: rows[0].id,
+      credits: rows[0].credits,
+      planId: rows[0].plan_id,
+      customerId: null,
+    }
   }
 }

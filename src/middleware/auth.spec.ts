@@ -3,7 +3,7 @@ import express from 'express'
 import fetch from 'node-fetch'
 import request from 'supertest'
 import config from '../config'
-import { introspect, authenticated } from './auth'
+import { introspect, authenticated, isSelf } from './auth'
 import { error } from './error'
 
 describe('error handler middleware', () => {
@@ -120,6 +120,43 @@ describe('error handler middleware', () => {
 
       request(testApp)
         .get('/test')
+        .expect(200)
+        .then(() => done())
+        .catch((err: Error) => done(err))
+    })
+  })
+
+  describe('isSelf', () => {
+    it('should return 403 when param id does not match user id', (done) => {
+      const testApp = express()
+        .use((req, res, next) => {
+          res.locals.authenticatedUser = { id: 1 }
+          next()
+        })
+        .get('/test/:id', authenticated, isSelf, (req, res) => {
+          res.sendStatus(200)
+        })
+
+      request(testApp)
+        .get('/test/100')
+        .expect('Content-Type', /json/)
+        .expect(403)
+        .then(() => done())
+        .catch((err: Error) => done(err))
+    })
+
+    it('should return continue to route when there is an authenticated user', (done) => {
+      const testApp = express()
+        .use((req, res, next) => {
+          res.locals.authenticatedUser = { id: 1 }
+          next()
+        })
+        .get('/test/:id', authenticated, isSelf, (req, res) => {
+          res.sendStatus(200)
+        })
+
+      request(testApp)
+        .get('/test/1')
         .expect(200)
         .then(() => done())
         .catch((err: Error) => done(err))

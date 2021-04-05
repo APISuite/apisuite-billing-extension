@@ -9,11 +9,14 @@ import promBundle from 'express-prom-bundle'
 import { Pool } from 'pg'
 import config from './config'
 import * as models from './models'
-import { UsersController } from './controllers'
 import { version } from '../package.json'
 import { introspect, error } from './middleware/'
-import { BaseController } from './controllers/base'
-import { HealthController } from './controllers/health'
+import {
+  UsersController,
+  BaseController,
+  HealthController,
+  PaymentsController,
+} from './controllers'
 
 export default class App {
   private readonly app: Application
@@ -43,6 +46,7 @@ export default class App {
   private setupMiddleware(): void {
     this.app.use(helmet())
     this.app.use(express.json())
+    this.app.use(express.urlencoded({ extended: true }))
 
     morgan.token('body', (req: Request) => JSON.stringify(req.body))
     this.app.use(morgan(':method :url :status - :body'))
@@ -74,8 +78,11 @@ export default class App {
     const health = new HealthController(this.dbPool)
 
     const ur = new models.UsersRepository(this.dbPool)
-    const users = new UsersController(ur)
+    const pr = new models.PlansRepository()
 
-    return [health, users]
+    const users = new UsersController(ur, pr)
+    const payments = new PaymentsController(ur)
+
+    return [health, users, payments]
   }
 }
