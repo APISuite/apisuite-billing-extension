@@ -6,8 +6,6 @@ import express, {
 import helmet from 'helmet'
 import morgan from 'morgan'
 import promBundle from 'express-prom-bundle'
-import { Pool } from 'pg'
-import config from './config'
 import * as models from './models'
 import { version } from '../package.json'
 import { introspect, error } from './middleware/'
@@ -20,16 +18,8 @@ import {
 
 export default class App {
   private readonly app: Application
-  private readonly dbPool: Pool
 
   constructor() {
-    this.dbPool = new Pool({
-      max: 20,
-      connectionString: config.get('dbURI'),
-      idleTimeoutMillis: 30000,
-      ssl: false,
-    })
-
     this.app = express()
     this.setupMiddleware()
     this.setupRoutes()
@@ -37,10 +27,6 @@ export default class App {
 
   public getApp(): Application {
     return this.app
-  }
-
-  public terminate(): void {
-    this.dbPool.end()
   }
 
   private setupMiddleware(): void {
@@ -75,9 +61,9 @@ export default class App {
   }
 
   private initControllers(): Array<BaseController> {
-    const health = new HealthController(this.dbPool)
+    const health = new HealthController()
 
-    const ur = new models.UsersRepository(this.dbPool)
+    const ur = new models.UsersRepository()
     const pr = new models.PlansRepository()
 
     const users = new UsersController(ur, pr)

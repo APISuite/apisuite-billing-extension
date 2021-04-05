@@ -15,13 +15,6 @@ server.on('listening', () => {
 })
 
 function onError(error: NodeJS.ErrnoException) {
-  try {
-    app.terminate()
-  } catch (err) {
-    log.error('could not terminate app')
-    log.debug(err)
-  }
-
   if (error.syscall !== 'listen') {
     throw error;
   }

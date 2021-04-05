@@ -1,13 +1,18 @@
 import express from 'express'
 import request from 'supertest'
+import sinon from 'sinon'
 import { HealthController } from './health'
 import { error } from '../middleware'
-import { MockPool, MockBadPool } from './health.mock'
+import { db } from '../db'
 
 describe('health controller', () => {
   describe('get health check', () => {
+    beforeEach(() => sinon.restore())
+
     it('should return 200', (done) => {
-      const controller = new HealthController(new MockPool())
+      sinon.stub(db, 'raw').resolves()
+
+      const controller = new HealthController()
       const testApp = express()
         .use(controller.getRouter())
         .use(error)
@@ -21,7 +26,9 @@ describe('health controller', () => {
     })
 
     it('should return 500 when database connection fails', (done) => {
-      const controller = new HealthController(new MockBadPool())
+      sinon.stub(db, 'raw').rejects()
+
+      const controller = new HealthController()
       const testApp = express()
         .use(controller.getRouter())
         .use(error)

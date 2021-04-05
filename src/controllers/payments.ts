@@ -2,7 +2,6 @@ import { Request, Response, Router } from 'express'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController } from './base'
 import { IUsersRepository } from '../models'
-import { authenticated } from '../middleware/'
 
 export class PaymentsController implements BaseController {
   private readonly path = '/payments'

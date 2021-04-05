@@ -8,7 +8,9 @@ export const db = knex({
 })
 
 export interface Transaction extends Knex {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   commit(): any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   rollback(): any
 }
 
