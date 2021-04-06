@@ -5,7 +5,7 @@ import log from '../log'
 import config from '../config'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController } from './base'
-import { IPlansRepository, IUsersRepository } from '../models'
+import { IPlansRepository, IUsersRepository, ISettingsRepository, SettingKeys } from '../models'
 import { authenticated, isSelf } from '../middleware/'
 import { findValidMandate, createCustomer } from '../payment-processing'
 
@@ -13,13 +13,16 @@ export class UsersController implements BaseController {
   private readonly path = '/users'
   private readonly usersRepo: IUsersRepository
   private readonly plansRepo: IPlansRepository
+  private readonly settingsRepo: ISettingsRepository
 
   constructor(
     usersRepo: IUsersRepository,
     plansRepo: IPlansRepository,
+    settingsRepo: ISettingsRepository,
   ) {
     this.usersRepo = usersRepo
     this.plansRepo = plansRepo
+    this.settingsRepo = settingsRepo
   }
 
   public getRouter(): Router {
@@ -30,12 +33,14 @@ export class UsersController implements BaseController {
   }
 
   public getUserDetails = async (req: Request, res: Response): AsyncHandlerResponse => {
+    const defaultCredits = Number(await this.settingsRepo.findByName(null, SettingKeys.DefaultCredits))
+
     let user = await this.usersRepo.findById(null, Number(req.params.id))
 
     if (!user) {
       user = await this.usersRepo.create(null, {
         id: res.locals.authenticatedUser.id,
-        credits: 100,
+        credits: defaultCredits,
         planId: null,
       })
     }

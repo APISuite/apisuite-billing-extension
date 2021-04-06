@@ -4,14 +4,16 @@ import { mockRequest, mockResponse } from 'mock-req-res'
 import { UsersController } from './users'
 import { MockUsersRepository } from '../models/user.mock'
 import { MockPlansRepository } from '../models/plan.mock'
+import { MockSettingsRepository } from '../models/setting.mock'
 
 describe('users controller', () => {
   describe('get user details', () => {
     const uRepo = new MockUsersRepository()
     const pRepo = new MockPlansRepository()
-    const controller = new UsersController(uRepo, pRepo)
+    const sRepo = new MockSettingsRepository()
+    const controller = new UsersController(uRepo, pRepo, sRepo)
 
-    it.only('should return 200 when getting user for the first time', async () => {
+    it('should return 200 when getting user for the first time', async () => {
       const req = mockRequest({
         params: { id: 1 },
       })

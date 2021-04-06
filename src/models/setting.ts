@@ -10,6 +10,10 @@ export interface ISettingsRepository {
   upsert: (trx: OptTransaction, setting: Setting) => Promise<Setting>
 }
 
+export enum SettingKeys {
+  DefaultCredits = "default_credits"
+}
+
 export class SettingsRepository implements ISettingsRepository {
   public findByName = async (trx: OptTransaction, name: string): Promise<string | null> => {
     const _db = trx ? trx : db

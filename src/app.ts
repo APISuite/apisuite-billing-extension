@@ -65,8 +65,9 @@ export default class App {
 
     const ur = new models.UsersRepository()
     const pr = new models.PlansRepository()
+    const sr = new models.SettingsRepository()
 
-    const users = new UsersController(ur, pr)
+    const users = new UsersController(ur, pr, sr)
     const webhooks = new WebhooksController()
 
     return [health, users, webhooks]
