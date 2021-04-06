@@ -4,8 +4,8 @@ import { Optional } from '../types'
 export interface User {
   id: number
   credits: number
-  planId: number
-  customerId: string
+  planId: number | null
+  customerId: string | null
 }
 
 export type UserBase = Omit<User, 'customerId'>

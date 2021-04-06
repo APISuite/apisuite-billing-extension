@@ -11,15 +11,21 @@ describe('users controller', () => {
     const pRepo = new MockPlansRepository()
     const controller = new UsersController(uRepo, pRepo)
 
-    it('should return 404 when the user cannot be found', async () => {
+    it.only('should return 200 when getting user for the first time', async () => {
       const req = mockRequest({
         params: { id: 1 },
       })
-      const res = mockResponse()
+      const res = mockResponse({
+        locals: {
+          authenticatedUser: {
+            id: 1,
+          },
+        },
+      })
 
       try {
         await controller.getUserDetails(req, res)
-        sinon.assert.calledWith(res.status, 404)
+        sinon.assert.calledWith(res.status, 200)
       } catch(err) {
         fail('unexpected error')
       }
@@ -30,6 +36,7 @@ describe('users controller', () => {
         id: 1,
         credits: 100,
         planId: 1,
+        customerId: '',
       }
       const req = mockRequest({
         params: { id: 1 },

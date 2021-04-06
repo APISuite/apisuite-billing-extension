@@ -13,7 +13,6 @@ import {
   UsersController,
   BaseController,
   HealthController,
-  PaymentsController,
   WebhooksController,
 } from './controllers'
 
@@ -68,9 +67,8 @@ export default class App {
     const pr = new models.PlansRepository()
 
     const users = new UsersController(ur, pr)
-    const payments = new PaymentsController(ur)
     const webhooks = new WebhooksController()
 
-    return [health, users, payments, webhooks]
+    return [health, users, webhooks]
   }
 }

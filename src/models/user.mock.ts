@@ -1,4 +1,4 @@
-import { User, IUsersRepository, UserBase } from './user'
+import { User, IUsersRepository, UserBase, UserUpdate } from './user'
 import { OptTransaction } from '../db'
 
 interface IUserHashMap {
@@ -21,7 +21,15 @@ export class MockUsersRepository implements IUsersRepository {
       id: user.id,
       credits: user.credits,
       planId: user.planId,
+      customerId: '',
     }
     return this.db[user.id]
+  }
+
+  async update(trx: OptTransaction, id: number, user: UserUpdate): Promise<User> {
+    if (user.planId) this.db[id].planId = user.planId
+    if (user.credits) this.db[id].credits = user.credits
+    if (user.customerId) this.db[id].customerId = user.customerId
+    return this.db[id]
   }
 }

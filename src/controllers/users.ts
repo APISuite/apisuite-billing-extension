@@ -30,11 +30,13 @@ export class UsersController implements BaseController {
   }
 
   public getUserDetails = async (req: Request, res: Response): AsyncHandlerResponse => {
-    const user = await this.usersRepo.findById(null, Number(req.params.id))
+    let user = await this.usersRepo.findById(null, Number(req.params.id))
 
     if (!user) {
-      return res.status(404).json({
-        error: 'user not found',
+      user = await this.usersRepo.create(null, {
+        id: res.locals.authenticatedUser.id,
+        credits: 100,
+        planId: null,
       })
     }
 
@@ -79,12 +81,14 @@ export class UsersController implements BaseController {
         })
       }
 
+      if (!user.customerId) throw Error('could not create mollie customer')
+
       const mandateId = await findValidMandate(user.customerId)
 
       const payment = await mollieClient.payments.create({
         amount: {
-          currency: 'eur',
-          value: '0.00',
+          currency: 'EUR',
+          value: plan.price.toString(),
         },
         // mandateId: mandateId,
         description: 'API Suite marketplace subscription setup',  // TODO config this

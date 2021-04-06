@@ -33,10 +33,12 @@ paths:
             text/plain:
               schema:
                 type: string
-  /users/{id}/plans/{planId}:
+  /users/{id}:
     get:
       tags: [ users ]
-      description: Returns a user based on the ID
+      description: >
+        Returns a user based on the ID.
+        This also sets up the user if it doesn't exist yet in the extension's context.
       security:
         - cookieAuth: [ ]
       parameters:
@@ -62,6 +64,7 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /users/{id}/plans/{planId}:
     post:
       tags: [ users ]
       description: >
