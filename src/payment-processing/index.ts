@@ -1,11 +1,11 @@
 import mollie, {MandateStatus} from '@mollie/api-client'
 import config from "../config"
 
-export const findValidMandate = async (customerId: string): Promise<string | null> => {
-  const mollieClient = mollie({
-    apiKey: config.get('mollie.apiKey'),
-  })
+const mollieClient = mollie({
+  apiKey: config.get('mollie.apiKey'),
+})
 
+export const findValidMandate = async (customerId: string): Promise<string | null> => {
   let mandates = await mollieClient.customers_mandates.list({
     customerId,
   })
@@ -25,5 +25,19 @@ export const findValidMandate = async (customerId: string): Promise<string | nul
   }
 
   return null
+}
+
+export interface NewMollieCustomer {
+  name: string
+  email: string
+}
+
+export const createCustomer = async (newCustomer: NewMollieCustomer): Promise<string> => {
+  const customer = await mollieClient.customers.create({
+    email: newCustomer.email,
+    name: newCustomer.name,
+  })
+
+  return customer.id
 }
 

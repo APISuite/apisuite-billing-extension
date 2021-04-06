@@ -7,7 +7,7 @@ import { AsyncHandlerResponse } from '../types'
 import { BaseController } from './base'
 import { IPlansRepository, IUsersRepository } from '../models'
 import { authenticated, isSelf } from '../middleware/'
-import { findValidMandate } from '../payment-processing'
+import { findValidMandate, createCustomer } from '../payment-processing'
 
 export class UsersController implements BaseController {
   private readonly path = '/users'
@@ -70,12 +70,12 @@ export class UsersController implements BaseController {
       }
 
       if (!user.customerId) {
-        const customer = await mollieClient.customers.create({
+        const customerId = await createCustomer({
           email: res.locals.authenticatedUser.email,
           name: res.locals.authenticatedUser.name,
         })
         user = await this.usersRepo.update(trx, user.id, {
-          customerId: customer.id,
+          customerId: customerId,
         })
       }
 
@@ -86,7 +86,7 @@ export class UsersController implements BaseController {
           currency: 'eur',
           value: '0.00',
         },
-        mandateId: mandateId,
+        // mandateId: mandateId,
         description: 'API Suite marketplace subscription setup',  // TODO config this
         sequenceType: SequenceType.first,
         webhookUrl: config.get('mollie.webhookUrl'),

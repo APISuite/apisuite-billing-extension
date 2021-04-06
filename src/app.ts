@@ -14,6 +14,7 @@ import {
   BaseController,
   HealthController,
   PaymentsController,
+  WebhooksController,
 } from './controllers'
 
 export default class App {
@@ -68,7 +69,8 @@ export default class App {
 
     const users = new UsersController(ur, pr)
     const payments = new PaymentsController(ur)
+    const webhooks = new WebhooksController()
 
-    return [health, users, payments]
+    return [health, users, payments, webhooks]
   }
 }
