@@ -12,6 +12,10 @@ export class MockPlansRepository implements IPlansRepository {
     this.db = {}
   }
 
+  async findAll(trx: OptTransaction): Promise<Plan[]> {
+    return Object.values(this.db)
+  }
+
   async findById(trx: OptTransaction, id: number): Promise<Plan | null> {
     return this.db[id] || null
   }
@@ -34,5 +38,10 @@ export class MockPlansRepository implements IPlansRepository {
     if (plan.credits) this.db[id].credits = plan.credits
     if (plan.periodicity) this.db[id].periodicity = plan.periodicity
     return this.db[id]
+  }
+
+  async delete(trx: OptTransaction, id: number): Promise<number> {
+    delete this.db[id]
+    return id
   }
 }

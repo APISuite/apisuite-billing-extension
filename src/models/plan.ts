@@ -13,12 +13,22 @@ export type PlanBase = Omit<Plan, 'id'>
 export type PlanUpdate = Omit<Optional<Plan>, 'id'>
 
 export interface IPlansRepository {
+  findAll: (trx: OptTransaction) => Promise<Plan[]>
   findById: (trx: OptTransaction, id: number) => Promise<Plan | null>
   create: (trx: OptTransaction, plan: PlanBase) => Promise<Plan>
   update: (trx: OptTransaction, id: number, plan: PlanUpdate) => Promise<Plan>
+  delete: (trx: OptTransaction, id: number) => Promise<number>
 }
 
 export class PlansRepository implements IPlansRepository {
+  public findAll = async(trx: OptTransaction): Promise<Plan[]> => {
+    const _db = trx ? trx : db
+
+    return _db
+      .select()
+      .from('plans')
+  }
+
   public findById = async(trx: OptTransaction, id: number): Promise<Plan | null> => {
     const _db = trx ? trx : db
 
@@ -65,5 +75,15 @@ export class PlansRepository implements IPlansRepository {
       .returning('*')
 
     return rows[0]
+  }
+
+  public delete = async (trx: OptTransaction, id: number): Promise<number> => {
+    const _db = trx ? trx : db
+
+    await _db('plans')
+      .where('id', id)
+      .del()
+
+    return id
   }
 }

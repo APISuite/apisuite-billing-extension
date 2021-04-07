@@ -1,4 +1,5 @@
 export * from './base'
-export * from './users'
 export * from './health'
+export * from './plans'
+export * from './users'
 export * from './webhooks'
