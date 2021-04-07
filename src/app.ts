@@ -71,7 +71,7 @@ export default class App {
       new HealthController(),
       new UsersController(ur, pr, sr),
       new PlansController(pr),
-      new PurchasesController(pr),
+      new PurchasesController(pr, ur),
       new WebhooksController(),
     ]
   }

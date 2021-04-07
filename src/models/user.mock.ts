@@ -32,4 +32,8 @@ export class MockUsersRepository implements IUsersRepository {
     if (user.customerId) this.db[id].customerId = user.customerId
     return this.db[id]
   }
+
+  async savePayment(trx: OptTransaction, id: number, paymentId: string): Promise<void> {
+    return
+  }
 }

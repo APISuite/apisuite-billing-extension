@@ -1,4 +1,4 @@
-import mollie, {MandateStatus, SequenceType} from '@mollie/api-client'
+import mollie, { MandateStatus, Payment, SequenceType } from '@mollie/api-client'
 import config from "../config"
 
 const mollieClient = mollie({
@@ -58,8 +58,10 @@ export const topUpPayment = async (price: number, description: string): Promise<
     redirectUrl: config.get('mollie.paymentRedirectUrl'),
   })
 
+  if (!payment || !payment._links.checkout || !payment._links.checkout.href) throw new Error('failed to create payment')
+
   return {
     id: payment.id,
-    checkoutURL: payment._links.checkout,
+    checkoutURL: payment._links.checkout.href,
   }
 }
