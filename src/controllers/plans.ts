@@ -4,7 +4,7 @@ import log from '../log'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController } from './base'
 import { IPlansRepository } from '../models'
-import { authenticated } from '../middleware/'
+import { authenticated, isAdmin } from '../middleware/'
 
 export class PlansController implements BaseController {
   private readonly path = '/plans'
@@ -16,12 +16,11 @@ export class PlansController implements BaseController {
 
   public getRouter(): Router {
     const router = Router()
-    // TODO admin middleware
-    router.get(`${this.path}/`, authenticated, this.getPlans)
-    router.get(`${this.path}/:id`, authenticated, this.getPlan)
-    router.post(`${this.path}/:id`, authenticated, this.createPlan)
-    router.put(`${this.path}/:id`, authenticated, this.updatePlan)
-    router.delete(`${this.path}/:id`, authenticated, this.deletePlan)
+    router.get(`${this.path}/`, authenticated, isAdmin, this.getPlans)
+    router.get(`${this.path}/:id`, authenticated, isAdmin, this.getPlan)
+    router.post(`${this.path}/:id`, authenticated, isAdmin, this.createPlan)
+    router.put(`${this.path}/:id`, authenticated, isAdmin, this.updatePlan)
+    router.delete(`${this.path}/:id`, authenticated, isAdmin, this.deletePlan)
     return router
   }
 

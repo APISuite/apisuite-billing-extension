@@ -3,7 +3,7 @@ import express from 'express'
 import fetch from 'node-fetch'
 import request from 'supertest'
 import config from '../config'
-import { introspect, authenticated, isSelf } from './auth'
+import { introspect, authenticated, isSelf, isAdmin } from './auth'
 import { error } from './error'
 
 describe('error handler middleware', () => {
@@ -133,7 +133,7 @@ describe('error handler middleware', () => {
           res.locals.authenticatedUser = { id: 1 }
           next()
         })
-        .get('/test/:id', authenticated, isSelf, (req, res) => {
+        .get('/test/:id', isSelf, (req, res) => {
           res.sendStatus(200)
         })
 
@@ -145,13 +145,50 @@ describe('error handler middleware', () => {
         .catch((err: Error) => done(err))
     })
 
-    it('should return continue to route when there is an authenticated user', (done) => {
+    it('should continue to route when there is an authenticated user', (done) => {
       const testApp = express()
         .use((req, res, next) => {
           res.locals.authenticatedUser = { id: 1 }
           next()
         })
-        .get('/test/:id', authenticated, isSelf, (req, res) => {
+        .get('/test/:id', isSelf, (req, res) => {
+          res.sendStatus(200)
+        })
+
+      request(testApp)
+        .get('/test/1')
+        .expect(200)
+        .then(() => done())
+        .catch((err: Error) => done(err))
+    })
+  })
+
+  describe.only('isAdmin', () => {
+    it('should return 403 when user role is not "admin"', (done) => {
+      const testApp = express()
+        .use((req, res, next) => {
+          res.locals.authenticatedUser = { role: { name: 'developer' } }
+          next()
+        })
+        .get('/test/:id', isAdmin, (req, res) => {
+          res.sendStatus(200)
+        })
+
+      request(testApp)
+        .get('/test/100')
+        .expect('Content-Type', /json/)
+        .expect(403)
+        .then(() => done())
+        .catch((err: Error) => done(err))
+    })
+
+    it('should continue to route when there user is admin', (done) => {
+      const testApp = express()
+        .use((req, res, next) => {
+          res.locals.authenticatedUser = { role: { name: 'admin' } }
+          next()
+        })
+        .get('/test/:id', isAdmin, (req, res) => {
           res.sendStatus(200)
         })
 

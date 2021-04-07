@@ -53,3 +53,11 @@ export const isSelf = (req: Request, res: Response, next: NextFunction): Handler
 
   next()
 }
+
+export const isAdmin = (req: Request, res: Response, next: NextFunction): HandlerResponse => {
+  if (res.locals.authenticatedUser.role && res.locals.authenticatedUser.role.name === 'admin') {
+    return next()
+  }
+
+  res.status(403).json({ errors: ['forbidden'] })
+}
