@@ -1,4 +1,4 @@
-import mollie, {MandateStatus} from '@mollie/api-client'
+import mollie, {MandateStatus, SequenceType} from '@mollie/api-client'
 import config from "../config"
 
 const mollieClient = mollie({
@@ -32,6 +32,11 @@ export interface NewMollieCustomer {
   email: string
 }
 
+export interface TopUpPaymentResult {
+  id: string
+  checkoutURL: string
+}
+
 export const createCustomer = async (newCustomer: NewMollieCustomer): Promise<string> => {
   const customer = await mollieClient.customers.create({
     email: newCustomer.email,
@@ -41,3 +46,20 @@ export const createCustomer = async (newCustomer: NewMollieCustomer): Promise<st
   return customer.id
 }
 
+export const topUpPayment = async (price: number, description: string): Promise<TopUpPaymentResult> => {
+  const payment = await mollieClient.payments.create({
+    amount: {
+      currency: 'EUR',
+      value: price.toString(),
+    },
+    description,
+    sequenceType: SequenceType.oneoff,
+    webhookUrl: config.get('mollie.webhookUrl'),
+    redirectUrl: config.get('mollie.paymentRedirectUrl'),
+  })
+
+  return {
+    id: payment.id,
+    checkoutURL: payment._links.checkout,
+  }
+}

@@ -13,7 +13,9 @@ import {
   UsersController,
   BaseController,
   HealthController,
-  WebhooksController, PlansController,
+  WebhooksController,
+  PlansController,
+  PurchasesController,
 } from './controllers'
 
 export default class App {
@@ -61,16 +63,16 @@ export default class App {
   }
 
   private initControllers(): Array<BaseController> {
-    const health = new HealthController()
-
     const ur = new models.UsersRepository()
     const pr = new models.PlansRepository()
     const sr = new models.SettingsRepository()
 
-    const users = new UsersController(ur, pr, sr)
-    const webhooks = new WebhooksController()
-    const plans = new PlansController(pr)
-
-    return [health, users, plans, webhooks]
+    return [
+      new HealthController(),
+      new UsersController(ur, pr, sr),
+      new PlansController(pr),
+      new PurchasesController(pr),
+      new WebhooksController(),
+    ]
   }
 }

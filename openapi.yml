@@ -199,36 +199,31 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-  /users/{id}/plans/{planId}:
+  /purchases:
     post:
-      tags: [ users ]
-      description: >
-        Subscribe a user to a billing plan.
-        If the user has no billing information yet, this will essentially set up a user in the billing extension system.
-        This action will trigger an initial zero amount payment in order to setup the user in the payment provider.
-        Only the user can trigger this for itself.
+      tags: [ purchases ]
+      description: Purchase a plan, which can be a one time credit top up or a subscription.
       security:
         - cookieAuth: [ ]
-      parameters:
-        - name: id
-          in: path
-          description: User ID
-          required: true
-          schema:
-            type: number
-        - name: planId
-          in: path
-          description: ID of the plan being subscribed
-          required: true
-          schema:
-            type: number
+      requestBody:
+        description: Purchase data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                plan_id:
+                  type: number
       responses:
         '302':
-          description: OIDC provider login page redirect
+          description: Payment processor checkout page redirect
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
 components:
   schemas:
     User:
