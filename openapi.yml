@@ -33,6 +33,141 @@ paths:
             text/plain:
               schema:
                 type: string
+  /plans:
+    get:
+      tags: [ plans ]
+      description: List plans. Plans without periodicity are one time top ups.
+      security:
+        - cookieAuth: [ ]
+      responses:
+        '200':
+          description: Plan model list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Plan'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [ plans ]
+      description: Create a plan
+      security:
+        - cookieAuth: [ ]
+      responses:
+        '201':
+          description: Plan model
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Plan'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /plans/{id}:
+    get:
+      tags: [ plans ]
+      description: Show a plan by id.
+      security:
+        - cookieAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: Plan ID
+          required: true
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Plan model
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Plan'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [ plans ]
+      description: Update a plan.
+      security:
+        - cookieAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: Plan ID
+          required: true
+          schema:
+            type: number
+      requestBody:
+        description: New role data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                price:
+                  type: number
+                credits:
+                  type: number
+                periodicity:
+                  type: string
+      responses:
+        '200':
+          description: Plan model
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Plan'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [ plans ]
+      description: Delete a plan.
+      security:
+        - cookieAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: Plan ID
+          required: true
+          schema:
+            type: number
+      responses:
+        '204':
+          description: No content
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /users/{id}:
     get:
       tags: [ users ]
@@ -106,6 +241,19 @@ components:
         email:
           type: string
         picture:
+          type: string
+    Plan:
+      type: object
+      properties:
+        id:
+          type: number
+        name:
+          type: string
+        price:
+          type: number
+        credits:
+          type: number
+        periodicity:
           type: string
     Health:
       type: object
