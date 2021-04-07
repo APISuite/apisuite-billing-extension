@@ -3,5 +3,5 @@ CREATE TABLE IF NOT EXISTS plans (
     name TEXT NOT NULL,
     price DECIMAL(12, 2) NOT NULL DEFAULT 0,
     credits INTEGER NOT NULL DEFAULT 0,
-    periodicity TEXT NOT NULL DEFAULT '1 month'
+    periodicity TEXT NULL
 );
