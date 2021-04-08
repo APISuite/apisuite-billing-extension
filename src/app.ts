@@ -56,7 +56,9 @@ export default class App {
 
   private setupRoutes(): void {
     const controllers = this.initControllers()
-    controllers.forEach((c) => this.app.use(c.getRouter()))
+    for(const c of controllers) {
+      this.app.use(c.getRouter())
+    }
 
     this.setupSystemRoutes()
     this.app.use(error)
@@ -66,13 +68,14 @@ export default class App {
     const ur = new models.UsersRepository()
     const pr = new models.PlansRepository()
     const sr = new models.SettingsRepository()
+    const tr = new models.TransactionsRepository()
 
     return [
       new HealthController(),
       new UsersController(ur, pr, sr),
       new PlansController(pr),
-      new PurchasesController(pr, ur),
-      new WebhooksController(),
+      new PurchasesController(pr, tr),
+      new WebhooksController(tr, ur),
     ]
   }
 }

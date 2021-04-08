@@ -1,26 +1,27 @@
 import { Request, Response, Router } from 'express'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController } from './base'
-import { IPlansRepository, IUsersRepository, Plan } from '../models'
+import { IPlansRepository, ITransactionsRepository, Plan } from '../models'
 import { authenticated } from '../middleware/'
 import { topUpPayment } from '../payment-processing'
+import { asyncWrap as aw } from '../middleware/async'
 
 export class PurchasesController implements BaseController {
   private readonly path = '/purchases'
   private readonly plansRepo: IPlansRepository
-  private readonly usersRepo: IUsersRepository
+  private readonly txnRepo: ITransactionsRepository
 
   constructor(
     plansRepo: IPlansRepository,
-    usersRepo: IUsersRepository,
+    txnRepo: ITransactionsRepository,
     ) {
     this.plansRepo = plansRepo
-    this.usersRepo = usersRepo
+    this.txnRepo = txnRepo
   }
 
   public getRouter(): Router {
     const router = Router()
-    router.post(`${this.path}/`, authenticated, this.purchasePlan)
+    router.post(`${this.path}/`, authenticated, aw(this.purchasePlan))
     return router
   }
 
@@ -44,7 +45,11 @@ export class PurchasesController implements BaseController {
 
   private purchaseTopUp = async (userId: number, plan: Plan): Promise<string> => {
     const payment = await topUpPayment(plan.price, plan.name)
-    await this.usersRepo.savePayment(null, userId, payment.id, plan.credits)
+    await this.txnRepo.create(null, {
+      userId,
+      paymentId: payment.id,
+      credits: plan.credits,
+    })
     return payment.checkoutURL
   }
 }

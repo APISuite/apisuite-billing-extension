@@ -9,7 +9,8 @@
     "lint": "eslint 'src/**/*.ts'",
     "build": "tsc -p .",
     "test": "mocha -r ts-node/register src/**/*.spec.ts",
-    "migrate": "./migrations/migrator -source file://migrations -database \"$DB_URI\" up"
+    "migrate": "./migrations/migrator -source file://migrations -database \"$DB_URI\" up",
+    "migrate-down": "./migrations/migrator -source file://migrations -database \"$DB_URI\" down"
   },
   "license": "MPL-2.0",
   "dependencies": {

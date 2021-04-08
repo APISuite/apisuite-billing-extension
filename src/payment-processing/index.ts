@@ -1,5 +1,5 @@
-import mollie, { MandateStatus, Payment, SequenceType } from '@mollie/api-client'
-import config from "../config"
+import mollie, { MandateStatus, PaymentStatus, SequenceType } from '@mollie/api-client'
+import config from '../config'
 
 const mollieClient = mollie({
   apiKey: config.get('mollie.apiKey'),
@@ -54,7 +54,7 @@ export const topUpPayment = async (price: number, description: string): Promise<
     },
     description,
     sequenceType: SequenceType.oneoff,
-    webhookUrl: config.get('mollie.webhookUrl'),
+    webhookUrl: config.get('mollie.topUpWebhookUrl'),
     redirectUrl: config.get('mollie.paymentRedirectUrl'),
   })
 
@@ -64,4 +64,10 @@ export const topUpPayment = async (price: number, description: string): Promise<
     id: payment.id,
     checkoutURL: payment._links.checkout.href,
   }
+}
+
+export const verifyPaymentSuccess = async (id: string): Promise<string | null> => {
+  const payment = await mollieClient.payments.get(id)
+  if (!payment) throw new Error('failed to check payment')
+  return payment.status === PaymentStatus.paid ? payment.id : null
 }

@@ -5,6 +5,7 @@ export const db = knex({
   client: 'pg',
   connection: config.get('dbURI'),
   searchPath: ['knex', 'public'],
+  debug: true,
 })
 
 export interface Transaction extends Knex {

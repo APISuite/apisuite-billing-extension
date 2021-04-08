@@ -16,9 +16,9 @@ export class PlansController implements BaseController {
 
   public getRouter(): Router {
     const router = Router()
-    router.get(`${this.path}/`, authenticated, isAdmin, this.getPlans)
+    router.get(`${this.path}`, authenticated, isAdmin, this.getPlans)
     router.get(`${this.path}/:id`, authenticated, isAdmin, this.getPlan)
-    router.post(`${this.path}/:id`, authenticated, isAdmin, this.createPlan)
+    router.post(`${this.path}`, authenticated, isAdmin, this.createPlan)
     router.put(`${this.path}/:id`, authenticated, isAdmin, this.updatePlan)
     router.delete(`${this.path}/:id`, authenticated, isAdmin, this.deletePlan)
     return router

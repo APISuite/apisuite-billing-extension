@@ -163,7 +163,7 @@ describe('error handler middleware', () => {
     })
   })
 
-  describe.only('isAdmin', () => {
+  describe('isAdmin', () => {
     it('should return 403 when user role is not "admin"', (done) => {
       const testApp = express()
         .use((req, res, next) => {

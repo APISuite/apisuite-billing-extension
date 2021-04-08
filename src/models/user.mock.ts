@@ -36,4 +36,8 @@ export class MockUsersRepository implements IUsersRepository {
   async savePayment(trx: OptTransaction, id: number, paymentId: string): Promise<void> {
     return
   }
+
+  async incrementCredits(trx: OptTransaction, id: number, amount: number): Promise<number> {
+    return 10 + amount
+  }
 }

@@ -36,11 +36,11 @@ export const schema = {
       default: 'http://localhost:3001/',
       env: 'PAYMENT_REDIRECT_URL',
     },
-    webhookUrl: {
-      doc: 'Mollie payment webhook URL',
+    topUpWebhookUrl: {
+      doc: 'Webhook URL for top up purchase',
       format: String,
-      default: 'http://localhost:6001/payments/webhook',
-      env: 'PAYMENTS_WEBHOOK_URL',
+      default: 'http://localhost:6001/webhooks/topup',
+      env: 'WEBHOOKS_TOPUP',
     },
   },
   apisuite: {

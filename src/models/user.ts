@@ -15,7 +15,7 @@ export interface IUsersRepository {
   findById: (trx: OptTransaction, id: number) => Promise<User | null>
   create: (trx: OptTransaction, user: UserBase) => Promise<User>
   update: (trx: OptTransaction, id: number, user: UserUpdate) => Promise<User>
-  savePayment: (trx: OptTransaction, id: number, paymentId: string, credits: number) => Promise<void>
+  incrementCredits: (trx: OptTransaction, id: number, amount: number) => Promise<number>
 }
 
 export class UsersRepository implements IUsersRepository {
@@ -75,17 +75,14 @@ export class UsersRepository implements IUsersRepository {
     }
   }
 
-  public savePayment = async(trx: OptTransaction, id: number, paymentId: string, credits: number): Promise<void> => {
+  public incrementCredits = async (trx: OptTransaction, id: number, amount: number): Promise<number> => {
     const _db = trx ? trx : db
 
-    await _db
-      .insert({
-        user_id: id,
-        payment_id: paymentId,
-        credits,
-      })
-      .into('user_payments')
+    const rows = await _db('users')
+      .where('id', id)
+      .increment('credits', amount)
+      .returning('credits')
 
-    return
+    return rows[0].credits
   }
 }
