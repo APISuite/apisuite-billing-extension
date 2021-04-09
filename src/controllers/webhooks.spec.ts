@@ -3,18 +3,18 @@ import express from 'express'
 import request from 'supertest'
 import { WebhooksController } from './webhooks'
 import { error } from '../middleware'
-import { MockTransactionsRepository } from '../models/transaction.mock'
+import {
+  user as usersRepo,
+  transaction as txnRepo,
+} from '../models'
 import * as paymentProcessing from '../payment-processing'
-import { MockUsersRepository } from '../models/user.mock'
 import { db } from '../db'
 
 describe('webhooks controller', () => {
   describe('topup webhook', () => {
     afterEach(() => sinon.restore())
 
-    const mtr = new MockTransactionsRepository()
-    const mur = new MockUsersRepository()
-    const controller = new WebhooksController(mtr, mur)
+    const controller = new WebhooksController()
     const testApp = express()
       .use(express.urlencoded({ extended: true }))
       .use(controller.getRouter())
@@ -59,6 +59,14 @@ describe('webhooks controller', () => {
       sinon.stub(db, 'transaction').resolves({
         commit: sinon.stub(),
         rollback: sinon.stub(),
+      })
+      sinon.stub(usersRepo, 'incrementCredits').resolves()
+      sinon.stub(txnRepo, 'setVerified').resolves({
+        userId: 1,
+        credits: 100,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        paymentId: 'randompaymentid',
       })
 
       request(testApp)

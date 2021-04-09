@@ -1,4 +1,4 @@
-export * from './user'
-export * from './plan'
-export * from './setting'
-export * from './transaction'
+export * as user from './user'
+export * as plan from './plan'
+export * as setting from './setting'
+export * as transaction from './transaction'

@@ -1,19 +1,13 @@
 import { NextFunction, Request, Response, Router } from 'express'
 import { db } from '../db'
-import log from '../log'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController } from './base'
-import { IPlansRepository } from '../models'
+import { plan as plansRepo } from '../models'
 import { authenticated, isAdmin, asyncWrap as aw } from '../middleware'
 import { DuplicateError } from '../models/errors'
 
 export class PlansController implements BaseController {
   private readonly path = '/plans'
-  private readonly plansRepo: IPlansRepository
-
-  constructor(plansRepo: IPlansRepository) {
-    this.plansRepo = plansRepo
-  }
 
   public getRouter(): Router {
     const router = Router()
@@ -26,7 +20,7 @@ export class PlansController implements BaseController {
   }
 
   public getPlans = async (req: Request, res: Response): AsyncHandlerResponse => {
-    const plans = await this.plansRepo.findAll(null)
+    const plans = await plansRepo.findAll(null)
 
     return res.status(200).json({
       data: plans,
@@ -34,7 +28,7 @@ export class PlansController implements BaseController {
   }
 
   public getPlan = async (req: Request, res: Response): AsyncHandlerResponse => {
-    const plan = await this.plansRepo.findById(null, Number(req.params.id))
+    const plan = await plansRepo.findById(null, Number(req.params.id))
 
     if (!plan) {
       return res.status(404).json({
@@ -49,7 +43,7 @@ export class PlansController implements BaseController {
 
   public createPlan = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
     try {
-      const plan = await this.plansRepo.create(null, {
+      const plan = await plansRepo.create(null, {
         name: req.body.name,
         price: req.body.price,
         credits: req.body.credits,
@@ -72,7 +66,7 @@ export class PlansController implements BaseController {
   public updatePlan = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
     const trx = await db.transaction()
     try {
-      let plan = await this.plansRepo.findById(trx, Number(req.params.id))
+      let plan = await plansRepo.findById(trx, Number(req.params.id))
 
       if (!plan) {
         return res.status(404).json({
@@ -80,7 +74,7 @@ export class PlansController implements BaseController {
         })
       }
 
-      plan = await this.plansRepo.update(trx, plan.id, req.body)
+      plan = await plansRepo.update(trx, plan.id, req.body)
 
       await trx.commit()
 
@@ -99,7 +93,7 @@ export class PlansController implements BaseController {
   }
 
   public deletePlan = async (req: Request, res: Response): AsyncHandlerResponse => {
-    await this.plansRepo.delete(null, Number(req.params.id))
+    await plansRepo.deletePlan(null, Number(req.params.id))
     return res.sendStatus(204)
   }
 }

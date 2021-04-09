@@ -1,56 +1,64 @@
 import sinon from 'sinon'
-import { fail } from 'assert'
-import { mockRequest, mockResponse } from 'mock-req-res'
+import request from 'supertest'
 import { UsersController } from './users'
-import { MockUsersRepository } from '../models/user.mock'
-import { MockPlansRepository } from '../models/plan.mock'
-import { MockSettingsRepository } from '../models/setting.mock'
+import {
+  user as usersRepo,
+  setting as settingsRepo,
+} from '../models'
+import express, { NextFunction, Request, Response } from 'express'
+import { error } from '../middleware'
 
 describe('users controller', () => {
+  const injectUser = (req: Request, res: Response, next: NextFunction) => {
+    res.locals.authenticatedUser = {
+      id: 1,
+      role: { name: 'admin' },
+    }
+    next()
+  }
+
+  afterEach(() => sinon.restore())
+
   describe('get user details', () => {
-    const uRepo = new MockUsersRepository()
-    const pRepo = new MockPlansRepository()
-    const sRepo = new MockSettingsRepository()
-    const controller = new UsersController(uRepo, pRepo, sRepo)
+    const controller = new UsersController()
+    const testApp = express()
+      .use(injectUser)
+      .use(controller.getRouter())
+      .use(error)
 
-    it('should return 200 when getting user for the first time', async () => {
-      const req = mockRequest({
-        params: { id: 1 },
-      })
-      const res = mockResponse({
-        locals: {
-          authenticatedUser: {
-            id: 1,
-          },
-        },
-      })
-
-      try {
-        await controller.getUserDetails(req, res)
-        sinon.assert.calledWith(res.status, 200)
-      } catch(err) {
-        fail('unexpected error')
-      }
-    })
-
-    it('should return 200 when the user is found', async () => {
-      uRepo.db[1] = {
+    it('should return 200 when getting user for the first time', (done) => {
+      sinon.stub(settingsRepo, 'findByName').resolves('100')
+      sinon.stub(usersRepo, 'findById').resolves(null)
+      sinon.stub(usersRepo, 'create').resolves({
         id: 1,
         credits: 100,
-        planId: 1,
-        customerId: '',
-      }
-      const req = mockRequest({
-        params: { id: 1 },
+        planId: null,
+        customerId: null,
       })
-      const res = mockResponse()
 
-      try {
-        await controller.getUserDetails(req, res)
-        sinon.assert.calledWith(res.status, 200)
-      } catch(err) {
-        fail('unexpected error')
-      }
+      request(testApp)
+        .get('/users/1')
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .then(() => done())
+        .catch((err: Error) => done(err))
+    })
+
+    it('should return 200 when getting user for the first time', (done) => {
+      sinon.stub(settingsRepo, 'findByName').resolves('100')
+      sinon.stub(usersRepo, 'findById').resolves({
+        id: 1,
+        credits: 100,
+        planId: null,
+        customerId: null,
+      })
+
+      request(testApp)
+        .get('/users/1')
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .then(() => done())
+        .catch((err: Error) => done(err))
     })
   })
 })

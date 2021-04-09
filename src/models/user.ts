@@ -11,78 +11,76 @@ export interface User {
 export type UserBase = Omit<User, 'customerId'>
 export type UserUpdate = Omit<Optional<User>, 'id'>
 
-export interface IUsersRepository {
-  findById: (trx: OptTransaction, id: number) => Promise<User | null>
-  create: (trx: OptTransaction, user: UserBase) => Promise<User>
-  update: (trx: OptTransaction, id: number, user: UserUpdate) => Promise<User>
-  incrementCredits: (trx: OptTransaction, id: number, amount: number) => Promise<number>
+const findById = async(trx: OptTransaction, id: number): Promise<User | null> => {
+  const _db = trx ? trx : db
+
+  const rows = await _db
+    .select()
+    .from('users')
+    .where('id', id)
+
+  if (rows.length) {
+    return {
+      id: rows[0].id,
+      credits: rows[0].credits,
+      planId: rows[0].plan_id,
+      customerId: rows[0].costumer_id,
+    }
+  }
+
+  return null
 }
 
-export class UsersRepository implements IUsersRepository {
-  public findById = async(trx: OptTransaction, id: number): Promise<User | null> => {
-    const _db = trx ? trx : db
+const create = async (trx: OptTransaction, user: UserBase): Promise<User> => {
+  const _db = trx ? trx : db
 
-    const rows = await _db
-      .select()
-      .from('users')
-      .where('id', id)
+  const rows = await _db
+    .insert({
+      id: user.id,
+      credits: user.credits,
+      plan_id: user.planId,
+    })
+    .into('users')
+    .returning('*')
 
-    if (rows.length) {
-      return {
-        id: rows[0].id,
-        credits: rows[0].credits,
-        planId: rows[0].plan_id,
-        customerId: rows[0].costumer_id,
-      }
-    }
-
-    return null
+  return {
+    id: rows[0].id,
+    credits: rows[0].credits,
+    planId: rows[0].plan_id,
+    customerId: rows[0].customer_id,
   }
+}
 
-  public create = async (trx: OptTransaction, user: UserBase): Promise<User> => {
-    const _db = trx ? trx : db
+const update = async (trx: OptTransaction, id: number, user: UserUpdate): Promise<User> => {
+  const _db = trx ? trx : db
 
-    const rows = await _db
-      .insert({
-        id: user.id,
-        credits: user.credits,
-        plan_id: user.planId,
-      })
-      .into('users')
-      .returning('*')
+  const rows = await _db('users')
+    .update(user)
+    .where('id', id)
+    .returning('*')
 
-    return {
-      id: rows[0].id,
-      credits: rows[0].credits,
-      planId: rows[0].plan_id,
-      customerId: rows[0].customer_id,
-    }
+  return {
+    id: rows[0].id,
+    credits: rows[0].credits,
+    planId: rows[0].plan_id,
+    customerId: rows[0].customer_id,
   }
+}
 
-  public update = async (trx: OptTransaction, id: number, user: UserUpdate): Promise<User> => {
-    const _db = trx ? trx : db
+const incrementCredits = async (trx: OptTransaction, id: number, amount: number): Promise<number> => {
+  const _db = trx ? trx : db
 
-    const rows = await _db('users')
-      .update(user)
-      .where('id', id)
-      .returning('*')
+  const rows = await _db('users')
+    .where('id', id)
+    .increment('credits', amount)
+    .returning('credits')
 
-    return {
-      id: rows[0].id,
-      credits: rows[0].credits,
-      planId: rows[0].plan_id,
-      customerId: rows[0].customer_id,
-    }
-  }
+  return rows[0].credits
+}
 
-  public incrementCredits = async (trx: OptTransaction, id: number, amount: number): Promise<number> => {
-    const _db = trx ? trx : db
-
-    const rows = await _db('users')
-      .where('id', id)
-      .increment('credits', amount)
-      .returning('credits')
-
-    return rows[0].credits
-  }
+export {
+  findById,
+  create,
+  update,
+  incrementCredits,
 }

@@ -1,23 +1,16 @@
 import { NextFunction, Request, Response, Router } from 'express'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController } from './base'
-import { ITransactionsRepository, IUsersRepository } from '../models'
+import {
+  transaction as txnRepo,
+  user as usersRepo,
+} from '../models'
 import { verifyPaymentSuccess } from '../payment-processing'
 import { asyncWrap as aw } from '../middleware'
 import { db } from '../db'
 
 export class WebhooksController implements BaseController {
   private readonly path = '/webhooks'
-  private readonly txnRepo: ITransactionsRepository
-  private readonly usersRepo: IUsersRepository
-
-  constructor(
-    txnRepo: ITransactionsRepository,
-    usersRepo: IUsersRepository,
-  ) {
-    this.txnRepo = txnRepo
-    this.usersRepo = usersRepo
-  }
 
   public getRouter(): Router {
     const router = Router()
@@ -46,8 +39,8 @@ export class WebhooksController implements BaseController {
     if (paymentId) {
       const trx = await db.transaction()
       try {
-        const transaction = await this.txnRepo.setVerified(trx, paymentId)
-        await this.usersRepo.incrementCredits(trx, transaction.userId, transaction.credits)
+        const transaction = await txnRepo.setVerified(trx, paymentId)
+        await usersRepo.incrementCredits(trx, transaction.userId, transaction.credits)
         await trx.commit()
       } catch (err) {
         await trx.rollback()

@@ -1,22 +1,16 @@
 import { Request, Response, Router } from 'express'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController } from './base'
-import { IPlansRepository, ITransactionsRepository, Plan } from '../models'
+import {
+  plan as plansRepo,
+  transaction as txnRepo,
+} from '../models'
+import { Plan } from '../models/plan'
 import { authenticated, asyncWrap as aw } from '../middleware/'
 import { topUpPayment } from '../payment-processing'
 
 export class PurchasesController implements BaseController {
   private readonly path = '/purchases'
-  private readonly plansRepo: IPlansRepository
-  private readonly txnRepo: ITransactionsRepository
-
-  constructor(
-    plansRepo: IPlansRepository,
-    txnRepo: ITransactionsRepository,
-    ) {
-    this.plansRepo = plansRepo
-    this.txnRepo = txnRepo
-  }
 
   public getRouter(): Router {
     const router = Router()
@@ -25,7 +19,7 @@ export class PurchasesController implements BaseController {
   }
 
   public purchasePlan = async (req: Request, res: Response): AsyncHandlerResponse => {
-    const plan = await this.plansRepo.findById(null, Number(req.body.planId))
+    const plan = await plansRepo.findById(null, Number(req.body.planId))
 
     if (!plan) {
       return res.status(404).json({
@@ -44,7 +38,7 @@ export class PurchasesController implements BaseController {
 
   private purchaseTopUp = async (userId: number, plan: Plan): Promise<string> => {
     const payment = await topUpPayment(plan.price, plan.name)
-    await this.txnRepo.create(null, {
+    await txnRepo.create(null, {
       userId,
       paymentId: payment.id,
       credits: plan.credits,

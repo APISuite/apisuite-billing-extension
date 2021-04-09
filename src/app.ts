@@ -6,7 +6,6 @@ import express, {
 import helmet from 'helmet'
 import morgan from 'morgan'
 import promBundle from 'express-prom-bundle'
-import * as models from './models'
 import { version } from '../package.json'
 import { introspect, error } from './middleware/'
 import {
@@ -65,17 +64,12 @@ export default class App {
   }
 
   private initControllers(): Array<BaseController> {
-    const ur = new models.UsersRepository()
-    const pr = new models.PlansRepository()
-    const sr = new models.SettingsRepository()
-    const tr = new models.TransactionsRepository()
-
     return [
       new HealthController(),
-      new UsersController(ur, pr, sr),
-      new PlansController(pr),
-      new PurchasesController(pr, tr),
-      new WebhooksController(tr, ur),
+      new UsersController(),
+      new PlansController(),
+      new PurchasesController(),
+      new WebhooksController(),
     ]
   }
 }
