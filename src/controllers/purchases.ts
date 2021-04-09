@@ -2,9 +2,8 @@ import { Request, Response, Router } from 'express'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController } from './base'
 import { IPlansRepository, ITransactionsRepository, Plan } from '../models'
-import { authenticated } from '../middleware/'
+import { authenticated, asyncWrap as aw } from '../middleware/'
 import { topUpPayment } from '../payment-processing'
-import { asyncWrap as aw } from '../middleware/async'
 
 export class PurchasesController implements BaseController {
   private readonly path = '/purchases'

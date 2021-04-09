@@ -1,5 +1,7 @@
 import { db, OptTransaction } from '../db'
 import { Optional } from '../types'
+import log from '../log'
+import { dbErrorParser } from './errors'
 
 export interface Plan {
   id: number
@@ -56,6 +58,10 @@ export class PlansRepository implements IPlansRepository {
       })
       .into('plans')
       .returning('*')
+      .catch((err) => {
+        log.error(err)
+        throw dbErrorParser(err)
+      })
 
     return {
       id: rows[0].id,
@@ -73,6 +79,10 @@ export class PlansRepository implements IPlansRepository {
       .update(plan)
       .where('id', id)
       .returning('*')
+      .catch((err) => {
+        log.error(err)
+        throw dbErrorParser(err)
+      })
 
     return rows[0]
   }

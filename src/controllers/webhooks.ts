@@ -3,7 +3,7 @@ import { AsyncHandlerResponse } from '../types'
 import { BaseController } from './base'
 import { ITransactionsRepository, IUsersRepository } from '../models'
 import { verifyPaymentSuccess } from '../payment-processing'
-import { asyncWrap as aw } from '../middleware/async'
+import { asyncWrap as aw } from '../middleware'
 import { db } from '../db'
 
 export class WebhooksController implements BaseController {

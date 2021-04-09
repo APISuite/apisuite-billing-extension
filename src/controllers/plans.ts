@@ -1,10 +1,11 @@
-import { Request, Response, Router } from 'express'
+import { NextFunction, Request, Response, Router } from 'express'
 import { db } from '../db'
 import log from '../log'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController } from './base'
 import { IPlansRepository } from '../models'
-import { authenticated, isAdmin } from '../middleware/'
+import { authenticated, isAdmin, asyncWrap as aw } from '../middleware'
+import { DuplicateError } from '../models/errors'
 
 export class PlansController implements BaseController {
   private readonly path = '/plans'
@@ -16,11 +17,11 @@ export class PlansController implements BaseController {
 
   public getRouter(): Router {
     const router = Router()
-    router.get(`${this.path}`, authenticated, isAdmin, this.getPlans)
-    router.get(`${this.path}/:id`, authenticated, isAdmin, this.getPlan)
-    router.post(`${this.path}`, authenticated, isAdmin, this.createPlan)
-    router.put(`${this.path}/:id`, authenticated, isAdmin, this.updatePlan)
-    router.delete(`${this.path}/:id`, authenticated, isAdmin, this.deletePlan)
+    router.get(`${this.path}`, authenticated, isAdmin, aw(this.getPlans))
+    router.get(`${this.path}/:id`, authenticated, isAdmin, aw(this.getPlan))
+    router.post(`${this.path}`, authenticated, isAdmin, aw(this.createPlan))
+    router.put(`${this.path}/:id`, authenticated, isAdmin, aw(this.updatePlan))
+    router.delete(`${this.path}/:id`, authenticated, isAdmin, aw(this.deletePlan))
     return router
   }
 
@@ -46,20 +47,29 @@ export class PlansController implements BaseController {
     })
   }
 
-  public createPlan = async (req: Request, res: Response): AsyncHandlerResponse => {
-    const plan = await this.plansRepo.create(null, {
-      name: req.body.name,
-      price: req.body.price,
-      credits: req.body.credits,
-      periodicity: req.body.periodicity,
-    })
+  public createPlan = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
+    try {
+      const plan = await this.plansRepo.create(null, {
+        name: req.body.name,
+        price: req.body.price,
+        credits: req.body.credits,
+        periodicity: req.body.periodicity,
+      })
 
-    return res.status(201).json({
-      data: plan,
-    })
+      return res.status(201).json({
+        data: plan,
+      })
+    } catch (err) {
+      if (err instanceof DuplicateError) {
+        return res.status(409).json({
+          error: err.message,
+        })
+      }
+      next(err)
+    }
   }
 
-  public updatePlan = async (req: Request, res: Response): AsyncHandlerResponse => {
+  public updatePlan = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
     const trx = await db.transaction()
     try {
       let plan = await this.plansRepo.findById(trx, Number(req.params.id))
@@ -78,36 +88,18 @@ export class PlansController implements BaseController {
         data: plan,
       })
     } catch (err) {
-      log.error(err)
       await trx.rollback()
-      return res.status(500).json({
-        error: 'could not create user plan subscription',
-      })
+      if (err instanceof DuplicateError) {
+        return res.status(409).json({
+          error: err.message,
+        })
+      }
+      next(err)
     }
   }
 
   public deletePlan = async (req: Request, res: Response): AsyncHandlerResponse => {
-    const trx = await db.transaction()
-    try {
-      const plan = await this.plansRepo.findById(trx, Number(req.params.id))
-
-      if (!plan) {
-        return res.status(404).json({
-          error: 'plan not found',
-        })
-      }
-
-      await this.plansRepo.delete(trx, plan.id)
-
-      await trx.commit()
-
-      return res.sendStatus(204)
-    } catch (err) {
-      log.error(err)
-      await trx.rollback()
-      return res.status(500).json({
-        error: 'could not create user plan subscription',
-      })
-    }
+    await this.plansRepo.delete(null, Number(req.params.id))
+    return res.sendStatus(204)
   }
 }
