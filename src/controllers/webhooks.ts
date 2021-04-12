@@ -16,6 +16,7 @@ export class WebhooksController implements BaseController {
     const router = Router()
     router.post(`${this.path}/subscriptions`, aw(this.subscriptionPaymentSuccess))
     router.post(`${this.path}/topup`, aw(this.topUpPaymentWebhookHandler))
+    router.post(`${this.path}/first`, aw(this.firstPaymentWebhookHandler))
     return router
   }
 
@@ -48,6 +49,15 @@ export class WebhooksController implements BaseController {
       }
       // TODO send invoice email?
     }
+
+    return res.status(200).json({
+      data: 'ok',
+    })
+  }
+
+  public firstPaymentWebhookHandler = async (req: Request, res: Response): AsyncHandlerResponse => {
+    console.log(req.body)
+    // req.body.id => transaction ID
 
     return res.status(200).json({
       data: 'ok',

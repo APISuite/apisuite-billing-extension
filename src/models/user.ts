@@ -24,7 +24,7 @@ const findById = async(trx: OptTransaction, id: number): Promise<User | null> =>
       id: rows[0].id,
       credits: rows[0].credits,
       planId: rows[0].plan_id,
-      customerId: rows[0].costumer_id,
+      customerId: rows[0].customer_id,
     }
   }
 

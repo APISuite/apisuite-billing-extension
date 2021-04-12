@@ -39,8 +39,14 @@ export const schema = {
     topUpWebhookUrl: {
       doc: 'Webhook URL for top up purchase',
       format: String,
-      default: 'http://localhost:6001/webhooks/topup',
+      default: 'http://localhost:6007/webhooks/topup',
       env: 'WEBHOOKS_TOPUP',
+    },
+    firstPaymentWebhookUrl: {
+      doc: 'Webhook URL for first payment',
+      format: String,
+      default: 'http://localhost:6007/webhooks/first',
+      env: 'WEBHOOKS_FIRST',
     },
   },
   apisuite: {

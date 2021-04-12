@@ -1,4 +1,4 @@
-import mollie, { MandateStatus, PaymentStatus, SequenceType } from '@mollie/api-client'
+import mollie, { MandateStatus, Payment, PaymentMethod, PaymentStatus, SequenceType } from '@mollie/api-client'
 import config from '../config'
 
 const mollieClient = mollie({
@@ -46,6 +46,28 @@ export const createCustomer = async (newCustomer: NewMollieCustomer): Promise<st
   return customer.id
 }
 
+export const firstPayment = async (customerId: string): Promise<TopUpPaymentResult> => {
+  const payment = await mollieClient.payments.create({
+    amount: {
+      currency: 'EUR',
+      value: '0.00',
+    },
+    customerId,
+    description: 'Payment method authorization',
+    sequenceType: SequenceType.first,
+    webhookUrl: config.get('mollie.firstPaymentWebhookUrl'),
+    redirectUrl: config.get('mollie.paymentRedirectUrl'),
+  })
+
+  const checkoutURL = getPaymentCheckoutURL(payment)
+  if (!checkoutURL) throw new Error('failed to create payment')
+
+  return {
+    id: payment.id,
+    checkoutURL: checkoutURL,
+  }
+}
+
 export const topUpPayment = async (price: number, description: string): Promise<TopUpPaymentResult> => {
   const payment = await mollieClient.payments.create({
     amount: {
@@ -58,11 +80,12 @@ export const topUpPayment = async (price: number, description: string): Promise<
     redirectUrl: config.get('mollie.paymentRedirectUrl'),
   })
 
-  if (!payment || !payment._links.checkout || !payment._links.checkout.href) throw new Error('failed to create payment')
+  const checkoutURL = getPaymentCheckoutURL(payment)
+  if (!checkoutURL) throw new Error('failed to create payment')
 
   return {
     id: payment.id,
-    checkoutURL: payment._links.checkout.href,
+    checkoutURL: checkoutURL,
   }
 }
 
@@ -70,4 +93,10 @@ export const verifyPaymentSuccess = async (id: string): Promise<string | null> =
   const payment = await mollieClient.payments.get(id)
   if (!payment) throw new Error('failed to check payment')
   return payment.status === PaymentStatus.paid ? payment.id : null
+}
+
+const getPaymentCheckoutURL = (payment: Payment): string | null => {
+  return payment && payment._links.checkout && payment._links.checkout.href
+    ? payment._links.checkout.href
+    : null
 }
