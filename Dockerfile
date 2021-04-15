@@ -11,4 +11,4 @@ COPY package*.json ./
 RUN npm install --only=production && npm install ts-node
 COPY --from=build_phase /usr/src/app/dist ./dist
 
-CMD ["npm", "start"]
+CMD ["npm", "run"]

@@ -23,6 +23,12 @@ export const schema = {
     default: 'postgresql://dbuser:secretpassword@database.server.com:3211/mydb',
     env: 'DB_URI',
   },
+  knexDebug: {
+    doc: 'Knex.js debug flag',
+    format: Boolean,
+    default: false,
+    env: 'KNEX_DEBUG',
+  },
   mollie: {
     apiKey: {
       doc: 'Mollie API key',

@@ -41,16 +41,8 @@ LOG_LEVEL=silent
 
 ## Database migrations
 
-Migrator tool: https://github.com/golang-migrate/migrate. A binary of this tool is packed with the project.
+Knex.js CLI is used for migration management: http://knexjs.org/#Migrations
 
 ### How to use
 
-Work from `migrations` directory.
-
-Generate migration files: `./migrator create -ext sql create-foo`.
-This will create 2 (SQL) migration files (up & down), properly timestamp named. 
-
-Run migrations locally: `DB_URI=<DB_URI_VAR_HERE> npm run migrate`.
-Note: postgres connection string may need the `sslmode` parameter here. 
-
-Since `golang-migrator` is a CLI, run `./migrator` at any time to produce help/usage information.
+Generate a migration: `npx knex migrate:make --migrations-directory ./migrations create-table`
