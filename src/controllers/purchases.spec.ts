@@ -26,7 +26,20 @@ describe('purchases controller', () => {
       .use(controller.getRouter())
       .use(error)
 
-    it('should return 404 when planId is invalid', (done) => {
+    it('should return 400 when planId is invalid', (done) => {
+      request(testApp)
+        .post('/purchases')
+        .send({ planId: 'notAPlanId' })
+        .expect('Content-Type', /json/)
+        .expect(400)
+        .then((res) => {
+          expect(res.body.errors).to.be.an('array')
+          done()
+        })
+        .catch((err: Error) => done(err))
+    })
+    
+    it('should return 404 when plan is does not exist', (done) => {
       sinon.stub(plansRepo, 'findById').resolves(null)
 
       request(testApp)

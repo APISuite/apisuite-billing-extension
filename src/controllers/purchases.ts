@@ -1,4 +1,5 @@
-import { Request, Response, Router } from 'express'
+import { NextFunction, Request, Response, Router } from 'express'
+import { body, } from 'express-validator'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController } from './base'
 import {
@@ -6,7 +7,7 @@ import {
   transaction as txnRepo,
 } from '../models'
 import { Plan } from '../models/plan'
-import { authenticated, asyncWrap as aw } from '../middleware/'
+import { authenticated, asyncWrap as aw, validator } from '../middleware'
 import { topUpPayment } from '../payment-processing'
 
 export class PurchasesController implements BaseController {
@@ -14,7 +15,12 @@ export class PurchasesController implements BaseController {
 
   public getRouter(): Router {
     const router = Router()
-    router.post(`${this.path}/`, authenticated, aw(this.purchasePlan))
+    router.post(
+      `${this.path}/`,
+      authenticated,
+      body('planId').isInt(),
+      validator,
+      aw(this.purchasePlan))
     return router
   }
 
