@@ -4,5 +4,5 @@ export const asyncWrap = (fn: Handler) =>
   (req: Request, res: Response, next: NextFunction): void => {
     Promise
       .resolve(fn(req, res, next))
-      .catch(next)
+      .catch((err) => next(err))
   }

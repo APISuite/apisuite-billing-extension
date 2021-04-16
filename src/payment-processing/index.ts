@@ -1,4 +1,4 @@
-import mollie, { MandateStatus, Payment, PaymentMethod, PaymentStatus, SequenceType } from '@mollie/api-client'
+import mollie, { MandateStatus, Payment, PaymentStatus, SequenceType } from '@mollie/api-client'
 import config from '../config'
 
 const mollieClient = mollie({
@@ -27,9 +27,20 @@ export const findValidMandate = async (customerId: string): Promise<string | nul
   return null
 }
 
+export const isMandateValid = async (mandateId: string, customerId: string): Promise<boolean> => {
+  const mandate = await mollieClient.customers_mandates.get(mandateId, { customerId })
+  return mandate.status === MandateStatus.valid || mandate.status === MandateStatus.pending
+}
+
 export interface NewMollieCustomer {
   name: string
   email: string
+}
+
+export interface FirstPaymentResult {
+  id: string
+  checkoutURL: string
+  mandateId: string
 }
 
 export interface TopUpPaymentResult {
@@ -46,7 +57,7 @@ export const createCustomer = async (newCustomer: NewMollieCustomer): Promise<st
   return customer.id
 }
 
-export const firstPayment = async (customerId: string): Promise<TopUpPaymentResult> => {
+export const firstPayment = async (customerId: string): Promise<FirstPaymentResult> => {
   const payment = await mollieClient.payments.create({
     amount: {
       currency: 'EUR',
@@ -62,9 +73,12 @@ export const firstPayment = async (customerId: string): Promise<TopUpPaymentResu
   const checkoutURL = getPaymentCheckoutURL(payment)
   if (!checkoutURL) throw new Error('failed to create payment')
 
+  if (!payment.mandateId) throw new Error('failed to create mandate')
+
   return {
     id: payment.id,
     checkoutURL: checkoutURL,
+    mandateId: payment.mandateId,
   }
 }
 
@@ -95,8 +109,43 @@ export const verifyPaymentSuccess = async (id: string): Promise<string | null> =
   return payment.status === PaymentStatus.paid ? payment.id : null
 }
 
+export const verifySubscriptionPaymentSuccess = async (id: string): Promise<string | null> => {
+  const payment = await mollieClient.payments.get(id)
+  if (!payment) throw new Error('failed to check payment')
+  if (!payment.subscriptionId) return null
+  return payment.status === PaymentStatus.paid ? payment.subscriptionId : null
+}
+
 const getPaymentCheckoutURL = (payment: Payment): string | null => {
   return payment && payment._links.checkout && payment._links.checkout.href
     ? payment._links.checkout.href
     : null
+}
+
+export interface SubscriptionPaymentData {
+  customerId: string
+  mandateId: string
+  price: number
+  credits: number
+  description: string
+  interval: string
+}
+
+export const subscriptionPayment = async (sub: SubscriptionPaymentData): Promise<string> => {
+  const startDate = (new Date()).toISOString().split('T')[0]
+  const payment = await mollieClient.customers_subscriptions.create({
+    customerId: sub.customerId,
+    mandateId: sub.mandateId,
+    description: sub.description,
+    interval: sub.interval,
+    amount: {
+      currency: 'EUR',
+      value: sub.price.toString(),
+    },
+    metadata: sub.credits,
+    webhookUrl: config.get('mollie.subscriptionPaymentWebhookUrl'),
+    startDate,
+  })
+
+  return payment.id
 }

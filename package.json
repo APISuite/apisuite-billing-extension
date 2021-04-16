@@ -7,7 +7,7 @@
     "dev": "nodemon --watch 'src/**/*.ts' --exec \"ts-node\" src/index.ts",
     "lint": "eslint 'src/**/*.ts'",
     "build": "tsc -p .",
-    "test": "mocha -r ts-node/register src/**/*.spec.ts",
+    "test": "LOG_LEVEL=silent mocha -r ts-node/register src/**/*.spec.ts",
     "migrate": "knex migrate:latest --client pg --migrations-directory ./migrations --connection \"$DB_URI\""
   },
   "license": "MPL-2.0",

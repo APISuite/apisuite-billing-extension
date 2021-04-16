@@ -6,12 +6,19 @@ import {
 import log from '../log'
 import { v4 } from 'uuid'
 import { HandlerResponse } from '../types'
-import { UserInputError } from '../controllers'
+import {
+  SubscriptionPreconditionError,
+  UserInputError,
+} from '../controllers'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const error = (err: Error, req: Request, res: Response, next: NextFunction): HandlerResponse => {
   if (err instanceof UserInputError) {
     return res.status(400).json({ errors: err.errors })
+  }
+
+  if (err instanceof SubscriptionPreconditionError) {
+    return res.status(400).json({ errors: [err.message] })
   }
 
   const errorId = v4()

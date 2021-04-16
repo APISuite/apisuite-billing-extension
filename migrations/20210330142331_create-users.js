@@ -5,6 +5,8 @@ exports.up = function(knex) {
       customer_id TEXT NULL UNIQUE,
       plan_id INTEGER NULL,
       credits INTEGER NOT NULL DEFAULT 0,
+      mandate_id TEXT NULL UNIQUE,
+      subscription_id TEXT NULL UNIQUE,
       CONSTRAINT fk_plan
           FOREIGN KEY(plan_id)
           REFERENCES plans(id)

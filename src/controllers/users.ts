@@ -1,14 +1,9 @@
 import { Request, Response, Router } from 'express'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController } from './base'
-import {
-  user as usersRepo,
-  setting as settingsRepo,
-} from '../models'
+import { user as usersRepo } from '../models'
 import { authenticated, isSelf, asyncWrap as aw } from '../middleware/'
 import { createCustomer, firstPayment } from '../payment-processing'
-import { User } from '../models/user'
-import { SettingKeys } from '../models/setting'
 
 export class UsersController implements BaseController {
   private readonly path = '/users'
@@ -21,7 +16,7 @@ export class UsersController implements BaseController {
   }
 
   public getUserDetails = async (req: Request, res: Response): AsyncHandlerResponse => {
-    const user = await this.getOrBootstrapUser(Number(req.params.id))
+    const user = await usersRepo.getOrBootstrapUser(null, Number(req.params.id))
 
     return res.status(200).json({
       data: user,
@@ -30,7 +25,7 @@ export class UsersController implements BaseController {
 
   public setupConsent = async (req: Request, res: Response): AsyncHandlerResponse => {
     const userID = Number(req.params.id)
-    const user = await this.getOrBootstrapUser(userID)
+    const user = await usersRepo.getOrBootstrapUser(null, userID)
 
     if (!user.customerId) {
       const customerId = await createCustomer({
@@ -45,19 +40,9 @@ export class UsersController implements BaseController {
     }
 
     const payment = await firstPayment(user.customerId)
-    return res.status(302).redirect(payment.checkoutURL)
-  }
-
-  private getOrBootstrapUser = async (userID: number): Promise<User> => {
-    const user = await usersRepo.findById(null, userID)
-    if (user) return user
-
-    const defaultCredits = Number(await settingsRepo.findByName(null, SettingKeys.DefaultCredits))
-
-    return usersRepo.create(null, {
-      id: userID,
-      credits: defaultCredits,
-      planId: null,
+    await usersRepo.update(null, userID, {
+      mandateId: payment.mandateId,
     })
+    return res.status(302).redirect(payment.checkoutURL)
   }
 }

@@ -1,21 +1,39 @@
 import { db, OptTransaction } from '../db'
 import { Optional } from '../types'
+import { setting as settingsRepo } from './index'
+import { SettingKeys } from './setting'
+import { Plan } from './plan'
 
 export interface User {
   id: number
   credits: number
   planId: number | null
   customerId: string | null
+  mandateId: string | null
+  subscriptionId: string | null
 }
 
-export type UserBase = Omit<User, 'customerId'>
+export type UserBase = Omit<User, 'customerId' | 'mandateId' | 'subscriptionId'>
 export type UserUpdate = Omit<Optional<User>, 'id'>
+
+const getOrBootstrapUser = async (trx: OptTransaction, userID: number): Promise<User> => {
+  const user = await findById(trx, userID)
+  if (user) return user
+
+  const defaultCredits = Number(await settingsRepo.findByName(trx, SettingKeys.DefaultCredits))
+
+  return create(trx, {
+    id: userID,
+    credits: defaultCredits,
+    planId: null,
+  })
+}
 
 const findById = async(trx: OptTransaction, id: number): Promise<User | null> => {
   const _db = trx ? trx : db
 
   const rows = await _db
-    .select()
+    .select('*')
     .from('users')
     .where('id', id)
 
@@ -25,6 +43,8 @@ const findById = async(trx: OptTransaction, id: number): Promise<User | null> =>
       credits: rows[0].credits,
       planId: rows[0].plan_id,
       customerId: rows[0].customer_id,
+      mandateId: rows[0].mandate_id,
+      subscriptionId: rows[0].subscription_id,
     }
   }
 
@@ -48,6 +68,8 @@ const create = async (trx: OptTransaction, user: UserBase): Promise<User> => {
     credits: rows[0].credits,
     planId: rows[0].plan_id,
     customerId: rows[0].customer_id,
+    mandateId: rows[0].mandate_id,
+    subscriptionId: rows[0].subscription_id,
   }
 }
 
@@ -64,6 +86,8 @@ const update = async (trx: OptTransaction, id: number, user: UserUpdate): Promis
     credits: rows[0].credits,
     planId: rows[0].plan_id,
     customerId: rows[0].customer_id,
+    mandateId: rows[0].mandate_id,
+    subscriptionId: rows[0].subscription_id,
   }
 }
 
@@ -78,9 +102,46 @@ const incrementCredits = async (trx: OptTransaction, id: number, amount: number)
   return rows[0].credits
 }
 
+const getUserPlan = async (trx: OptTransaction, id: number): Promise<Plan> => {
+  const _db = trx ? trx : db
+
+  const rows = await _db
+    .select('plans.*')
+    .from('users')
+    .join('plans', 'users.plan_id', 'plans.id')
+    .where('users.id', id)
+
+  return rows[0]
+}
+
+const findBySubscriptionId = async(trx: OptTransaction, subscriptionId: string): Promise<User | null> => {
+  const _db = trx ? trx : db
+
+  const rows = await _db
+    .select('*')
+    .from('users')
+    .where('subscription_id', subscriptionId)
+
+  if (rows.length) {
+    return {
+      id: rows[0].id,
+      credits: rows[0].credits,
+      planId: rows[0].plan_id,
+      customerId: rows[0].customer_id,
+      mandateId: rows[0].mandate_id,
+      subscriptionId: rows[0].subscription_id,
+    }
+  }
+
+  return null
+}
+
 export {
+  getOrBootstrapUser,
   findById,
   create,
   update,
   incrementCredits,
+  getUserPlan,
+  findBySubscriptionId,
 }

@@ -11,3 +11,9 @@ export class UserInputError extends Error {
     this.errors = errors
   }
 }
+
+export class SubscriptionPreconditionError extends Error {
+  constructor(message: string) {
+    super(message)
+  }
+}
