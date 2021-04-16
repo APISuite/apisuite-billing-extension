@@ -221,6 +221,34 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /users/{id}/plans/{planId}:
+    delete:
+      tags: [ users ]
+      description: Cancels a subscription plan
+      security:
+        - cookieAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: User ID
+          required: true
+          schema:
+            type: number
+        - name: id
+          in: path
+          description: Plan ID
+          required: true
+          schema:
+            type: number
+      responses:
+        '204':
+          description: No content
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /purchases:
     post:
       tags: [ purchases ]

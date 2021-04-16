@@ -1,4 +1,4 @@
-import mollie, { MandateStatus, Payment, PaymentStatus, SequenceType } from '@mollie/api-client'
+import mollie, { MandateStatus, Payment, PaymentStatus, SequenceType, SubscriptionStatus } from '@mollie/api-client'
 import config from '../config'
 
 const mollieClient = mollie({
@@ -148,4 +148,9 @@ export const subscriptionPayment = async (sub: SubscriptionPaymentData): Promise
   })
 
   return payment.id
+}
+
+export const cancelSubscription = async (id: string, customerId: string): Promise<void> => {
+  const subscription = await mollieClient.customers_subscriptions.cancel(id, { customerId })
+  if (subscription.status !== SubscriptionStatus.canceled) throw new Error('failed to cancel subscription')
 }

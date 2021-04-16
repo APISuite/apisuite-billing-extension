@@ -97,4 +97,118 @@ describe('users controller', () => {
         .catch((err: Error) => done(err))
     })
   })
+
+  describe('cancel subscription', () => {
+    const controller = new UsersController()
+    const testApp = express()
+      .use(injectUser)
+      .use(controller.getRouter())
+      .use(error)
+
+    it('should return 204 when user has no customerID', (done) => {
+      sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
+        id: 1,
+        credits: 100,
+        planId: 1,
+        customerId: null,
+        mandateId: 'mid',
+        subscriptionId: 'sid',
+      })
+
+      request(testApp)
+        .delete('/users/1/plans/1')
+        .expect(204)
+        .then(() => done())
+        .catch((err: Error) => done(err))
+    })
+
+    it('should return 204 when user has no subscription', (done) => {
+      sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
+        id: 1,
+        credits: 100,
+        planId: 1,
+        customerId: 'cid',
+        mandateId: 'mid',
+        subscriptionId: null,
+      })
+
+      request(testApp)
+        .delete('/users/1/plans/1')
+        .expect(204)
+        .then(() => done())
+        .catch((err: Error) => done(err))
+    })
+
+    it('should return 204 when user has no plan', (done) => {
+      sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
+        id: 1,
+        credits: 100,
+        planId: null,
+        customerId: 'cid',
+        mandateId: 'mid',
+        subscriptionId: 'sid',
+      })
+
+      request(testApp)
+        .delete('/users/1/plans/1')
+        .expect(204)
+        .then(() => done())
+        .catch((err: Error) => done(err))
+    })
+
+    it('should return 204 when user has non matching plan', (done) => {
+      sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
+        id: 1,
+        credits: 100,
+        planId: 999,
+        customerId: 'cid',
+        mandateId: 'mid',
+        subscriptionId: 'sid',
+      })
+
+      request(testApp)
+        .delete('/users/1/plans/1')
+        .expect(204)
+        .then(() => done())
+        .catch((err: Error) => done(err))
+    })
+
+    it('should return 204 when subscription is cancelled', (done) => {
+      sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
+        id: 1,
+        credits: 100,
+        planId: 1,
+        customerId: 'cid',
+        mandateId: 'mid',
+        subscriptionId: 'sid',
+      })
+      sinon.stub(paymentProcessing, 'cancelSubscription').resolves()
+      sinon.stub(usersRepo, 'update').resolves()
+
+      request(testApp)
+        .delete('/users/1/plans/1')
+        .expect(204)
+        .then(() => done())
+        .catch((err: Error) => done(err))
+    })
+
+    it('should return 500 when subscription cancellation fails', (done) => {
+      sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
+        id: 1,
+        credits: 100,
+        planId: 1,
+        customerId: 'cid',
+        mandateId: 'mid',
+        subscriptionId: 'sid',
+      })
+      sinon.stub(paymentProcessing, 'cancelSubscription').rejects()
+
+      request(testApp)
+        .delete('/users/1/plans/1')
+        .expect(500)
+        .expect('Content-Type', /json/)
+        .then(() => done())
+        .catch((err: Error) => done(err))
+    })
+  })
 })
