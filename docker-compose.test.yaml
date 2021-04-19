@@ -1,0 +1,22 @@
+version: '3.7'
+services:
+  db:
+    image: postgres:12
+    container_name: billing-db
+    environment:
+      - POSTGRES_USER=integrationtests
+      - POSTGRES_PASSWORD=integrationtests
+      - POSTGRES_DB=test_billing
+    restart: on-failure
+#    ports:
+#      - "5432:${POSTGRES_PORT_INTERNAL}"
+
+  billing:
+    build:
+      context: ./
+      dockerfile: Dockerfile-test
+    container_name: billing
+    command: itest
+    environment:
+      - TEST_DB_URI=postgres://integrationtests:integrationtests@billing-db:5432/test_billing
+      - KNEX_DEBUG=false

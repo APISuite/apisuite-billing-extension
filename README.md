@@ -38,6 +38,8 @@ To run integration tests, a database is required. Use `TEST_DB_URI` to configure
 Database integration tests live in `src/models` and have `src/models/index.test.ts` as a starting point. 
 This is necessary because of the necessity to run migrations and seed data before the test suite is executed.
 
+Integration tests can also be executed with docker-compose: `docker-compose -f docker-compose.test.yaml up --exit-code-from billing`
+
 ### Environment variables
 
 All variables used in code are documented in `src/config/schema.js`.
