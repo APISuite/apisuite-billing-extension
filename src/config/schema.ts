@@ -18,10 +18,18 @@ export const schema = {
     env: 'LOG_LEVEL',
   },
   dbURI: {
-    doc: 'Database connection string',
-    format: String,
-    default: 'postgresql://dbuser:secretpassword@database.server.com:3211/mydb',
-    env: 'DB_URI',
+    live: {
+      doc: 'Database connection string',
+      format: String,
+      default: 'postgresql://dbuser:secretpassword@database.server.com:3211/mydb',
+      env: 'DB_URI',
+    },
+    test: {
+      doc: 'Test database connection string',
+      format: String,
+      default: 'postgresql://dbuser:secretpassword@database.server.com:3211/testdb',
+      env: 'TEST_DB_URI',
+    },
   },
   knexDebug: {
     doc: 'Knex.js debug flag',

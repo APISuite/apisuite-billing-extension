@@ -7,12 +7,14 @@
     "dev": "nodemon --watch 'src/**/*.ts' --exec \"ts-node\" src/index.ts",
     "lint": "eslint 'src/**/*.ts'",
     "build": "tsc -p .",
-    "test": "LOG_LEVEL=silent mocha -r ts-node/register src/**/*.spec.ts",
+    "test": "NODE_ENV=test LOG_LEVEL=silent mocha -r ts-node/register src/**/*.spec.ts",
+    "itest": "NODE_ENV=test LOG_LEVEL=silent mocha -r ts-node/register --exit src/models/index.test.ts",
     "migrate": "knex migrate:latest --client pg --migrations-directory ./migrations --connection \"$DB_URI\""
   },
   "license": "MPL-2.0",
   "dependencies": {
     "@mollie/api-client": "^3.5.0",
+    "camelcase-keys": "6.2.2",
     "convict": "6.0.1",
     "express": "4.17.1",
     "express-prom-bundle": "6.3.5",
