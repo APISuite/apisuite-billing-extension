@@ -29,6 +29,15 @@ This API server provides two monitoring endpoints:
 - Database migrations should be planed/created in a gradual way to avoid breaking changes
   (example: renaming a column can be done in 2 steps: create new column; change code to start using new column; delete old column when code no longer references it)
 
+### Integration tests
+
+Beside good old unit tests, this projects also has integration tests on the data access layer.
+
+To run integration tests, a database is required. Use `TEST_DB_URI` to configure the connection URl, similarly to the application one.
+
+Database integration tests live in `src/models` and have `src/models/index.test.ts` as a starting point. 
+This is necessary because of the necessity to run migrations and seed data before the test suite is executed.
+
 ### Environment variables
 
 All variables used in code are documented in `src/config/schema.js`.
