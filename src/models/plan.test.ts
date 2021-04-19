@@ -112,4 +112,45 @@ export default function run(): void {
       throw new Error('unexpected error')
     }
   })
+
+  it('should allow seamless transaction usage', async () => {
+    const trx = await db.transaction()
+    try {
+      const plan = await findById(trx, 1)
+      if (!plan) throw new Error()
+      expect(plan).to.be.an('object')
+      expect(plan.id).to.eq(1)
+
+      await deletePlan(trx, 1)
+      await trx.rollback()
+    } catch(err) {
+      await trx.rollback()
+      throw new Error('unexpected error')
+    }
+
+    const plan = await findById(null, 1)
+    if (!plan) throw new Error()
+    expect(plan).to.be.an('object')
+    expect(plan.id).to.eq(1)
+
+    const trx2 = await db.transaction()
+    try {
+      const plan = await findById(trx2, 1)
+      if (!plan) throw new Error()
+      expect(plan).to.be.an('object')
+      expect(plan.id).to.eq(1)
+
+      await update(trx2, 1, { credits: 1 })
+      await trx2.commit()
+    } catch(err) {
+      await trx2.rollback()
+      throw new Error('unexpected error')
+    }
+
+    const plan2 = await findById(null, 1)
+    if (!plan2) throw new Error()
+    expect(plan2).to.be.an('object')
+    expect(plan2.id).to.eq(1)
+    expect(plan2.credits).to.eq(1)
+  })
 }
