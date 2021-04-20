@@ -54,13 +54,7 @@ const create = async (trx: OptTransaction, plan: PlanBase): Promise<Plan> => {
       throw dbErrorParser(err)
     })
 
-  return {
-    id: rows[0].id,
-    name: rows[0].name,
-    price: rows[0].price,
-    credits: rows[0].credits,
-    periodicity: rows[0].periodicity,
-  }
+  return rows[0]
 }
 
 const update = async (trx: OptTransaction, id: number, plan: PlanUpdate): Promise<Plan> => {

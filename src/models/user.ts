@@ -38,14 +38,7 @@ const findById = async(trx: OptTransaction, id: number): Promise<User | null> =>
     .where('id', id)
 
   if (rows.length) {
-    return {
-      id: rows[0].id,
-      credits: rows[0].credits,
-      planId: rows[0].plan_id,
-      customerId: rows[0].customer_id,
-      mandateId: rows[0].mandate_id,
-      subscriptionId: rows[0].subscription_id,
-    }
+    return rows[0]
   }
 
   return null
@@ -63,14 +56,7 @@ const create = async (trx: OptTransaction, user: UserBase): Promise<User> => {
     .into('users')
     .returning('*')
 
-  return {
-    id: rows[0].id,
-    credits: rows[0].credits,
-    planId: rows[0].plan_id,
-    customerId: rows[0].customer_id,
-    mandateId: rows[0].mandate_id,
-    subscriptionId: rows[0].subscription_id,
-  }
+  return rows[0]
 }
 
 const update = async (trx: OptTransaction, id: number, user: UserUpdate): Promise<User> => {
@@ -81,14 +67,7 @@ const update = async (trx: OptTransaction, id: number, user: UserUpdate): Promis
     .where('id', id)
     .returning('*')
 
-  return {
-    id: rows[0].id,
-    credits: rows[0].credits,
-    planId: rows[0].plan_id,
-    customerId: rows[0].customer_id,
-    mandateId: rows[0].mandate_id,
-    subscriptionId: rows[0].subscription_id,
-  }
+  return rows[0]
 }
 
 const incrementCredits = async (trx: OptTransaction, id: number, amount: number): Promise<number> => {
@@ -123,14 +102,7 @@ const findBySubscriptionId = async(trx: OptTransaction, subscriptionId: string):
     .where('subscription_id', subscriptionId)
 
   if (rows.length) {
-    return {
-      id: rows[0].id,
-      credits: rows[0].credits,
-      planId: rows[0].plan_id,
-      customerId: rows[0].customer_id,
-      mandateId: rows[0].mandate_id,
-      subscriptionId: rows[0].subscription_id,
-    }
+    return rows[0]
   }
 
   return null
