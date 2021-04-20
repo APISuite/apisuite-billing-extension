@@ -3,31 +3,33 @@ import { Optional } from '../types'
 import log from '../log'
 import { dbErrorParser } from './errors'
 
-export interface Plan {
+const TABLE = 'subscriptions'
+
+export interface Subscription {
   id: number
   name: string
   price: number
   credits: number
-  periodicity: string | null
+  periodicity: string
 }
 
-export type PlanBase = Omit<Plan, 'id'>
-export type PlanUpdate = Omit<Optional<Plan>, 'id'>
+export type SubscriptionBase = Omit<Subscription, 'id'>
+export type SubscriptionUpdate = Omit<Optional<Subscription>, 'id'>
 
-const findAll = async(trx: OptTransaction): Promise<Plan[]> => {
+const findAll = async(trx: OptTransaction): Promise<Subscription[]> => {
   const _db = trx ? trx : db
 
   return _db
     .select()
-    .from('plans')
+    .from(TABLE)
 }
 
-const findById = async(trx: OptTransaction, id: number): Promise<Plan | null> => {
+const findById = async(trx: OptTransaction, id: number): Promise<Subscription | null> => {
   const _db = trx ? trx : db
 
   const rows = await _db
     .select()
-    .from('plans')
+    .from(TABLE)
     .where('id', id)
 
   if (rows.length) {
@@ -37,17 +39,12 @@ const findById = async(trx: OptTransaction, id: number): Promise<Plan | null> =>
   return null
 }
 
-const create = async (trx: OptTransaction, plan: PlanBase): Promise<Plan> => {
+const create = async (trx: OptTransaction, sub: SubscriptionBase): Promise<Subscription> => {
   const _db = trx ? trx : db
 
   const rows = await _db
-    .insert({
-      name: plan.name,
-      price: plan.price,
-      credits: plan.credits,
-      periodicity: plan.periodicity,
-    })
-    .into('plans')
+    .insert(sub)
+    .into(TABLE)
     .returning('*')
     .catch((err) => {
       log.error(err)
@@ -57,11 +54,11 @@ const create = async (trx: OptTransaction, plan: PlanBase): Promise<Plan> => {
   return rows[0]
 }
 
-const update = async (trx: OptTransaction, id: number, plan: PlanUpdate): Promise<Plan> => {
+const update = async (trx: OptTransaction, id: number, sub: SubscriptionUpdate): Promise<Subscription> => {
   const _db = trx ? trx : db
 
-  const rows = await _db('plans')
-    .update(plan)
+  const rows = await _db(TABLE)
+    .update(sub)
     .where('id', id)
     .returning('*')
     .catch((err) => {
@@ -72,10 +69,10 @@ const update = async (trx: OptTransaction, id: number, plan: PlanUpdate): Promis
   return rows[0]
 }
 
-const deletePlan = async (trx: OptTransaction, id: number): Promise<number> => {
+const deleteSubscription = async (trx: OptTransaction, id: number): Promise<number> => {
   const _db = trx ? trx : db
 
-  await _db('plans')
+  await _db(TABLE)
     .where('id', id)
     .del()
 
@@ -87,5 +84,5 @@ export {
   findById,
   create,
   update,
-  deletePlan,
+  deleteSubscription,
 }

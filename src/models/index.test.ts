@@ -1,5 +1,6 @@
 import { db } from '../db'
-import plan from './plan.test'
+import pkg from './package.test'
+import subscription from './subscription.test'
 
 before(async () => {
   await db.migrate.latest()
@@ -11,5 +12,6 @@ after(async () => {
 })
 
 describe('database integration tests', () => {
-  describe('plan', plan.bind(this))
+  describe('package', pkg.bind(this))
+  describe('subscription', subscription.bind(this))
 })

@@ -26,6 +26,6 @@ export const error = (err: Error, req: Request, res: Response, next: NextFunctio
   log.error({ err, error_id: errorId })
 
   res.status(500).json({
-    error: `Oops! Something went wrong on our side. Error reference code: ${errorId}`,
+    errors: [`Oops! Something went wrong on our side. Error reference code: ${errorId}`],
   })
 }

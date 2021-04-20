@@ -28,10 +28,10 @@ describe('users controller', () => {
       sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
         id: 1,
         credits: 100,
-        planId: null,
-        customerId: null,
-        mandateId: null,
         subscriptionId: null,
+        ppCustomerId: null,
+        ppMandateId: null,
+        ppSubscriptionId: null,
       })
 
       request(testApp)
@@ -54,10 +54,10 @@ describe('users controller', () => {
       sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
         id: 1,
         credits: 100,
-        planId: null,
-        customerId: 'fakeid',
-        mandateId: null,
         subscriptionId: null,
+        ppCustomerId: 'fakeid',
+        ppMandateId: null,
+        ppSubscriptionId: null,
       })
       sinon.stub(usersRepo, 'update').resolves()
       sinon.stub(paymentProcessing, 'firstPayment').resolves({
@@ -77,10 +77,10 @@ describe('users controller', () => {
       sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
         id: 1,
         credits: 100,
-        planId: null,
-        customerId: null,
-        mandateId: null,
         subscriptionId: null,
+        ppCustomerId: null,
+        ppMandateId: null,
+        ppSubscriptionId: null,
       })
       sinon.stub(paymentProcessing, 'createCustomer').resolves('fakeCustomerId')
       sinon.stub(usersRepo, 'update').resolves()
@@ -109,10 +109,10 @@ describe('users controller', () => {
       sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
         id: 1,
         credits: 100,
-        planId: 1,
-        customerId: null,
-        mandateId: 'mid',
-        subscriptionId: 'sid',
+        subscriptionId: 1,
+        ppCustomerId: null,
+        ppMandateId: 'mid',
+        ppSubscriptionId: 'sid',
       })
 
       request(testApp)
@@ -126,10 +126,10 @@ describe('users controller', () => {
       sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
         id: 1,
         credits: 100,
-        planId: 1,
-        customerId: 'cid',
-        mandateId: 'mid',
-        subscriptionId: null,
+        subscriptionId: 1,
+        ppCustomerId: 'cid',
+        ppMandateId: 'mid',
+        ppSubscriptionId: null,
       })
 
       request(testApp)
@@ -143,10 +143,10 @@ describe('users controller', () => {
       sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
         id: 1,
         credits: 100,
-        planId: null,
-        customerId: 'cid',
-        mandateId: 'mid',
-        subscriptionId: 'sid',
+        subscriptionId: null,
+        ppCustomerId: 'cid',
+        ppMandateId: 'mid',
+        ppSubscriptionId: 'sid',
       })
 
       request(testApp)
@@ -160,10 +160,10 @@ describe('users controller', () => {
       sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
         id: 1,
         credits: 100,
-        planId: 999,
-        customerId: 'cid',
-        mandateId: 'mid',
-        subscriptionId: 'sid',
+        subscriptionId: 999,
+        ppCustomerId: 'cid',
+        ppMandateId: 'mid',
+        ppSubscriptionId: 'sid',
       })
 
       request(testApp)
@@ -177,10 +177,10 @@ describe('users controller', () => {
       sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
         id: 1,
         credits: 100,
-        planId: 1,
-        customerId: 'cid',
-        mandateId: 'mid',
-        subscriptionId: 'sid',
+        subscriptionId: 1,
+        ppCustomerId: 'cid',
+        ppMandateId: 'mid',
+        ppSubscriptionId: 'sid',
       })
       sinon.stub(paymentProcessing, 'cancelSubscription').resolves()
       sinon.stub(usersRepo, 'update').resolves()
@@ -196,10 +196,10 @@ describe('users controller', () => {
       sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
         id: 1,
         credits: 100,
-        planId: 1,
-        customerId: 'cid',
-        mandateId: 'mid',
-        subscriptionId: 'sid',
+        subscriptionId: 1,
+        ppCustomerId: 'cid',
+        ppMandateId: 'mid',
+        ppSubscriptionId: 'sid',
       })
       sinon.stub(paymentProcessing, 'cancelSubscription').rejects()
 

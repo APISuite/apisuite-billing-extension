@@ -33,15 +33,15 @@ paths:
             text/plain:
               schema:
                 type: string
-  /plans:
+  /packages:
     get:
-      tags: [ plans ]
-      description: List plans. Plans without periodicity are one time top ups.
+      tags: [ packages ]
+      description: List credit packages
       security:
         - cookieAuth: [ ]
       responses:
         '200':
-          description: Plan model list
+          description: Package model list
           content:
             application/json:
               schema:
@@ -50,53 +50,53 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Plan'
+                      $ref: '#/components/schemas/Package'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
     post:
-      tags: [ plans ]
-      description: Create a plan
+      tags: [ packages ]
+      description: Create a package
       security:
         - cookieAuth: [ ]
       responses:
         '201':
-          description: Plan model
+          description: Package model
           content:
             application/json:
               schema:
                 type: object
                 properties:
                   data:
-                    $ref: '#/components/schemas/Plan'
+                    $ref: '#/components/schemas/Package'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-  /plans/{id}:
+  /packages/{id}:
     get:
-      tags: [ plans ]
-      description: Show a plan by id.
+      tags: [ packages ]
+      description: Show a package by id.
       security:
         - cookieAuth: [ ]
       parameters:
         - name: id
           in: path
-          description: Plan ID
+          description: Package ID
           required: true
           schema:
             type: number
       responses:
         '200':
-          description: Plan model
+          description: Package model
           content:
             application/json:
               schema:
                 type: object
                 properties:
                   data:
-                    $ref: '#/components/schemas/Plan'
+                    $ref: '#/components/schemas/Package'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -104,19 +104,152 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
     put:
-      tags: [ plans ]
-      description: Update a plan.
+      tags: [ packages ]
+      description: Update a package.
       security:
         - cookieAuth: [ ]
       parameters:
         - name: id
           in: path
-          description: Plan ID
+          description: Package ID
           required: true
           schema:
             type: number
       requestBody:
-        description: New role data
+        description: New package data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                price:
+                  type: number
+                credits:
+                  type: number
+      responses:
+        '200':
+          description: package model
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Package'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [ packages ]
+      description: Delete a package.
+      security:
+        - cookieAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: Package ID
+          required: true
+          schema:
+            type: number
+      responses:
+        '204':
+          description: No content
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /subscriptions:
+    get:
+      tags: [ subscriptions ]
+      description: List subscriptions
+      security:
+        - cookieAuth: [ ]
+      responses:
+        '200':
+          description: Subscription model list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Subscription'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [ subscriptions ]
+      description: Create a subscription
+      security:
+        - cookieAuth: [ ]
+      responses:
+        '201':
+          description: Subscription model
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Subscription'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /subscriptions/{id}:
+    get:
+      tags: [ subscriptions ]
+      description: Show a subscription by id.
+      security:
+        - cookieAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: Subscription ID
+          required: true
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Subscription model
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Subscription'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [ subscriptions ]
+      description: Update a subscription.
+      security:
+        - cookieAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: Subscription ID
+          required: true
+          schema:
+            type: number
+      requestBody:
+        description: New subscription data
         required: true
         content:
           application/json:
@@ -133,14 +266,14 @@ paths:
                   type: string
       responses:
         '200':
-          description: Plan model
+          description: package model
           content:
             application/json:
               schema:
                 type: object
                 properties:
                   data:
-                    $ref: '#/components/schemas/Plan'
+                    $ref: '#/components/schemas/Subscription'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -148,14 +281,14 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
     delete:
-      tags: [ plans ]
-      description: Delete a plan.
+      tags: [ subscriptions ]
+      description: Delete a subscription.
       security:
         - cookieAuth: [ ]
       parameters:
         - name: id
           in: path
-          description: Plan ID
+          description: Subscription ID
           required: true
           schema:
             type: number
@@ -221,10 +354,10 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-  /users/{id}/plans/{planId}:
+  /users/{id}/subscriptions/{subscriptionId}:
     delete:
       tags: [ users ]
-      description: Cancels a subscription plan
+      description: Cancels a user subscription
       security:
         - cookieAuth: [ ]
       parameters:
@@ -234,9 +367,9 @@ paths:
           required: true
           schema:
             type: number
-        - name: id
+        - name: subscriptionId
           in: path
-          description: Plan ID
+          description: Subscription ID
           required: true
           schema:
             type: number
@@ -249,25 +382,44 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-  /purchases:
+  /purchases/packages/{id}:
     post:
       tags: [ purchases ]
-      description: Purchase a plan, which can be a one time credit top up or a subscription.
+      description: Purchase a credits package
       security:
         - cookieAuth: [ ]
-      requestBody:
-        description: Purchase data
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                plan_id:
-                  type: number
+      parameters:
+        - name: id
+          in: path
+          description: Package ID
+          required: true
+          schema:
+            type: number
       responses:
         '302':
           description: Payment processor checkout page redirect
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /purchases/subscriptions/{id}:
+    post:
+      tags: [ purchases ]
+      description: Purchase a subscription
+      security:
+        - cookieAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: Subscription ID
+          required: true
+          schema:
+            type: number
+      responses:
+        '204':
+          description: No content
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -287,7 +439,18 @@ components:
           type: string
         picture:
           type: string
-    Plan:
+    Package:
+      type: object
+      properties:
+        id:
+          type: number
+        name:
+          type: string
+        price:
+          type: number
+        credits:
+          type: number
+    Subscription:
       type: object
       properties:
         id:
@@ -311,8 +474,11 @@ components:
     Error:
       type: object
       properties:
-        error:
-          type: string
+        errors:
+          type: array
+          items:
+            type: string
+
 
   responses:
     BadRequest:

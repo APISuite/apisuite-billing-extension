@@ -2,11 +2,11 @@ import { expect } from 'chai'
 import express, { Request, Response, NextFunction } from 'express'
 import request from 'supertest'
 import { error } from '../middleware'
-import { plan as plansRepo } from '../models'
-import { PlansController } from './plans'
+import { pkg as pkgsRepo } from '../models'
+import { PackagesController } from './packages'
 import sinon from 'sinon'
 
-describe('plans controller', () => {
+describe('packages controller', () => {
   const injectUser = (req: Request, res: Response, next: NextFunction) => {
     res.locals.authenticatedUser = {
       role: { name: 'admin' },
@@ -16,18 +16,18 @@ describe('plans controller', () => {
 
   afterEach(() => sinon.restore())
 
-  describe('get plans', () => {
-    const controller = new PlansController()
+  describe('get packages', () => {
+    const controller = new PackagesController()
     const testApp = express()
       .use(injectUser)
       .use(controller.getRouter())
       .use(error)
 
-    it('should return 200 and plan list', (done) => {
-      sinon.stub(plansRepo, 'findAll').resolves([])
+    it('should return 200 and package list', (done) => {
+      sinon.stub(pkgsRepo, 'findAll').resolves([])
 
       request(testApp)
-        .get('/plans')
+        .get('/packages')
         .expect('Content-Type', /json/)
         .expect(200)
         .then((res) => {
@@ -38,38 +38,37 @@ describe('plans controller', () => {
     })
 
     it('should return 500 when a database error occurs', (done) => {
-      sinon.stub(plansRepo, 'findAll').rejects()
+      sinon.stub(pkgsRepo, 'findAll').rejects()
 
       request(testApp)
-        .get('/plans')
+        .get('/packages')
         .expect('Content-Type', /json/)
         .expect(500)
         .then((res) => {
-          expect(res.body.error).to.be.a('string')
+          expect(res.body.errors).to.be.an('array')
           done()
         })
         .catch((err: Error) => done(err))
     })
   })
 
-  describe('get plan by id', () => {
-    const controller = new PlansController()
+  describe('get package by id', () => {
+    const controller = new PackagesController()
     const testApp = express()
       .use(injectUser)
       .use(controller.getRouter())
       .use(error)
 
-    it('should return 200 and plan object', (done) => {
-      sinon.stub(plansRepo, 'findById').resolves({
+    it('should return 200 and package object', (done) => {
+      sinon.stub(pkgsRepo, 'findById').resolves({
         id: 1,
         credits: 10,
-        periodicity: null,
         name: 'test',
         price: 100,
       })
 
       request(testApp)
-        .get('/plans/1')
+        .get('/packages/1')
         .expect('Content-Type', /json/)
         .expect(200)
         .then((res) => {
@@ -79,29 +78,29 @@ describe('plans controller', () => {
         .catch((err: Error) => done(err))
     })
 
-    it('should return 404 when plan is not found', (done) => {
-      sinon.stub(plansRepo, 'findById').resolves(null)
+    it('should return 404 when package is not found', (done) => {
+      sinon.stub(pkgsRepo, 'findById').resolves(null)
 
       request(testApp)
-        .get('/plans/100')
+        .get('/packages/100')
         .expect('Content-Type', /json/)
         .expect(404)
         .then((res) => {
-          expect(res.body.error).to.be.a('string')
+          expect(res.body.errors).to.be.an('array')
           done()
         })
         .catch((err: Error) => done(err))
     })
 
     it('should return 500 when a database error occurs', (done) => {
-      sinon.stub(plansRepo, 'findById').rejects()
+      sinon.stub(pkgsRepo, 'findById').rejects()
 
       request(testApp)
-        .get('/plans/1')
+        .get('/packages/1')
         .expect('Content-Type', /json/)
         .expect(500)
         .then((res) => {
-          expect(res.body.error).to.be.a('string')
+          expect(res.body.errors).to.be.an('array')
           done()
         })
         .catch((err: Error) => done(err))

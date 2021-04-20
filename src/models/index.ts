@@ -1,4 +1,5 @@
 export * as user from './user'
-export * as plan from './plan'
+export * as pkg from './package'
 export * as setting from './setting'
+export * as subscription from './subscription'
 export * as transaction from './transaction'

@@ -4,7 +4,7 @@ import { BaseController } from './base'
 import {
   transaction as txnRepo,
   user as usersRepo,
-  plan as plansRepo,
+  pkg as pkgsRepo,
 } from '../models'
 import { verifyPaymentSuccess, verifySubscriptionPaymentSuccess } from '../payment-processing'
 import { asyncWrap as aw } from '../middleware'
@@ -24,7 +24,7 @@ export class WebhooksController implements BaseController {
   public subscriptionPaymentSuccess = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
     if (!req.body.id) {
       return res.status(400).json({
-        error: 'missing payment id',
+        errors: ['missing payment id'],
       })
     }
 
@@ -34,10 +34,10 @@ export class WebhooksController implements BaseController {
       try {
         // TODO create transaction record
         // const transaction = await txnRepo.setVerified(trx, paymentId)
-        const user = await usersRepo.findBySubscriptionId(trx, subscriptionId)
-        if (!user || !user.planId) throw new Error('invalid subscription user')
+        const user = await usersRepo.findByPPSubscriptionId(trx, subscriptionId)
+        if (!user || !user.subscriptionId) throw new Error('invalid subscription user')
 
-        const plan = await plansRepo.findById(trx, user?.planId)
+        const plan = await pkgsRepo.findById(trx, user?.subscriptionId)
         if (!plan) throw new Error('invalid subscription plan')
 
         await usersRepo.incrementCredits(trx, user.id, plan.credits)
@@ -57,7 +57,7 @@ export class WebhooksController implements BaseController {
   public topUpPaymentWebhookHandler = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
     if (!req.body.id) {
       return res.status(400).json({
-        error: 'missing payment id',
+        errors: ['missing payment id'],
       })
     }
 

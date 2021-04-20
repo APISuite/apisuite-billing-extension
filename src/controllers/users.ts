@@ -28,21 +28,21 @@ export class UsersController implements BaseController {
     const userID = Number(req.params.id)
     const user = await usersRepo.getOrBootstrapUser(null, userID)
 
-    if (!user.customerId) {
+    if (!user.ppCustomerId) {
       const customerId = await createCustomer({
         email: res.locals.authenticatedUser.email,
         name: res.locals.authenticatedUser.name,
       })
 
       await usersRepo.update(null, userID, {
-        customerId,
+        ppCustomerId: customerId,
       })
-      user.customerId = customerId
+      user.ppCustomerId = customerId
     }
 
-    const payment = await firstPayment(user.customerId)
+    const payment = await firstPayment(user.ppCustomerId)
     await usersRepo.update(null, userID, {
-      mandateId: payment.mandateId,
+      ppMandateId: payment.mandateId,
     })
     return res.status(302).redirect(payment.checkoutURL)
   }
@@ -50,13 +50,13 @@ export class UsersController implements BaseController {
   public cancelSubscription = async (req: Request, res: Response): AsyncHandlerResponse => {
     const user = await usersRepo.getOrBootstrapUser(null, Number(req.params.id))
 
-    if (!user.customerId || !user.subscriptionId ||
-      !user.planId || user.planId !== Number(req.params.id)) return res.sendStatus(204)
+    if (!user.ppCustomerId || !user.ppSubscriptionId ||
+      !user.subscriptionId || user.subscriptionId !== Number(req.params.id)) return res.sendStatus(204)
 
-    await cancelSubscription(user.subscriptionId, user.customerId)
+    await cancelSubscription(user.ppSubscriptionId, user.ppCustomerId)
     await usersRepo.update(null, user.id, {
-      planId: null,
       subscriptionId: null,
+      ppSubscriptionId: null,
     })
     return res.sendStatus(204)
   }

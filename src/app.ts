@@ -13,8 +13,9 @@ import {
   BaseController,
   HealthController,
   WebhooksController,
-  PlansController,
+  PackagesController,
   PurchasesController,
+  SubscriptionsController,
 } from './controllers'
 
 export default class App {
@@ -49,7 +50,7 @@ export default class App {
     })
 
     this.app.use('*', (req: Request, res: Response) => {
-      res.status(404).json({ error: 'route not found' })
+      res.status(404).json({ errors: ['route not found'] })
     })
   }
 
@@ -67,8 +68,9 @@ export default class App {
     return [
       new HealthController(),
       new UsersController(),
-      new PlansController(),
+      new PackagesController(),
       new PurchasesController(),
+      new SubscriptionsController(),
       new WebhooksController(),
     ]
   }

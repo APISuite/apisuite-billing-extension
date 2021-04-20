@@ -2,18 +2,19 @@ import { db, OptTransaction } from '../db'
 import { Optional } from '../types'
 import { setting as settingsRepo } from './index'
 import { SettingKeys } from './setting'
-import { Plan } from './plan'
+
+const TABLE = 'users'
 
 export interface User {
   id: number
   credits: number
-  planId: number | null
-  customerId: string | null
-  mandateId: string | null
-  subscriptionId: string | null
+  subscriptionId: number | null
+  ppCustomerId: string | null
+  ppMandateId: string | null
+  ppSubscriptionId: string | null
 }
 
-export type UserBase = Omit<User, 'customerId' | 'mandateId' | 'subscriptionId'>
+export type UserBase = Omit<User, 'ppCustomerId' | 'ppMandateId' | 'ppSubscriptionId'>
 export type UserUpdate = Omit<Optional<User>, 'id'>
 
 const getOrBootstrapUser = async (trx: OptTransaction, userID: number): Promise<User> => {
@@ -25,7 +26,7 @@ const getOrBootstrapUser = async (trx: OptTransaction, userID: number): Promise<
   return create(trx, {
     id: userID,
     credits: defaultCredits,
-    planId: null,
+    subscriptionId: null,
   })
 }
 
@@ -34,7 +35,7 @@ const findById = async(trx: OptTransaction, id: number): Promise<User | null> =>
 
   const rows = await _db
     .select('*')
-    .from('users')
+    .from(TABLE)
     .where('id', id)
 
   if (rows.length) {
@@ -51,9 +52,9 @@ const create = async (trx: OptTransaction, user: UserBase): Promise<User> => {
     .insert({
       id: user.id,
       credits: user.credits,
-      plan_id: user.planId,
+      plan_id: user.subscriptionId,
     })
-    .into('users')
+    .into(TABLE)
     .returning('*')
 
   return rows[0]
@@ -62,7 +63,7 @@ const create = async (trx: OptTransaction, user: UserBase): Promise<User> => {
 const update = async (trx: OptTransaction, id: number, user: UserUpdate): Promise<User> => {
   const _db = trx ? trx : db
 
-  const rows = await _db('users')
+  const rows = await _db(TABLE)
     .update(user)
     .where('id', id)
     .returning('*')
@@ -73,7 +74,7 @@ const update = async (trx: OptTransaction, id: number, user: UserUpdate): Promis
 const incrementCredits = async (trx: OptTransaction, id: number, amount: number): Promise<number> => {
   const _db = trx ? trx : db
 
-  const rows = await _db('users')
+  const rows = await _db(TABLE)
     .where('id', id)
     .increment('credits', amount)
     .returning('credits')
@@ -81,24 +82,12 @@ const incrementCredits = async (trx: OptTransaction, id: number, amount: number)
   return rows[0].credits
 }
 
-const getUserPlan = async (trx: OptTransaction, id: number): Promise<Plan> => {
-  const _db = trx ? trx : db
-
-  const rows = await _db
-    .select('plans.*')
-    .from('users')
-    .join('plans', 'users.plan_id', 'plans.id')
-    .where('users.id', id)
-
-  return rows[0]
-}
-
-const findBySubscriptionId = async(trx: OptTransaction, subscriptionId: string): Promise<User | null> => {
+const findByPPSubscriptionId = async(trx: OptTransaction, subscriptionId: string): Promise<User | null> => {
   const _db = trx ? trx : db
 
   const rows = await _db
     .select('*')
-    .from('users')
+    .from(TABLE)
     .where('subscription_id', subscriptionId)
 
   if (rows.length) {
@@ -114,6 +103,5 @@ export {
   create,
   update,
   incrementCredits,
-  getUserPlan,
-  findBySubscriptionId,
+  findByPPSubscriptionId,
 }

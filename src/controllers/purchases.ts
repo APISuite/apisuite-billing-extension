@@ -1,14 +1,13 @@
 import { Request, Response, Router } from 'express'
-import { body } from 'express-validator'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController, SubscriptionPreconditionError } from './base'
 import {
   user as usersRepo,
-  plan as plansRepo,
+  pkg as pkgsRepo,
+  subscription as subscriptionsRepo,
   transaction as txnRepo,
 } from '../models'
-import { Plan } from '../models/plan'
-import { authenticated, asyncWrap as aw, validator } from '../middleware'
+import { authenticated, asyncWrap as aw } from '../middleware'
 import { isMandateValid, subscriptionPayment, topUpPayment } from '../payment-processing'
 
 export class PurchasesController implements BaseController {
@@ -16,72 +15,63 @@ export class PurchasesController implements BaseController {
 
   public getRouter(): Router {
     const router = Router()
-    router.post(
-      `${this.path}/`,
-      authenticated,
-      body('planId').isInt(),
-      validator,
-      aw(this.purchasePlan))
+    router.post(`${this.path}/packages/:id`, authenticated, aw(this.purchasePackage))
+    router.post(`${this.path}/subscriptions/:id`, authenticated, aw(this.purchaseSubscription))
     return router
   }
 
-  public purchasePlan = async (req: Request, res: Response): AsyncHandlerResponse => {
-    const plan = await plansRepo.findById(null, Number(req.body.planId))
+  public purchasePackage = async (req: Request, res: Response): AsyncHandlerResponse => {
+    const pkg = await pkgsRepo.findById(null, Number(req.params.id))
 
-    if (!plan) {
+    if (!pkg) {
       return res.status(404).json({
-        error: 'plan not found',
+        errors: ['package not found'],
       })
     }
 
-    if (plan.periodicity) {
-      await this.purchaseSubscription(res.locals.authenticatedUser.id, plan)
-      return res.sendStatus(204)
-    }
-
-    const redirectURL = await this.purchaseTopUp(res.locals.authenticatedUser.id, plan)
-    return res.status(302).redirect(redirectURL)
-  }
-
-  private purchaseTopUp = async (userId: number, plan: Plan): Promise<string> => {
-    const payment = await topUpPayment(plan.price, plan.name)
+    const payment = await topUpPayment(pkg.price, pkg.name)
     await txnRepo.create(null, {
-      userId,
+      userId: res.locals.authenticatedUser.id,
       paymentId: payment.id,
-      credits: plan.credits,
+      credits: pkg.credits,
     })
-    return payment.checkoutURL
+    return res.status(302).redirect(payment.checkoutURL)
   }
 
-  private purchaseSubscription = async (userId: number, plan: Plan): Promise<void> => {
-    if (!plan.periodicity) {
-      throw new Error('invalid subscription')
-    }
-
-    const user = await usersRepo.getOrBootstrapUser(null, userId)
-    if (!user.customerId || !user.mandateId) {
+  public purchaseSubscription = async (req: Request, res: Response): AsyncHandlerResponse => {
+    const user = await usersRepo.getOrBootstrapUser(null, res.locals.authenticatedUser.id)
+    if (!user.ppCustomerId || !user.ppMandateId) {
       throw new SubscriptionPreconditionError('no valid payment method available')
     }
 
-    if (user.subscriptionId) {
+    if (user.ppSubscriptionId || user.subscriptionId) {
       throw new SubscriptionPreconditionError('user has active subscription')
     }
 
-    if (!(await isMandateValid(user.mandateId, user.customerId))) {
+    const subscription = await subscriptionsRepo.findById(null, Number(req.params.id))
+    if (!subscription) {
+      return res.status(404).json({
+        errors: ['subscription not found'],
+      })
+    }
+
+    if (!(await isMandateValid(user.ppMandateId, user.ppCustomerId))) {
       throw new SubscriptionPreconditionError('configured payment method is invalid')
     }
 
     const subscriptionId = await subscriptionPayment({
-      customerId: user.customerId,
-      mandateId: user.mandateId,
-      price: plan.price,
-      credits: plan.credits,
-      description: plan.name,
-      interval: plan.periodicity,
+      customerId: user.ppCustomerId,
+      mandateId: user.ppMandateId,
+      price: subscription.price,
+      credits: subscription.credits,
+      description: subscription.name,
+      interval: subscription.periodicity,
     })
-    await usersRepo.update(null, userId, {
-      planId: plan.id,
-      subscriptionId,
+    await usersRepo.update(null, user.id, {
+      subscriptionId: subscription.id,
+      ppSubscriptionId: subscriptionId,
     })
+
+    return res.sendStatus(204)
   }
 }

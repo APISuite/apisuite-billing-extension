@@ -2,14 +2,14 @@ exports.up = function(knex) {
   return knex.raw(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER NOT NULL PRIMARY KEY,
-      customer_id TEXT NULL UNIQUE,
-      plan_id INTEGER NULL,
+      subscription_id INTEGER NULL,
       credits INTEGER NOT NULL DEFAULT 0,
-      mandate_id TEXT NULL UNIQUE,
-      subscription_id TEXT NULL UNIQUE,
-      CONSTRAINT fk_plan
-          FOREIGN KEY(plan_id)
-          REFERENCES plans(id)
+      pp_customer_id TEXT NULL UNIQUE,
+      pp_mandate_id TEXT NULL UNIQUE,
+      pp_subscription_id TEXT NULL UNIQUE,
+      CONSTRAINT fk_subscription
+          FOREIGN KEY(subscription_id)
+          REFERENCES subscriptions(id)
           ON DELETE RESTRICT
     );
   `)
