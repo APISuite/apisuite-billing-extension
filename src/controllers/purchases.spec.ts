@@ -44,7 +44,7 @@ describe('purchases controller', () => {
       sinon.stub(pkgsRepo, 'findById').resolves({
         id: 99,
         name: '5k creds',
-        price: 123,
+        price: '123',
         credits: 5000,
       })
       sinon.stub(txnRepo, 'create').resolves()

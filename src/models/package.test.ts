@@ -68,7 +68,7 @@ export default function run(): void {
   it('should update all properties of a package', async () => {
     const newPkgData = {
       name: 'Edited Starter Pack',
-      price: 900,
+      price: '900',
       credits: 900,
     }
 

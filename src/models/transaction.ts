@@ -1,54 +1,55 @@
 import { db, OptTransaction } from '../db'
 
+const TABLE = 'transactions'
+
+export enum TransactionType {
+  TopUp = 1,
+  Consent = 2,
+  Subscription = 3,
+}
+
 export interface Transaction {
   paymentId: string
   userId: number
   credits: number
+  verified: boolean
+  type: TransactionType
+  amount: string
   createdAt: string
   updatedAt: string
 }
 
 export type TransactionBase = Omit<Transaction, 'createdAt' | 'updatedAt'>
 
-const create = async (trx: OptTransaction, transaction: TransactionBase): Promise<Transaction> => {
+export const findAllByUser = async (trx: OptTransaction, userId: number): Promise<Transaction> => {
   const _db = trx ? trx : db
 
   const rows = await _db
-    .insert({
-      user_id: transaction.userId,
-      payment_id: transaction.paymentId,
-      credits: transaction.credits,
-    })
-    .into('transactions')
-    .returning('*')
+    .select()
+    .from(TABLE)
+    .where('user_id', userId)
 
-  return {
-    paymentId: rows[0].payment_id,
-    credits: rows[0].credits,
-    userId: rows[0].user_id,
-    createdAt: rows[0].created_at,
-    updatedAt: rows[0].updated_at,
-  }
+  return rows[0]
 }
 
-const setVerified = async (trx: OptTransaction, paymentId: string): Promise<Transaction> => {
+export const create = async (trx: OptTransaction, transaction: TransactionBase): Promise<Transaction> => {
   const _db = trx ? trx : db
 
-  const rows = await _db('transactions')
+  const rows = await _db
+    .insert(transaction)
+    .into(TABLE)
+    .returning('*')
+
+  return rows[0]
+}
+
+export const setVerified = async (trx: OptTransaction, paymentId: string): Promise<Transaction> => {
+  const _db = trx ? trx : db
+
+  const rows = await _db(TABLE)
     .update({ verified: true })
     .where('payment_id', paymentId)
     .returning('*')
 
-  return {
-    paymentId: rows[0].payment_id,
-    credits: rows[0].credits,
-    userId: rows[0].user_id,
-    createdAt: rows[0].created_at,
-    updatedAt: rows[0].updated_at,
-  }
-}
-
-export {
-  create,
-  setVerified,
+  return rows[0]
 }

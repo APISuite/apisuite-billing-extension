@@ -2,22 +2,32 @@ import { Request, Response, Router } from 'express'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController, SubscriptionPreconditionError } from './base'
 import {
-  user as usersRepo,
   pkg as pkgsRepo,
   subscription as subscriptionsRepo,
   transaction as txnRepo,
+  user as usersRepo,
 } from '../models'
-import { authenticated, asyncWrap as aw } from '../middleware'
+import { asyncWrap as aw, authenticated, isSelf } from '../middleware'
 import { isMandateValid, subscriptionPayment, topUpPayment } from '../payment-processing'
+import { TransactionType } from '../models/transaction'
 
 export class PurchasesController implements BaseController {
   private readonly path = '/purchases'
 
   public getRouter(): Router {
     const router = Router()
+    router.get(`${this.path}/`, authenticated, aw(this.listPurchases))
     router.post(`${this.path}/packages/:id`, authenticated, aw(this.purchasePackage))
     router.post(`${this.path}/subscriptions/:id`, authenticated, aw(this.purchaseSubscription))
     return router
+  }
+
+  public listPurchases = async (req: Request, res: Response): AsyncHandlerResponse => {
+    const transactions = await txnRepo.findAllByUser(null, res.locals.authenticatedUser.id,)
+
+    return res.status(200).json({
+      data: transactions,
+    })
   }
 
   public purchasePackage = async (req: Request, res: Response): AsyncHandlerResponse => {
@@ -34,6 +44,9 @@ export class PurchasesController implements BaseController {
       userId: res.locals.authenticatedUser.id,
       paymentId: payment.id,
       credits: pkg.credits,
+      verified: false,
+      type: TransactionType.TopUp,
+      amount: pkg.price,
     })
     return res.status(302).redirect(payment.checkoutURL)
   }

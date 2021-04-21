@@ -64,7 +64,7 @@ describe('packages controller', () => {
         id: 1,
         credits: 10,
         name: 'test',
-        price: 100,
+        price: '100.00',
       })
 
       request(testApp)

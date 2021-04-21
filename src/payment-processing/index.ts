@@ -48,6 +48,15 @@ export interface TopUpPaymentResult {
   checkoutURL: string
 }
 
+export interface VerifiedPayment {
+  id: string
+  amount: string
+}
+
+export interface VerifiedSubscriptionPayment extends VerifiedPayment {
+  subscriptionId: string
+}
+
 export const createCustomer = async (newCustomer: NewMollieCustomer): Promise<string> => {
   const customer = await mollieClient.customers.create({
     email: newCustomer.email,
@@ -82,7 +91,7 @@ export const firstPayment = async (customerId: string): Promise<FirstPaymentResu
   }
 }
 
-export const topUpPayment = async (price: number, description: string): Promise<TopUpPaymentResult> => {
+export const topUpPayment = async (price: string, description: string): Promise<TopUpPaymentResult> => {
   const payment = await mollieClient.payments.create({
     amount: {
       currency: 'EUR',
@@ -103,17 +112,26 @@ export const topUpPayment = async (price: number, description: string): Promise<
   }
 }
 
-export const verifyPaymentSuccess = async (id: string): Promise<string | null> => {
+export const verifyPaymentSuccess = async (id: string): Promise<VerifiedPayment | null> => {
   const payment = await mollieClient.payments.get(id)
   if (!payment) throw new Error('failed to check payment')
-  return payment.status === PaymentStatus.paid ? payment.id : null
+  if (payment.status !== PaymentStatus.paid) return null
+  return {
+    id: payment.id,
+    amount: payment.amount.value,
+  }
 }
 
-export const verifySubscriptionPaymentSuccess = async (id: string): Promise<string | null> => {
+export const verifySubscriptionPaymentSuccess = async (id: string): Promise<VerifiedSubscriptionPayment | null> => {
   const payment = await mollieClient.payments.get(id)
   if (!payment) throw new Error('failed to check payment')
   if (!payment.subscriptionId) return null
-  return payment.status === PaymentStatus.paid ? payment.subscriptionId : null
+  if (payment.status !== PaymentStatus.paid) return null
+  return {
+    id: payment.id,
+    amount: payment.amount.value,
+    subscriptionId: payment.subscriptionId,
+  }
 }
 
 const getPaymentCheckoutURL = (payment: Payment): string | null => {

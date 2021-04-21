@@ -5,6 +5,7 @@ exports.up = async function(knex) {
       user_id INTEGER NOT NULL,
       credits INTEGER NOT NULL DEFAULT 0,
       verified BOOLEAN DEFAULT FALSE,
+      type INTEGER NOT NULL,
       created_at TIMESTAMP NOT NULL DEFAULT now(),
       updated_at TIMESTAMP NOT NULL DEFAULT now(),
       CONSTRAINT fk_user

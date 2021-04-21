@@ -1,14 +1,11 @@
 import { NextFunction, Request, Response, Router } from 'express'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController } from './base'
-import {
-  transaction as txnRepo,
-  user as usersRepo,
-  pkg as pkgsRepo,
-} from '../models'
+import { pkg as pkgsRepo, transaction as txnRepo, user as usersRepo, } from '../models'
 import { verifyPaymentSuccess, verifySubscriptionPaymentSuccess } from '../payment-processing'
 import { asyncWrap as aw } from '../middleware'
 import { db } from '../db'
+import { TransactionType } from '../models/transaction'
 
 export class WebhooksController implements BaseController {
   private readonly path = '/webhooks'
@@ -28,25 +25,34 @@ export class WebhooksController implements BaseController {
       })
     }
 
-    const subscriptionId = await verifySubscriptionPaymentSuccess(req.body.id)
-    if (subscriptionId) {
+    const payment = await verifySubscriptionPaymentSuccess(req.body.id)
+    if (payment) {
       const trx = await db.transaction()
       try {
-        // TODO create transaction record
-        // const transaction = await txnRepo.setVerified(trx, paymentId)
-        const user = await usersRepo.findByPPSubscriptionId(trx, subscriptionId)
+        const user = await usersRepo.findByPPSubscriptionId(trx, payment.subscriptionId)
         if (!user || !user.subscriptionId) throw new Error('invalid subscription user')
 
         const plan = await pkgsRepo.findById(trx, user?.subscriptionId)
         if (!plan) throw new Error('invalid subscription plan')
 
-        await usersRepo.incrementCredits(trx, user.id, plan.credits)
+        await Promise.all([
+          await usersRepo.incrementCredits(trx, user.id, plan.credits),
+          await txnRepo.create(trx, {
+            paymentId: req.body.id,
+            credits: plan.credits,
+            userId: user.id,
+            verified: true,
+            type: TransactionType.Subscription,
+            amount: payment.subscriptionId,
+          }),
+        ])
+
         await trx.commit()
+        // TODO send invoice email?
       } catch (err) {
         await trx.rollback()
         next(err)
       }
-      // TODO send invoice email?
     }
 
     return res.status(200).json({
@@ -61,18 +67,18 @@ export class WebhooksController implements BaseController {
       })
     }
 
-    const paymentId = await verifyPaymentSuccess(req.body.id)
-    if (paymentId) {
+    const payment = await verifyPaymentSuccess(req.body.id)
+    if (payment) {
       const trx = await db.transaction()
       try {
-        const transaction = await txnRepo.setVerified(trx, paymentId)
+        const transaction = await txnRepo.setVerified(trx, payment.id)
         await usersRepo.incrementCredits(trx, transaction.userId, transaction.credits)
         await trx.commit()
+        // TODO send invoice email?
       } catch (err) {
         await trx.rollback()
         next(err)
       }
-      // TODO send invoice email?
     }
 
     return res.status(200).json({
@@ -81,8 +87,17 @@ export class WebhooksController implements BaseController {
   }
 
   public firstPaymentWebhookHandler = async (req: Request, res: Response): AsyncHandlerResponse => {
-    console.log(req.body)
-    // req.body.id => transaction ID
+    const payment = await verifyPaymentSuccess(req.body.id)
+    if (payment) {
+      await txnRepo.create(null, {
+        userId: res.locals.authenticatedUser.id,
+        paymentId: payment.id,
+        credits: 0,
+        verified: true,
+        type: TransactionType.Consent,
+        amount: payment.amount,
+      })
+    }
 
     return res.status(200).json({
       data: 'ok',

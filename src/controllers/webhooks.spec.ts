@@ -9,6 +9,7 @@ import {
 } from '../models'
 import * as paymentProcessing from '../payment-processing'
 import { db } from '../db'
+import { TransactionType } from '../models/transaction'
 
 describe('webhooks controller', () => {
   describe('topup webhook', () => {
@@ -55,7 +56,10 @@ describe('webhooks controller', () => {
     })
 
     it('should return 200 when payment is verified', (done) => {
-      sinon.stub(paymentProcessing, 'verifyPaymentSuccess').resolves('randompaymentid')
+      sinon.stub(paymentProcessing, 'verifyPaymentSuccess').resolves({
+        id: 'paymentid123',
+        amount: '1000',
+      })
       sinon.stub(db, 'transaction').resolves({
         commit: sinon.stub(),
         rollback: sinon.stub(),
@@ -67,6 +71,9 @@ describe('webhooks controller', () => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         paymentId: 'randompaymentid',
+        type: TransactionType.TopUp,
+        amount: '1000',
+        verified: true,
       })
 
       request(testApp)
