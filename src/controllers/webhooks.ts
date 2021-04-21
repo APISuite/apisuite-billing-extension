@@ -89,14 +89,7 @@ export class WebhooksController implements BaseController {
   public firstPaymentWebhookHandler = async (req: Request, res: Response): AsyncHandlerResponse => {
     const payment = await verifyPaymentSuccess(req.body.id)
     if (payment) {
-      await txnRepo.create(null, {
-        userId: res.locals.authenticatedUser.id,
-        paymentId: payment.id,
-        credits: 0,
-        verified: true,
-        type: TransactionType.Consent,
-        amount: payment.amount,
-      })
+      await txnRepo.setVerified(null, payment.id)
     }
 
     return res.status(200).json({

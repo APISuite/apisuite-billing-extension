@@ -7,7 +7,7 @@ import {
   transaction as txnRepo,
   user as usersRepo,
 } from '../models'
-import { asyncWrap as aw, authenticated, isSelf } from '../middleware'
+import { asyncWrap as aw, authenticated } from '../middleware'
 import { isMandateValid, subscriptionPayment, topUpPayment } from '../payment-processing'
 import { TransactionType } from '../models/transaction'
 

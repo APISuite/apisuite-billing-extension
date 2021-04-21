@@ -49,11 +49,7 @@ const create = async (trx: OptTransaction, user: UserBase): Promise<User> => {
   const _db = trx ? trx : db
 
   const rows = await _db
-    .insert({
-      id: user.id,
-      credits: user.credits,
-      plan_id: user.subscriptionId,
-    })
+    .insert(user)
     .into(TABLE)
     .returning('*')
 

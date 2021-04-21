@@ -41,6 +41,7 @@ export interface FirstPaymentResult {
   id: string
   checkoutURL: string
   mandateId: string
+  amount: string,
 }
 
 export interface TopUpPaymentResult {
@@ -88,6 +89,7 @@ export const firstPayment = async (customerId: string): Promise<FirstPaymentResu
     id: payment.id,
     checkoutURL: checkoutURL,
     mandateId: payment.mandateId,
+    amount: payment.amount.value,
   }
 }
 

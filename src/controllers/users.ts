@@ -1,9 +1,11 @@
-import { Request, Response, Router } from 'express'
+import { NextFunction, Request, Response, Router } from 'express'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController } from './base'
-import { user as usersRepo } from '../models'
+import { transaction as txnRepo, user as usersRepo } from '../models'
 import { authenticated, isSelf, asyncWrap as aw } from '../middleware/'
 import { createCustomer, firstPayment, cancelSubscription } from '../payment-processing'
+import { TransactionType } from '../models/transaction'
+import { db } from '../db'
 
 export class UsersController implements BaseController {
   private readonly path = '/users'
@@ -24,27 +26,43 @@ export class UsersController implements BaseController {
     })
   }
 
-  public setupConsent = async (req: Request, res: Response): AsyncHandlerResponse => {
-    const userID = Number(req.params.id)
-    const user = await usersRepo.getOrBootstrapUser(null, userID)
+  public setupConsent = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
+    const trx = await db.transaction()
+    try {
+      const userID = Number(req.params.id)
+      const user = await usersRepo.getOrBootstrapUser(trx, userID)
 
-    if (!user.ppCustomerId) {
-      const customerId = await createCustomer({
-        email: res.locals.authenticatedUser.email,
-        name: res.locals.authenticatedUser.name,
-      })
+      if (!user.ppCustomerId) {
+        const customerId = await createCustomer({
+          email: res.locals.authenticatedUser.email,
+          name: res.locals.authenticatedUser.name,
+        })
 
-      await usersRepo.update(null, userID, {
-        ppCustomerId: customerId,
+        await usersRepo.update(trx, userID, {
+          ppCustomerId: customerId,
+        })
+        user.ppCustomerId = customerId
+      }
+
+      const payment = await firstPayment(user.ppCustomerId)
+
+      await txnRepo.create(trx, {
+        userId: res.locals.authenticatedUser.id,
+        paymentId: payment.id,
+        credits: 0,
+        verified: false,
+        type: TransactionType.Consent,
+        amount: payment.amount,
       })
-      user.ppCustomerId = customerId
+      await usersRepo.update(trx, userID, {
+        ppMandateId: payment.mandateId,
+      })
+      await trx.commit()
+      return res.status(302).redirect(payment.checkoutURL)
+    } catch(err) {
+      await trx.rollback()
+      next(err)
     }
-
-    const payment = await firstPayment(user.ppCustomerId)
-    await usersRepo.update(null, userID, {
-      ppMandateId: payment.mandateId,
-    })
-    return res.status(302).redirect(payment.checkoutURL)
   }
 
   public cancelSubscription = async (req: Request, res: Response): AsyncHandlerResponse => {

@@ -3,9 +3,9 @@ import { db, OptTransaction } from '../db'
 const TABLE = 'transactions'
 
 export enum TransactionType {
-  TopUp = 1,
-  Consent = 2,
-  Subscription = 3,
+  TopUp = 'topup',
+  Consent = 'consent',
+  Subscription = 'subscription',
 }
 
 export interface Transaction {

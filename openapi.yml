@@ -488,15 +488,25 @@ components:
     Purchase:
       type: object
       properties:
-        id:
+        paymentId:
           type: number
-        name:
+        userId:
           type: string
-        price:
+        amount:
           type: number
         credits:
           type: number
-        periodicity:
+        verified:
+          type: boolean
+        type:
+          type: string
+          enum:
+            - topup
+            - consent
+            - subscription
+        createdAt:
+          type: string
+        updatedAt:
           type: string
     Health:
       type: object
