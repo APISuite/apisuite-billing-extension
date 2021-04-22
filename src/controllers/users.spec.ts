@@ -2,9 +2,13 @@ import sinon from 'sinon'
 import request from 'supertest'
 import express, { NextFunction, Request, Response } from 'express'
 import { UsersController } from './users'
-import { user as usersRepo } from '../models'
+import {
+  user as usersRepo,
+  transaction as txnRepo,
+} from '../models'
 import { error } from '../middleware'
 import * as paymentProcessing from '../payment-processing'
+import { db } from '../db'
 
 describe('users controller', () => {
   const injectUser = (req: Request, res: Response, next: NextFunction) => {
@@ -50,6 +54,13 @@ describe('users controller', () => {
       .use(controller.getRouter())
       .use(error)
 
+    beforeEach(() => {
+      sinon.stub(db, 'transaction').resolves({
+        commit: sinon.stub(),
+        rollback: sinon.stub(),
+      })
+    })
+
     it('should return 302 when the user already has a customerID', (done) => {
       sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
         id: 1,
@@ -59,12 +70,14 @@ describe('users controller', () => {
         ppMandateId: null,
         ppSubscriptionId: null,
       })
-      sinon.stub(usersRepo, 'update').resolves()
       sinon.stub(paymentProcessing, 'firstPayment').resolves({
         checkoutURL: 'someURL',
         id: 'paymentid',
         mandateId: 'mandateId',
+        amount: '0.00',
       })
+      sinon.stub(txnRepo, 'create').resolves()
+      sinon.stub(usersRepo, 'update').resolves()
 
       request(testApp)
         .post('/users/1/consent')
@@ -83,12 +96,14 @@ describe('users controller', () => {
         ppSubscriptionId: null,
       })
       sinon.stub(paymentProcessing, 'createCustomer').resolves('fakeCustomerId')
-      sinon.stub(usersRepo, 'update').resolves()
       sinon.stub(paymentProcessing, 'firstPayment').resolves({
         checkoutURL: 'someURL',
         id: 'paymentid',
         mandateId: 'mandateId',
+        amount: '0.00',
       })
+      sinon.stub(txnRepo, 'create').resolves()
+      sinon.stub(usersRepo, 'update').resolves()
 
       request(testApp)
         .post('/users/1/consent')

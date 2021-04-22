@@ -2,7 +2,7 @@ import { NextFunction, Request, Response, Router } from 'express'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController } from './base'
 import { transaction as txnRepo, user as usersRepo } from '../models'
-import { authenticated, isSelf, asyncWrap as aw } from '../middleware/'
+import { authenticated, isSelf, asyncWrap as aw, isAdmin } from '../middleware/'
 import { createCustomer, firstPayment, cancelSubscription } from '../payment-processing'
 import { TransactionType } from '../models/transaction'
 import { db } from '../db'
@@ -14,6 +14,7 @@ export class UsersController implements BaseController {
     const router = Router()
     router.get(`${this.path}/:id`, authenticated, isSelf, aw(this.getUserDetails))
     router.post(`${this.path}/:id/consent`, authenticated, isSelf, aw(this.setupConsent))
+    router.put(`${this.path}/:id/credits`, authenticated, isAdmin, aw(this.manageCredits))
     router.delete(`${this.path}/:id/plans/:planId`, authenticated, isSelf, aw(this.cancelSubscription))
     return router
   }
@@ -77,5 +78,20 @@ export class UsersController implements BaseController {
       ppSubscriptionId: null,
     })
     return res.sendStatus(204)
+  }
+
+  public manageCredits = async (req: Request, res: Response): AsyncHandlerResponse => {
+    if (req.params.id === res.locals.authenticatedUser.id) {
+      return res.status(403).json({ errors: ['unable to manage own credits'] })
+    }
+
+    let user = await usersRepo.getOrBootstrapUser(null, Number(req.params.id))
+    user = await usersRepo.update(null, user.id, {
+      credits: user.credits + Number(req.body.credits),
+    })
+
+    return res.status(200).json({
+      data: user,
+    })
   }
 }
