@@ -11,8 +11,8 @@ export class SubscriptionsController implements BaseController {
 
   public getRouter(): Router {
     const router = Router()
-    router.get(`${this.path}`, authenticated, isAdmin, aw(this.getSubscriptions))
-    router.get(`${this.path}/:id`, authenticated, isAdmin, aw(this.getSubscription))
+    router.get(`${this.path}`, authenticated, aw(this.getSubscriptions))
+    router.get(`${this.path}/:id`, authenticated, aw(this.getSubscription))
     router.post(`${this.path}`, authenticated, isAdmin, aw(this.createSubscription))
     router.put(`${this.path}/:id`, authenticated, isAdmin, aw(this.updateSubscription))
     router.delete(`${this.path}/:id`, authenticated, isAdmin, aw(this.deleteSubscription))

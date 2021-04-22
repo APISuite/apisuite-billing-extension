@@ -11,8 +11,8 @@ export class PackagesController implements BaseController {
 
   public getRouter(): Router {
     const router = Router()
-    router.get(`${this.path}`, authenticated, isAdmin, aw(this.getPackages))
-    router.get(`${this.path}/:id`, authenticated, isAdmin, aw(this.getPackage))
+    router.get(`${this.path}`, authenticated, aw(this.getPackages))
+    router.get(`${this.path}/:id`, authenticated, aw(this.getPackage))
     router.post(`${this.path}`, authenticated, isAdmin, aw(this.createPackage))
     router.put(`${this.path}/:id`, authenticated, isAdmin, aw(this.updatePackage))
     router.delete(`${this.path}/:id`, authenticated, isAdmin, aw(this.deletePackage))
