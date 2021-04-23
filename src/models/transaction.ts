@@ -14,22 +14,20 @@ export interface Transaction {
   credits: number
   verified: boolean
   type: TransactionType
-  amount: string
+  amount: number
   createdAt: string
   updatedAt: string
 }
 
 export type TransactionBase = Omit<Transaction, 'createdAt' | 'updatedAt'>
 
-export const findAllByUser = async (trx: OptTransaction, userId: number): Promise<Transaction> => {
+export const findAllByUser = async (trx: OptTransaction, userId: number): Promise<Transaction[]> => {
   const _db = trx ? trx : db
 
-  const rows = await _db
+  return _db
     .select()
     .from(TABLE)
     .where('user_id', userId)
-
-  return rows[0]
 }
 
 export const create = async (trx: OptTransaction, transaction: TransactionBase): Promise<Transaction> => {

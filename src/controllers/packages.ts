@@ -43,19 +43,19 @@ export class PackagesController implements BaseController {
 
   public createPackage = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
     try {
-      const plan = await pkgsRepo.create(null, {
+      const pkg = await pkgsRepo.create(null, {
         name: req.body.name,
         price: req.body.price,
         credits: req.body.credits,
       })
 
       return res.status(201).json({
-        data: plan,
+        data: pkg,
       })
     } catch (err) {
       if (err instanceof DuplicateError) {
         return res.status(409).json({
-          errors: err.message,
+          errors: [err.message],
         })
       }
       next(err)
@@ -68,6 +68,7 @@ export class PackagesController implements BaseController {
       let plan = await pkgsRepo.findById(trx, Number(req.params.id))
 
       if (!plan) {
+        await trx.rollback()
         return res.status(404).json({
           errors: ['plan not found'],
         })
@@ -84,7 +85,7 @@ export class PackagesController implements BaseController {
       await trx.rollback()
       if (err instanceof DuplicateError) {
         return res.status(409).json({
-          errors: err.message,
+          errors: [err.message],
         })
       }
       next(err)

@@ -8,7 +8,7 @@ const TABLE = 'packages'
 export interface Package {
   id: number
   name: string
-  price: string
+  price: number
   credits: number
 }
 

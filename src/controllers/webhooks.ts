@@ -1,7 +1,11 @@
 import { NextFunction, Request, Response, Router } from 'express'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController } from './base'
-import { pkg as pkgsRepo, transaction as txnRepo, user as usersRepo, } from '../models'
+import {
+  transaction as txnRepo,
+  user as usersRepo,
+  subscription as subscriptionsRepo,
+} from '../models'
 import { verifyPaymentSuccess, verifySubscriptionPaymentSuccess } from '../payment-processing'
 import { asyncWrap as aw } from '../middleware'
 import { db } from '../db'
@@ -30,20 +34,26 @@ export class WebhooksController implements BaseController {
       const trx = await db.transaction()
       try {
         const user = await usersRepo.findByPPSubscriptionId(trx, payment.subscriptionId)
-        if (!user || !user.subscriptionId) throw new Error('invalid subscription user')
+        if (!user || !user.subscriptionId) {
+          await trx.rollback()
+          throw new Error('invalid subscription user')
+        }
 
-        const plan = await pkgsRepo.findById(trx, user?.subscriptionId)
-        if (!plan) throw new Error('invalid subscription plan')
+        const subscription = await subscriptionsRepo.findById(trx, user?.subscriptionId)
+        if (!subscription) {
+          await trx.rollback()
+          throw new Error('invalid subscription')
+        }
 
         await Promise.all([
-          await usersRepo.incrementCredits(trx, user.id, plan.credits),
+          await usersRepo.incrementCredits(trx, user.id, subscription.credits),
           await txnRepo.create(trx, {
             paymentId: req.body.id,
-            credits: plan.credits,
+            credits: subscription.credits,
             userId: user.id,
             verified: true,
             type: TransactionType.Subscription,
-            amount: payment.subscriptionId,
+            amount: payment.amount,
           }),
         ])
 
@@ -87,6 +97,12 @@ export class WebhooksController implements BaseController {
   }
 
   public firstPaymentWebhookHandler = async (req: Request, res: Response): AsyncHandlerResponse => {
+    if (!req.body.id) {
+      return res.status(400).json({
+        errors: ['missing payment id'],
+      })
+    }
+
     const payment = await verifyPaymentSuccess(req.body.id)
     if (payment) {
       await txnRepo.setVerified(null, payment.id)

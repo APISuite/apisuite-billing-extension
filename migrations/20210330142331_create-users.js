@@ -3,7 +3,7 @@ exports.up = function(knex) {
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER NOT NULL PRIMARY KEY,
       subscription_id INTEGER NULL,
-      credits INTEGER NOT NULL DEFAULT 0,
+      credits DECIMAL(12, 2) NOT NULL DEFAULT 0,
       pp_customer_id TEXT NULL UNIQUE,
       pp_mandate_id TEXT NULL UNIQUE,
       pp_subscription_id TEXT NULL UNIQUE,

@@ -43,8 +43,8 @@ export default function run(): void {
     const pkg = {
       id: 1,
       name: 'Starter Pack',
-      price: '200.00',
-      credits: 200,
+      price: 200.55,
+      credits: 200.1,
     }
 
     const testAssertions = (r: any) => {
@@ -68,7 +68,7 @@ export default function run(): void {
   it('should update all properties of a package', async () => {
     const newPkgData = {
       name: 'Edited Starter Pack',
-      price: '900',
+      price: 900,
       credits: 900,
     }
 
@@ -77,7 +77,7 @@ export default function run(): void {
       expect(r).to.deep.eq({
         id: 1,
         ...newPkgData,
-        price: '900.00',
+        price: 900,
       })
     }
 

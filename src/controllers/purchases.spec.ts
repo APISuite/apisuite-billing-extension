@@ -6,7 +6,8 @@ import { error } from '../middleware'
 import {
   pkg as pkgsRepo,
   subscription as subscriptionsRepo,
-  transaction as txnRepo, user as usersRepo,
+  transaction as txnRepo,
+  user as usersRepo,
 } from '../models'
 import { PurchasesController } from './purchases'
 import * as paymentProcessing from '../payment-processing'
@@ -18,6 +19,42 @@ describe('purchases controller', () => {
   }
 
   afterEach(() => sinon.restore())
+
+  describe('get purchases', () => {
+    const controller = new PurchasesController()
+    const testApp = express()
+      .use(injectUser)
+      .use(controller.getRouter())
+      .use(error)
+
+    it('should return 200 and purchases list', (done) => {
+      sinon.stub(txnRepo, 'findAllByUser').resolves([])
+
+      request(testApp)
+        .get('/purchases')
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .then((res) => {
+          expect(res.body.data).to.be.an('array')
+          done()
+        })
+        .catch((err: Error) => done(err))
+    })
+
+    it('should return 500 when a database error occurs', (done) => {
+      sinon.stub(txnRepo, 'findAllByUser').rejects()
+
+      request(testApp)
+        .get('/purchases')
+        .expect('Content-Type', /json/)
+        .expect(500)
+        .then((res) => {
+          expect(res.body.errors).to.be.an('array')
+          done()
+        })
+        .catch((err: Error) => done(err))
+    })
+  })
 
   describe('purchase top up', () => {
     const controller = new PurchasesController()
@@ -44,7 +81,7 @@ describe('purchases controller', () => {
       sinon.stub(pkgsRepo, 'findById').resolves({
         id: 99,
         name: '5k creds',
-        price: '123',
+        price: 123,
         credits: 5000,
       })
       sinon.stub(txnRepo, 'create').resolves()

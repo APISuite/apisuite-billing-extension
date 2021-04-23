@@ -23,7 +23,7 @@ export class PurchasesController implements BaseController {
   }
 
   public listPurchases = async (req: Request, res: Response): AsyncHandlerResponse => {
-    const transactions = await txnRepo.findAllByUser(null, res.locals.authenticatedUser.id,)
+    const transactions = await txnRepo.findAllByUser(null, res.locals.authenticatedUser.id)
 
     return res.status(200).json({
       data: transactions,

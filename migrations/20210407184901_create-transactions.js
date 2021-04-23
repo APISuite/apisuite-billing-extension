@@ -8,7 +8,7 @@ exports.up = async function(knex) {
       payment_id TEXT PRIMARY KEY,
       user_id INTEGER NOT NULL,
       amount DECIMAL(12, 2) NOT NULL DEFAULT 0,
-      credits INTEGER NOT NULL DEFAULT 0,
+      credits DECIMAL(12, 2) NOT NULL DEFAULT 0,
       verified BOOLEAN DEFAULT FALSE,
       type transaction_type NOT NULL,
       created_at TIMESTAMP NOT NULL DEFAULT now(),
@@ -28,6 +28,8 @@ exports.up = async function(knex) {
   `)
 }
 
-exports.down = function(knex) {
-  return knex.raw('DROP TABLE IF EXISTS transactions;')
+exports.down = async function(knex) {
+  await knex.raw('DROP TRIGGER IF EXISTS set_timestamp ON transactions;')
+  await knex.raw('DROP TABLE IF EXISTS transactions;')
+  return knex.raw('DROP TYPE IF EXISTS transaction_type;')
 }

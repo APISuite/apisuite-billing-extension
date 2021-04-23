@@ -2,6 +2,13 @@ import camelCaseKeys from 'camelcase-keys'
 import knex, { Knex } from 'knex'
 import config from '../config'
 
+import { types } from 'pg'
+import { builtins } from 'pg-types'
+
+types.setTypeParser(<number>builtins.NUMERIC, function(val) {
+  return parseFloat(val)
+})
+
 const camelToSnakeCase = (str: string): string => {
   return str
     .replace(

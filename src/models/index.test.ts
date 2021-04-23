@@ -12,6 +12,6 @@ after(async () => {
 })
 
 describe('database integration tests', () => {
-  describe('package', pkg.bind(this))
+  describe.only('package', pkg.bind(this))
   describe('subscription', subscription.bind(this))
 })

@@ -74,7 +74,7 @@ describe('users controller', () => {
         checkoutURL: 'someURL',
         id: 'paymentid',
         mandateId: 'mandateId',
-        amount: '0.00',
+        amount: 0,
       })
       sinon.stub(txnRepo, 'create').resolves()
       sinon.stub(usersRepo, 'update').resolves()
@@ -100,7 +100,7 @@ describe('users controller', () => {
         checkoutURL: 'someURL',
         id: 'paymentid',
         mandateId: 'mandateId',
-        amount: '0.00',
+        amount: 0,
       })
       sinon.stub(txnRepo, 'create').resolves()
       sinon.stub(usersRepo, 'update').resolves()

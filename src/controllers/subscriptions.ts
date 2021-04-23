@@ -56,7 +56,7 @@ export class SubscriptionsController implements BaseController {
     } catch (err) {
       if (err instanceof DuplicateError) {
         return res.status(409).json({
-          error: err.message,
+          errors: [err.message],
         })
       }
       next(err)
@@ -69,6 +69,7 @@ export class SubscriptionsController implements BaseController {
       let subscription = await subscriptionsRepo.findById(trx, Number(req.params.id))
 
       if (!subscription) {
+        await trx.rollback()
         return res.status(404).json({
           errors: ['subscription not found'],
         })

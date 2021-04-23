@@ -41,7 +41,7 @@ export interface FirstPaymentResult {
   id: string
   checkoutURL: string
   mandateId: string
-  amount: string,
+  amount: number,
 }
 
 export interface TopUpPaymentResult {
@@ -51,7 +51,7 @@ export interface TopUpPaymentResult {
 
 export interface VerifiedPayment {
   id: string
-  amount: string
+  amount: number
 }
 
 export interface VerifiedSubscriptionPayment extends VerifiedPayment {
@@ -89,11 +89,11 @@ export const firstPayment = async (customerId: string): Promise<FirstPaymentResu
     id: payment.id,
     checkoutURL: checkoutURL,
     mandateId: payment.mandateId,
-    amount: payment.amount.value,
+    amount: parseFloat(payment.amount.value),
   }
 }
 
-export const topUpPayment = async (price: string, description: string): Promise<TopUpPaymentResult> => {
+export const topUpPayment = async (price: number, description: string): Promise<TopUpPaymentResult> => {
   const payment = await mollieClient.payments.create({
     amount: {
       currency: 'EUR',
@@ -120,7 +120,7 @@ export const verifyPaymentSuccess = async (id: string): Promise<VerifiedPayment 
   if (payment.status !== PaymentStatus.paid) return null
   return {
     id: payment.id,
-    amount: payment.amount.value,
+    amount: parseFloat(payment.amount.value),
   }
 }
 
@@ -131,7 +131,7 @@ export const verifySubscriptionPaymentSuccess = async (id: string): Promise<Veri
   if (payment.status !== PaymentStatus.paid) return null
   return {
     id: payment.id,
-    amount: payment.amount.value,
+    amount: parseFloat(payment.amount.value),
     subscriptionId: payment.subscriptionId,
   }
 }
