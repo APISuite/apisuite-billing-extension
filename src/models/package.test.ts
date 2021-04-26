@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { findAll, findById, update, deletePackage } from './package'
+import { findAll, findById, create, update, deletePackage } from './package'
 import { db } from '../db'
 
 
@@ -60,6 +60,30 @@ export default function run(): void {
       const trxRes = await findById(null, 1)
       await trx.commit()
       testAssertions(trxRes)
+    } catch(err) {
+      throw new Error('unexpected error')
+    }
+  })
+
+  it('should create a package', async () => {
+    const newPkgData = {
+      name: 'Hyper Pack',
+      price: 2000,
+      credits: 2000,
+    }
+
+    const trx = await db.transaction()
+    try {
+      const res = await create(trx, newPkgData)
+      const pkg = await findById(trx, res.id)
+      await trx.commit()
+
+      if (!pkg) throw new Error('failed to create package')
+      expect(pkg).to.be.an('object')
+      expect(pkg).to.deep.eq({
+        id: pkg.id,
+        ...newPkgData,
+      })
     } catch(err) {
       throw new Error('unexpected error')
     }

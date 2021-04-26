@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { findAll, findById, update, deleteSubscription } from './subscription'
+import { findAll, findById, create, update, deleteSubscription } from './subscription'
 import { db } from '../db'
 
 
@@ -40,17 +40,17 @@ export default function run(): void {
   })
 
   it('should return a subscription with id 1', async () => {
-    const pkg = {
+    const subscription = {
       id: 1,
       name: 'Starter Subscription',
-      price: '200.00',
+      price: 200,
       credits: 200,
       periodicity: '1 month',
     }
 
     const testAssertions = (r: any) => {
       expect(r).to.be.an('object')
-      expect(r).to.deep.eq(pkg)
+      expect(r).to.deep.eq(subscription)
     }
 
     const res = await findById(null, 1)
@@ -61,6 +61,31 @@ export default function run(): void {
       const trxRes = await findById(null, 1)
       await trx.commit()
       testAssertions(trxRes)
+    } catch(err) {
+      throw new Error('unexpected error')
+    }
+  })
+
+  it('should create a subscription', async () => {
+    const newSubData = {
+      name: 'Hyper Subscription',
+      price: 2000,
+      credits: 2000,
+      periodicity: '5 months',
+    }
+
+    const trx = await db.transaction()
+    try {
+      const res = await create(trx, newSubData)
+      const sub = await findById(trx, res.id)
+      await trx.commit()
+
+      if (!sub) throw new Error('failed to create subscription')
+      expect(sub).to.be.an('object')
+      expect(sub).to.deep.eq({
+        id: sub.id,
+        ...newSubData,
+      })
     } catch(err) {
       throw new Error('unexpected error')
     }
@@ -79,7 +104,7 @@ export default function run(): void {
       expect(r).to.deep.eq({
         id: 1,
         ...newSubData,
-        price: '900.00',
+        price: 900,
       })
     }
 

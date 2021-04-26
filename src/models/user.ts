@@ -84,7 +84,7 @@ const findByPPSubscriptionId = async(trx: OptTransaction, subscriptionId: string
   const rows = await _db
     .select('*')
     .from(TABLE)
-    .where('subscription_id', subscriptionId)
+    .where('pp_subscription_id', subscriptionId)
 
   if (rows.length) {
     return rows[0]
