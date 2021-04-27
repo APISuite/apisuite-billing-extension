@@ -1,14 +1,19 @@
 import { Request, Response, Router } from 'express'
 import { AsyncHandlerResponse } from '../types'
-import { BaseController, SubscriptionPreconditionError } from './base'
+import { BaseController, PurchasePreconditionError } from './base'
+import { asyncWrap as aw, authenticated } from '../middleware'
 import {
   pkg as pkgsRepo,
   subscription as subscriptionsRepo,
   transaction as txnRepo,
   user as usersRepo,
 } from '../models'
-import { asyncWrap as aw, authenticated } from '../middleware'
-import { isMandateValid, subscriptionPayment, topUpPayment } from '../payment-processing'
+import {
+  isMandateValid,
+  subscriptionPayment,
+  topUpPayment,
+  listCustomerPayments,
+} from '../payment-processing'
 import { TransactionType } from '../models/transaction'
 
 export class PurchasesController implements BaseController {
@@ -23,14 +28,23 @@ export class PurchasesController implements BaseController {
   }
 
   public listPurchases = async (req: Request, res: Response): AsyncHandlerResponse => {
-    const transactions = await txnRepo.findAllByUser(null, res.locals.authenticatedUser.id)
+    const user = await usersRepo.getOrBootstrapUser(null, res.locals.authenticatedUser.id)
+    if (!user.ppCustomerId) {
+      return res.status(200).json({ data: [] })
+    }
+    const payments = await listCustomerPayments(user.ppCustomerId)
 
     return res.status(200).json({
-      data: transactions,
+      data: payments,
     })
   }
 
   public purchasePackage = async (req: Request, res: Response): AsyncHandlerResponse => {
+    const user = await usersRepo.getOrBootstrapUser(null, res.locals.authenticatedUser.id)
+    if (!user.ppCustomerId) {
+      throw new PurchasePreconditionError('no valid payment method available')
+    }
+
     const pkg = await pkgsRepo.findById(null, Number(req.params.id))
 
     if (!pkg) {
@@ -39,7 +53,7 @@ export class PurchasesController implements BaseController {
       })
     }
 
-    const payment = await topUpPayment(pkg.price, pkg.name)
+    const payment = await topUpPayment(pkg.price, pkg.name, user.ppCustomerId)
     await txnRepo.create(null, {
       userId: res.locals.authenticatedUser.id,
       paymentId: payment.id,
@@ -54,11 +68,11 @@ export class PurchasesController implements BaseController {
   public purchaseSubscription = async (req: Request, res: Response): AsyncHandlerResponse => {
     const user = await usersRepo.getOrBootstrapUser(null, res.locals.authenticatedUser.id)
     if (!user.ppCustomerId || !user.ppMandateId) {
-      throw new SubscriptionPreconditionError('no valid payment method available')
+      throw new PurchasePreconditionError('no valid payment method available')
     }
 
     if (user.ppSubscriptionId || user.subscriptionId) {
-      throw new SubscriptionPreconditionError('user has active subscription')
+      throw new PurchasePreconditionError('user has active subscription')
     }
 
     const subscription = await subscriptionsRepo.findById(null, Number(req.params.id))
@@ -69,7 +83,7 @@ export class PurchasesController implements BaseController {
     }
 
     if (!(await isMandateValid(user.ppMandateId, user.ppCustomerId))) {
-      throw new SubscriptionPreconditionError('configured payment method is invalid')
+      throw new PurchasePreconditionError('configured payment method is invalid')
     }
 
     const subscriptionId = await subscriptionPayment({

@@ -12,7 +12,7 @@ export class UserInputError extends Error {
   }
 }
 
-export class SubscriptionPreconditionError extends Error {
+export class PurchasePreconditionError extends Error {
   constructor(message: string) {
     super(message)
   }

@@ -12,7 +12,7 @@ import * as paymentProcessing from '../payment-processing'
 import { db } from '../db'
 import { TransactionType } from '../models/transaction'
 
-describe.only('webhooks controller', () => {
+describe('webhooks controller', () => {
   describe('topup webhook', () => {
     afterEach(() => sinon.restore())
 

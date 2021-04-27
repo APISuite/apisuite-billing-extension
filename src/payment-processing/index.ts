@@ -58,6 +58,18 @@ export interface VerifiedSubscriptionPayment extends VerifiedPayment {
   subscriptionId: string
 }
 
+export interface CustomerPayment {
+  id: string
+  description: string
+  method: string
+  status: string
+  createdAt: string
+  amount: {
+    value: string
+    currency: string
+  }
+}
+
 export const createCustomer = async (newCustomer: NewMollieCustomer): Promise<string> => {
   const customer = await mollieClient.customers.create({
     email: newCustomer.email,
@@ -65,6 +77,31 @@ export const createCustomer = async (newCustomer: NewMollieCustomer): Promise<st
   })
 
   return customer.id
+}
+
+export const listCustomerPayments = async (id: string): Promise<CustomerPayment[]> => {
+  const payments = await mollieClient.customers_payments.list({
+    customerId: id,
+  })
+  let nextPage = payments.nextPage
+
+  while(nextPage) {
+    const nextPayments = await nextPage()
+    payments.concat(nextPayments)
+    nextPage = nextPayments.nextPage
+  }
+
+  return payments.map((payment) => ({
+    id: payment.id,
+    description: payment.description,
+    method: <string>payment.method,
+    status: payment.status,
+    createdAt: payment.createdAt,
+    amount: {
+      currency: payment.amount.currency,
+      value: payment.amount.value,
+    },
+  }))
 }
 
 export const firstPayment = async (customerId: string): Promise<FirstPaymentResult> => {
@@ -93,13 +130,14 @@ export const firstPayment = async (customerId: string): Promise<FirstPaymentResu
   }
 }
 
-export const topUpPayment = async (price: number, description: string): Promise<TopUpPaymentResult> => {
+export const topUpPayment = async (price: number, description: string, customerId: string): Promise<TopUpPaymentResult> => {
   const payment = await mollieClient.payments.create({
+    customerId,
+    description,
     amount: {
       currency: 'EUR',
       value: price.toString(),
     },
-    description,
     sequenceType: SequenceType.oneoff,
     webhookUrl: config.get('mollie.topUpWebhookUrl'),
     redirectUrl: config.get('mollie.paymentRedirectUrl'),

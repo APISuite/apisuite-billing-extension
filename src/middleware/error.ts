@@ -7,7 +7,7 @@ import log from '../log'
 import { v4 } from 'uuid'
 import { HandlerResponse } from '../types'
 import {
-  SubscriptionPreconditionError,
+  PurchasePreconditionError,
   UserInputError,
 } from '../controllers'
 
@@ -17,7 +17,7 @@ export const error = (err: Error, req: Request, res: Response, next: NextFunctio
     return res.status(400).json({ errors: err.errors })
   }
 
-  if (err instanceof SubscriptionPreconditionError) {
+  if (err instanceof PurchasePreconditionError) {
     return res.status(400).json({ errors: [err.message] })
   }
 
