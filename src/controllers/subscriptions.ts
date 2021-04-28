@@ -2,6 +2,7 @@ import { NextFunction, Request, Response, Router } from 'express'
 import { db } from '../db'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController } from './base'
+import { NotFoundError } from './errors'
 import { subscription as subscriptionsRepo } from '../models'
 import { authenticated, isAdmin, asyncWrap as aw } from '../middleware'
 import { DuplicateError } from '../models/errors'
@@ -27,13 +28,11 @@ export class SubscriptionsController implements BaseController {
     })
   }
 
-  public getSubscription = async (req: Request, res: Response): AsyncHandlerResponse => {
+  public getSubscription = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
     const subscription = await subscriptionsRepo.findById(null, Number(req.params.id))
 
     if (!subscription) {
-      return res.status(404).json({
-        errors: ['subscription not found'],
-      })
+      return next(new NotFoundError('subscription'))
     }
 
     return res.status(200).json({
@@ -54,11 +53,6 @@ export class SubscriptionsController implements BaseController {
         data: subscription,
       })
     } catch (err) {
-      if (err instanceof DuplicateError) {
-        return res.status(409).json({
-          errors: [err.message],
-        })
-      }
       next(err)
     }
   }
@@ -70,9 +64,7 @@ export class SubscriptionsController implements BaseController {
 
       if (!subscription) {
         await trx.rollback()
-        return res.status(404).json({
-          errors: ['subscription not found'],
-        })
+        return next(new NotFoundError('subscription'))
       }
 
       subscription = await subscriptionsRepo.update(trx, subscription.id, req.body)
@@ -84,11 +76,6 @@ export class SubscriptionsController implements BaseController {
       })
     } catch (err) {
       await trx.rollback()
-      if (err instanceof DuplicateError) {
-        return res.status(409).json({
-          errors: [err.message],
-        })
-      }
       next(err)
     }
   }

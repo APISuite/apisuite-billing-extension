@@ -1,5 +1,5 @@
 import express, {
-  Application,
+  Application, NextFunction,
   Request,
   Response,
 } from 'express'
@@ -15,7 +15,7 @@ import {
   WebhooksController,
   PackagesController,
   PurchasesController,
-  SubscriptionsController,
+  SubscriptionsController, NotFoundError,
 } from './controllers'
 
 export default class App {
@@ -49,8 +49,8 @@ export default class App {
       res.json({ version })
     })
 
-    this.app.use('*', (req: Request, res: Response) => {
-      res.status(404).json({ errors: ['route not found'] })
+    this.app.use('*', (req: Request, res: Response, next: NextFunction) => {
+      next(new NotFoundError('route'))
     })
   }
 

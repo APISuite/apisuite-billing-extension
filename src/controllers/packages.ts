@@ -2,9 +2,9 @@ import { NextFunction, Request, Response, Router } from 'express'
 import { db } from '../db'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController } from './base'
+import { NotFoundError } from './errors'
 import { pkg as pkgsRepo } from '../models'
 import { authenticated, isAdmin, asyncWrap as aw } from '../middleware'
-import { DuplicateError } from '../models/errors'
 
 export class PackagesController implements BaseController {
   private readonly path = '/packages'
@@ -27,13 +27,11 @@ export class PackagesController implements BaseController {
     })
   }
 
-  public getPackage = async (req: Request, res: Response): AsyncHandlerResponse => {
+  public getPackage = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
     const plan = await pkgsRepo.findById(null, Number(req.params.id))
 
     if (!plan) {
-      return res.status(404).json({
-        errors: ['plan not found'],
-      })
+      return next(new NotFoundError('package'))
     }
 
     return res.status(200).json({
@@ -53,11 +51,6 @@ export class PackagesController implements BaseController {
         data: pkg,
       })
     } catch (err) {
-      if (err instanceof DuplicateError) {
-        return res.status(409).json({
-          errors: [err.message],
-        })
-      }
       next(err)
     }
   }
@@ -69,9 +62,7 @@ export class PackagesController implements BaseController {
 
       if (!plan) {
         await trx.rollback()
-        return res.status(404).json({
-          errors: ['plan not found'],
-        })
+        return next(new NotFoundError('package'))
       }
 
       plan = await pkgsRepo.update(trx, plan.id, req.body)
@@ -83,11 +74,6 @@ export class PackagesController implements BaseController {
       })
     } catch (err) {
       await trx.rollback()
-      if (err instanceof DuplicateError) {
-        return res.status(409).json({
-          errors: [err.message],
-        })
-      }
       next(err)
     }
   }

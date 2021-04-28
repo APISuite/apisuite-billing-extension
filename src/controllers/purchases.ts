@@ -1,6 +1,7 @@
-import { Request, Response, Router } from 'express'
+import { NextFunction, Request, Response, Router } from 'express'
 import { AsyncHandlerResponse } from '../types'
-import { BaseController, PurchasePreconditionError } from './base'
+import { BaseController } from './base'
+import { NotFoundError, PurchasePreconditionError } from './errors'
 import { asyncWrap as aw, authenticated } from '../middleware'
 import {
   pkg as pkgsRepo,
@@ -39,7 +40,7 @@ export class PurchasesController implements BaseController {
     })
   }
 
-  public purchasePackage = async (req: Request, res: Response): AsyncHandlerResponse => {
+  public purchasePackage = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
     const user = await usersRepo.getOrBootstrapUser(null, res.locals.authenticatedUser.id)
     if (!user.ppCustomerId) {
       throw new PurchasePreconditionError('no valid payment method available')
@@ -48,9 +49,7 @@ export class PurchasesController implements BaseController {
     const pkg = await pkgsRepo.findById(null, Number(req.params.id))
 
     if (!pkg) {
-      return res.status(404).json({
-        errors: ['package not found'],
-      })
+      return next(new NotFoundError('package'))
     }
 
     const payment = await topUpPayment(pkg.price, pkg.name, user.ppCustomerId)
@@ -65,7 +64,7 @@ export class PurchasesController implements BaseController {
     return res.status(302).redirect(payment.checkoutURL)
   }
 
-  public purchaseSubscription = async (req: Request, res: Response): AsyncHandlerResponse => {
+  public purchaseSubscription = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
     const user = await usersRepo.getOrBootstrapUser(null, res.locals.authenticatedUser.id)
     if (!user.ppCustomerId || !user.ppMandateId) {
       throw new PurchasePreconditionError('no valid payment method available')
@@ -77,9 +76,7 @@ export class PurchasesController implements BaseController {
 
     const subscription = await subscriptionsRepo.findById(null, Number(req.params.id))
     if (!subscription) {
-      return res.status(404).json({
-        errors: ['subscription not found'],
-      })
+      return next(new NotFoundError('subscription'))
     }
 
     if (!(await isMandateValid(user.ppMandateId, user.ppCustomerId))) {

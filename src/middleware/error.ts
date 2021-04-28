@@ -7,9 +7,11 @@ import log from '../log'
 import { v4 } from 'uuid'
 import { HandlerResponse } from '../types'
 import {
-  PurchasePreconditionError,
   UserInputError,
+  PurchasePreconditionError,
+  NotFoundError,
 } from '../controllers'
+import { DuplicateError } from '../models/errors'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const error = (err: Error, req: Request, res: Response, next: NextFunction): HandlerResponse => {
@@ -19,6 +21,14 @@ export const error = (err: Error, req: Request, res: Response, next: NextFunctio
 
   if (err instanceof PurchasePreconditionError) {
     return res.status(400).json({ errors: [err.message] })
+  }
+
+  if (err instanceof NotFoundError) {
+    return res.status(404).json({ errors: [err.message] })
+  }
+
+  if (err instanceof DuplicateError) {
+    return res.status(409).json({ errors: [err.message] })
   }
 
   const errorId = v4()
