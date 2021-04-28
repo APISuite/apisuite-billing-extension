@@ -1,11 +1,10 @@
 import { NextFunction, Request, Response, Router } from 'express'
 import { db } from '../db'
 import { AsyncHandlerResponse } from '../types'
-import { BaseController } from './base'
+import { BaseController, responseBase } from './base'
 import { NotFoundError } from './errors'
 import { subscription as subscriptionsRepo } from '../models'
 import { authenticated, isAdmin, asyncWrap as aw } from '../middleware'
-import { DuplicateError } from '../models/errors'
 
 export class SubscriptionsController implements BaseController {
   private readonly path = '/subscriptions'
@@ -23,9 +22,7 @@ export class SubscriptionsController implements BaseController {
   public getSubscriptions = async (req: Request, res: Response): AsyncHandlerResponse => {
     const subscriptions = await subscriptionsRepo.findAll(null)
 
-    return res.status(200).json({
-      data: subscriptions,
-    })
+    return res.status(200).json(responseBase(subscriptions))
   }
 
   public getSubscription = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
@@ -35,9 +32,7 @@ export class SubscriptionsController implements BaseController {
       return next(new NotFoundError('subscription'))
     }
 
-    return res.status(200).json({
-      data: subscription,
-    })
+    return res.status(200).json(responseBase(subscription))
   }
 
   public createSubscription = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
@@ -49,9 +44,7 @@ export class SubscriptionsController implements BaseController {
         periodicity: req.body.periodicity,
       })
 
-      return res.status(201).json({
-        data: subscription,
-      })
+      return res.status(201).json(responseBase(subscription))
     } catch (err) {
       next(err)
     }
@@ -71,9 +64,7 @@ export class SubscriptionsController implements BaseController {
 
       await trx.commit()
 
-      return res.status(200).json({
-        data: subscription,
-      })
+      return res.status(200).json(responseBase(subscription))
     } catch (err) {
       await trx.rollback()
       next(err)

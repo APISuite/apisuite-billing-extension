@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response, Router } from 'express'
 import { AsyncHandlerResponse } from '../types'
-import { BaseController } from './base'
+import { BaseController, responseBase } from './base'
 import { NotFoundError, PurchasePreconditionError } from './errors'
 import { asyncWrap as aw, authenticated } from '../middleware'
 import {
@@ -31,13 +31,11 @@ export class PurchasesController implements BaseController {
   public listPurchases = async (req: Request, res: Response): AsyncHandlerResponse => {
     const user = await usersRepo.getOrBootstrapUser(null, res.locals.authenticatedUser.id)
     if (!user.ppCustomerId) {
-      return res.status(200).json({ data: [] })
+      return res.status(200).json(responseBase([]))
     }
     const payments = await listCustomerPayments(user.ppCustomerId)
 
-    return res.status(200).json({
-      data: payments,
-    })
+    return res.status(200).json(responseBase(payments))
   }
 
   public purchasePackage = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {

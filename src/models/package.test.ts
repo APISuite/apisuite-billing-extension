@@ -2,7 +2,6 @@ import { expect } from 'chai'
 import { findAll, findById, create, update, deletePackage } from './package'
 import { db } from '../db'
 
-
 export default function run(): void {
   it('should return a list of packages', async () => {
     const testAssertions = (r: any) => {

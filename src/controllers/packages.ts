@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response, Router } from 'express'
 import { db } from '../db'
 import { AsyncHandlerResponse } from '../types'
-import { BaseController } from './base'
+import { BaseController, responseBase } from './base'
 import { NotFoundError } from './errors'
 import { pkg as pkgsRepo } from '../models'
 import { authenticated, isAdmin, asyncWrap as aw } from '../middleware'
@@ -22,9 +22,7 @@ export class PackagesController implements BaseController {
   public getPackages = async (req: Request, res: Response): AsyncHandlerResponse => {
     const plans = await pkgsRepo.findAll(null)
 
-    return res.status(200).json({
-      data: plans,
-    })
+    return res.status(200).json(responseBase(plans))
   }
 
   public getPackage = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
@@ -34,9 +32,7 @@ export class PackagesController implements BaseController {
       return next(new NotFoundError('package'))
     }
 
-    return res.status(200).json({
-      data: plan,
-    })
+    return res.status(200).json(responseBase(plan))
   }
 
   public createPackage = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
@@ -47,9 +43,7 @@ export class PackagesController implements BaseController {
         credits: req.body.credits,
       })
 
-      return res.status(201).json({
-        data: pkg,
-      })
+      return res.status(201).json(responseBase(pkg))
     } catch (err) {
       next(err)
     }
@@ -58,20 +52,18 @@ export class PackagesController implements BaseController {
   public updatePackage = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
     const trx = await db.transaction()
     try {
-      let plan = await pkgsRepo.findById(trx, Number(req.params.id))
+      let pkg = await pkgsRepo.findById(trx, Number(req.params.id))
 
-      if (!plan) {
+      if (!pkg) {
         await trx.rollback()
         return next(new NotFoundError('package'))
       }
 
-      plan = await pkgsRepo.update(trx, plan.id, req.body)
+      pkg = await pkgsRepo.update(trx, pkg.id, req.body)
 
       await trx.commit()
 
-      return res.status(200).json({
-        data: plan,
-      })
+      return res.status(200).json(responseBase(pkg))
     } catch (err) {
       await trx.rollback()
       next(err)

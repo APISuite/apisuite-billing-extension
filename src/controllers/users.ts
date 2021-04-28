@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response, Router } from 'express'
 import { AsyncHandlerResponse } from '../types'
-import { BaseController } from './base'
+import { BaseController, responseBase } from './base'
 import { transaction as txnRepo, user as usersRepo } from '../models'
 import { authenticated, isSelf, asyncWrap as aw, isAdmin } from '../middleware/'
 import { createCustomer, firstPayment, cancelSubscription } from '../payment-processing'
@@ -21,10 +21,7 @@ export class UsersController implements BaseController {
 
   public getUserDetails = async (req: Request, res: Response): AsyncHandlerResponse => {
     const user = await usersRepo.getOrBootstrapUser(null, Number(req.params.id))
-
-    return res.status(200).json({
-      data: user,
-    })
+    return res.status(200).json(responseBase(user))
   }
 
   public setupConsent = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
@@ -90,8 +87,6 @@ export class UsersController implements BaseController {
       credits: user.credits + Number(req.body.credits),
     })
 
-    return res.status(200).json({
-      data: user,
-    })
+    return res.status(200).json(responseBase(user))
   }
 }

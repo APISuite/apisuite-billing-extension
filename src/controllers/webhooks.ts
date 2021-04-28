@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response, Router } from 'express'
 import { AsyncHandlerResponse } from '../types'
-import { BaseController } from './base'
+import { BaseController, responseBase } from './base'
 import {
   transaction as txnRepo,
   user as usersRepo,
@@ -65,9 +65,7 @@ export class WebhooksController implements BaseController {
       }
     }
 
-    return res.status(200).json({
-      data: 'ok',
-    })
+    return res.status(200).json(responseBase('ok'))
   }
 
   public topUpPaymentWebhookHandler = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
@@ -91,9 +89,7 @@ export class WebhooksController implements BaseController {
       }
     }
 
-    return res.status(200).json({
-      data: 'ok',
-    })
+    return res.status(200).json(responseBase('ok'))
   }
 
   public firstPaymentWebhookHandler = async (req: Request, res: Response): AsyncHandlerResponse => {
@@ -108,8 +104,6 @@ export class WebhooksController implements BaseController {
       await txnRepo.setVerified(null, payment.id)
     }
 
-    return res.status(200).json({
-      data: 'ok',
-    })
+    return res.status(200).json(responseBase('ok'))
   }
 }

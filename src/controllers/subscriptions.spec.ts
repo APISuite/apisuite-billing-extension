@@ -3,11 +3,10 @@ import { expect } from 'chai'
 import express, { Request, Response, NextFunction } from 'express'
 import request from 'supertest'
 import { error } from '../middleware'
-import { pkg as pkgsRepo, subscription as subscriptionsRepo } from '../models'
+import { subscription as subscriptionsRepo } from '../models'
 import { SubscriptionsController } from './subscriptions'
 import { DuplicateError } from '../models/errors'
 import { db } from '../db'
-import { PackagesController } from './packages'
 
 describe('subscriptions controller', () => {
   const injectUser = (req: Request, res: Response, next: NextFunction) => {
