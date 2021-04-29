@@ -486,12 +486,16 @@ components:
       type: object
       properties:
         id:
+          type: number
+        credits:
+          type: number
+        subscriptionId:
           type: string
-        name:
+        ppCustomerId:
           type: string
-        email:
+        ppMandateId:
           type: string
-        picture:
+        ppSubscriptionId:
           type: string
     Package:
       type: object
