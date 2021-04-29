@@ -14,8 +14,10 @@ import {
   subscriptionPayment,
   topUpPayment,
   listCustomerPayments,
+  cancelSubscription,
 } from '../payment-processing'
 import { TransactionType } from '../models/transaction'
+import { db } from '../db'
 
 export class PurchasesController implements BaseController {
   private readonly path = '/purchases'
@@ -63,37 +65,54 @@ export class PurchasesController implements BaseController {
   }
 
   public purchaseSubscription = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
-    const user = await usersRepo.getOrBootstrapUser(null, res.locals.authenticatedUser.id)
-    if (!user.ppCustomerId || !user.ppMandateId) {
-      throw new PurchasePreconditionError('no valid payment method available')
+    const trx = await db.transaction()
+    try {
+      const user = await usersRepo.getOrBootstrapUser(trx, res.locals.authenticatedUser.id)
+      if (!user.ppCustomerId || !user.ppMandateId) {
+        await trx.rollback()
+        return next(new PurchasePreconditionError('no valid payment method available'))
+      }
+
+      if (user.subscriptionId === Number(req.params.id)) {
+        await trx.rollback()
+        return next(new PurchasePreconditionError('subscription already active'))
+      }
+
+      const subscription = await subscriptionsRepo.findById(trx, Number(req.params.id))
+      if (!subscription) {
+        await trx.rollback()
+        return next(new NotFoundError('subscription'))
+      }
+
+      if (!(await isMandateValid(user.ppMandateId, user.ppCustomerId))) {
+        await trx.rollback()
+        return next(new PurchasePreconditionError('configured payment method is invalid'))
+      }
+
+      if (user.ppSubscriptionId) {
+        await cancelSubscription(user.ppSubscriptionId, user.ppCustomerId)
+        user.ppSubscriptionId = null
+        user.subscriptionId = null
+      }
+
+      const subscriptionId = await subscriptionPayment({
+        customerId: user.ppCustomerId,
+        mandateId: user.ppMandateId,
+        price: subscription.price,
+        credits: subscription.credits,
+        description: subscription.name,
+        interval: subscription.periodicity,
+      })
+      await usersRepo.update(trx, user.id, {
+        subscriptionId: subscription.id,
+        ppSubscriptionId: subscriptionId,
+      })
+
+      await trx.commit()
+      return res.sendStatus(204)
+    } catch(err) {
+      await trx.rollback()
+      next(err)
     }
-
-    if (user.ppSubscriptionId || user.subscriptionId) {
-      throw new PurchasePreconditionError('user has active subscription')
-    }
-
-    const subscription = await subscriptionsRepo.findById(null, Number(req.params.id))
-    if (!subscription) {
-      return next(new NotFoundError('subscription'))
-    }
-
-    if (!(await isMandateValid(user.ppMandateId, user.ppCustomerId))) {
-      throw new PurchasePreconditionError('configured payment method is invalid')
-    }
-
-    const subscriptionId = await subscriptionPayment({
-      customerId: user.ppCustomerId,
-      mandateId: user.ppMandateId,
-      price: subscription.price,
-      credits: subscription.credits,
-      description: subscription.name,
-      interval: subscription.periodicity,
-    })
-    await usersRepo.update(null, user.id, {
-      subscriptionId: subscription.id,
-      ppSubscriptionId: subscriptionId,
-    })
-
-    return res.sendStatus(204)
   }
 }

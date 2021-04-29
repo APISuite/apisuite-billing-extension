@@ -11,6 +11,7 @@ import {
 } from '../models'
 import { PurchasesController } from './purchases'
 import * as paymentProcessing from '../payment-processing'
+import { db } from '../db'
 
 describe('purchases controller', () => {
   const injectUser = (req: Request, res: Response, next: NextFunction) => {
@@ -164,6 +165,13 @@ describe('purchases controller', () => {
       periodicity: '1 month',
     }
 
+    beforeEach(() => {
+      sinon.stub(db, 'transaction').resolves({
+        commit: sinon.stub(),
+        rollback: sinon.stub(),
+      })
+    })
+
     it('should return 404 when subscription does not exist', (done) => {
       sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
         id: 1,
@@ -224,12 +232,11 @@ describe('purchases controller', () => {
         .catch((err: Error) => done(err))
     })
 
-    it('should return 400 when user has active subscription', (done) => {
-      sinon.stub(subscriptionsRepo, 'findById').resolves(mockSubscription)
+    it('should return 400 when subscription is already active', (done) => {
       sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
         id: 1,
         credits: 100,
-        subscriptionId: null,
+        subscriptionId: 99,
         ppCustomerId: 'x-customer-1234',
         ppMandateId: 'x-mandate-1234',
         ppSubscriptionId: 'x-subscription-1234',
@@ -274,6 +281,7 @@ describe('purchases controller', () => {
         ppSubscriptionId: null,
       })
       sinon.stub(paymentProcessing, 'isMandateValid').resolves(true)
+      sinon.stub(paymentProcessing, 'cancelSubscription').resolves()
       sinon.stub(paymentProcessing, 'subscriptionPayment').resolves('sub-id')
       sinon.stub(usersRepo, 'update').resolves()
 
@@ -295,6 +303,7 @@ describe('purchases controller', () => {
         ppSubscriptionId: null,
       })
       sinon.stub(paymentProcessing, 'isMandateValid').resolves(true)
+      sinon.stub(paymentProcessing, 'cancelSubscription').resolves()
       sinon.stub(paymentProcessing, 'subscriptionPayment').rejects()
 
       request(testApp)
