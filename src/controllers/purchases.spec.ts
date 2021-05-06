@@ -80,24 +80,6 @@ describe('purchases controller', () => {
       .use(controller.getRouter())
       .use(error)
 
-    it('should return 400 when user has no customer id', (done) => {
-      sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
-        id: 1,
-        credits: 100,
-        subscriptionId: null,
-        ppCustomerId: null,
-        ppMandateId: null,
-        ppSubscriptionId: null,
-      })
-
-      request(testApp)
-        .post('/purchases/packages/99')
-        .expect(400)
-        .expect('Content-Type', /json/)
-        .then(() => done())
-        .catch((err: Error) => done(err))
-    })
-
     it('should return 404 when plan does not exist', (done) => {
       sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
         id: 1,
@@ -129,6 +111,37 @@ describe('purchases controller', () => {
         ppMandateId: null,
         ppSubscriptionId: null,
       })
+      sinon.stub(pkgsRepo, 'findById').resolves({
+        id: 99,
+        name: '5k creds',
+        price: 123,
+        credits: 5000,
+      })
+      sinon.stub(txnRepo, 'create').resolves()
+      sinon.stub(paymentProcessing, 'topUpPayment').resolves({
+        id: 'payment-id-12345',
+        checkoutURL: 'https://redirected.here',
+      })
+
+      request(testApp)
+        .post('/purchases/packages/99')
+        .send({ planId: 99 })
+        .expect(302)
+        .then(() => done())
+        .catch((err: Error) => done(err))
+    })
+
+    it('should return 302 when purchasing a top up (user has no customer id)', (done) => {
+      sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
+        id: 1,
+        credits: 100,
+        subscriptionId: null,
+        ppCustomerId: null,
+        ppMandateId: null,
+        ppSubscriptionId: null,
+      })
+      sinon.stub(paymentProcessing, 'createUser').resolves('custmr-id')
+      sinon.stub(usersRepo, 'update').resolves()
       sinon.stub(pkgsRepo, 'findById').resolves({
         id: 99,
         name: '5k creds',

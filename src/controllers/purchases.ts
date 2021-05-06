@@ -15,6 +15,7 @@ import {
   topUpPayment,
   listCustomerPayments,
   cancelSubscription,
+  createUser,
 } from '../payment-processing'
 import { TransactionType } from '../models/transaction'
 import { db } from '../db'
@@ -43,11 +44,11 @@ export class PurchasesController implements BaseController {
   public purchasePackage = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
     const user = await usersRepo.getOrBootstrapUser(null, res.locals.authenticatedUser.id)
     if (!user.ppCustomerId) {
-      throw new PurchasePreconditionError('no valid payment method available')
+      user.ppCustomerId = await createUser(res.locals.authenticatedUser.name, res.locals.authenticatedUser.email)
+      await usersRepo.update(null, res.locals.authenticatedUser.id, { ppCustomerId: user.ppCustomerId })
     }
 
     const pkg = await pkgsRepo.findById(null, Number(req.params.id))
-
     if (!pkg) {
       return next(new NotFoundError('package'))
     }
