@@ -140,7 +140,7 @@ export const topUpPayment = async (price: number, description: string, customerI
     },
     sequenceType: SequenceType.oneoff,
     webhookUrl: config.get('mollie.topUpWebhookUrl'),
-    redirectUrl: config.get('mollie.paymentRedirectUrl'),
+    redirectUrl: 'http://localhost:3001?type=topup', //config.get('mollie.paymentRedirectUrl'),
   })
 
   const checkoutURL = getPaymentCheckoutURL(payment)
@@ -191,7 +191,7 @@ export interface SubscriptionPaymentData {
 
 export const subscriptionPayment = async (sub: SubscriptionPaymentData): Promise<string> => {
   const startDate = (new Date()).toISOString().split('T')[0]
-  const payment = await mollieClient.customers_subscriptions.create({
+  const subscription = await mollieClient.customers_subscriptions.create({
     customerId: sub.customerId,
     mandateId: sub.mandateId,
     description: sub.description,
@@ -205,7 +205,7 @@ export const subscriptionPayment = async (sub: SubscriptionPaymentData): Promise
     startDate,
   })
 
-  return payment.id
+  return subscription.id
 }
 
 export const cancelSubscription = async (id: string, customerId: string): Promise<void> => {
