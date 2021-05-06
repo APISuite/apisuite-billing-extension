@@ -472,8 +472,8 @@ paths:
           schema:
             type: number
       responses:
-        '302':
-          description: Payment processor checkout page redirect
+        '204':
+          description: No content
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -529,9 +529,9 @@ components:
         description:
           type: string
         method:
-          type: string
+          type: number
         status:
-          type: string
+          type: number
         amount:
           type: object
           properties:
