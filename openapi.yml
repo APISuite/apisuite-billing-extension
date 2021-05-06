@@ -529,9 +529,9 @@ components:
         description:
           type: string
         method:
-          type: number
+          type: string
         status:
-          type: number
+          type: string
         amount:
           type: object
           properties:
