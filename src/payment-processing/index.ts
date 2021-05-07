@@ -1,5 +1,7 @@
+import moment from 'moment'
 import mollie, { MandateStatus, Payment, PaymentStatus, SequenceType, SubscriptionStatus } from '@mollie/api-client'
 import config from '../config'
+import { Subscription } from '../models/subscription'
 
 const mollieClient = mollie({
   apiKey: config.get('mollie.apiKey'),
@@ -70,6 +72,21 @@ export interface CustomerPayment {
   }
 }
 
+export interface SubscriptionPaymentData {
+  customerId: string
+  price: number
+  credits: number
+  description: string
+  interval: string
+  startAfterFirstInterval: boolean
+}
+
+const getPaymentCheckoutURL = (payment: Payment): string | null => {
+  return payment && payment._links.checkout && payment._links.checkout.href
+    ? payment._links.checkout.href
+    : null
+}
+
 export const createCustomer = async (newCustomer: NewMollieCustomer): Promise<string> => {
   const customer = await mollieClient.customers.create({
     email: newCustomer.email,
@@ -104,16 +121,42 @@ export const listCustomerPayments = async (id: string): Promise<CustomerPayment[
   }))
 }
 
-export const firstPayment = async (customerId: string): Promise<FirstPaymentResult> => {
+export const firstPayment = async (customerId: string, value: number): Promise<FirstPaymentResult> => {
   const payment = await mollieClient.payments.create({
     amount: {
       currency: 'EUR',
-      value: '0.00',
+      value: value.toFixed(2).toString(),
     },
     customerId,
-    description: 'Payment method authorization',
+    description: 'Payment authorization',
     sequenceType: SequenceType.first,
     webhookUrl: config.get('mollie.firstPaymentWebhookUrl'),
+    redirectUrl: config.get('mollie.paymentRedirectUrl'),
+  })
+
+  const checkoutURL = getPaymentCheckoutURL(payment)
+  if (!checkoutURL) throw new Error('failed to create payment')
+
+  if (!payment.mandateId) throw new Error('failed to create mandate')
+
+  return {
+    id: payment.id,
+    checkoutURL: checkoutURL,
+    mandateId: payment.mandateId,
+    amount: parseFloat(payment.amount.value),
+  }
+}
+
+export const subscriptionFirstPayment = async (customerId: string, subscription: Subscription): Promise<FirstPaymentResult> => {
+  const payment = await mollieClient.payments.create({
+    amount: {
+      currency: 'EUR',
+      value: subscription.price.toFixed(2).toString(),
+    },
+    customerId,
+    description: 'Payment authorization - ' + subscription.name,
+    sequenceType: SequenceType.first,
+    webhookUrl: config.get('mollie.subscriptionFirstPaymentWebhookUrl'),
     redirectUrl: config.get('mollie.paymentRedirectUrl'),
   })
 
@@ -136,11 +179,11 @@ export const topUpPayment = async (price: number, description: string, customerI
     description,
     amount: {
       currency: 'EUR',
-      value: price.toString(),
+      value: price.toFixed(2).toString(),
     },
     sequenceType: SequenceType.oneoff,
     webhookUrl: config.get('mollie.topUpWebhookUrl'),
-    redirectUrl: 'http://localhost:3001?type=topup', //config.get('mollie.paymentRedirectUrl'),
+    redirectUrl: config.get('mollie.paymentRedirectUrl'), // 'http://localhost:3001?type=topup'
   })
 
   const checkoutURL = getPaymentCheckoutURL(payment)
@@ -174,31 +217,17 @@ export const verifySubscriptionPaymentSuccess = async (id: string): Promise<Veri
   }
 }
 
-const getPaymentCheckoutURL = (payment: Payment): string | null => {
-  return payment && payment._links.checkout && payment._links.checkout.href
-    ? payment._links.checkout.href
-    : null
-}
-
-export interface SubscriptionPaymentData {
-  customerId: string
-  mandateId: string
-  price: number
-  credits: number
-  description: string
-  interval: string
-}
-
 export const subscriptionPayment = async (sub: SubscriptionPaymentData): Promise<string> => {
-  const startDate = (new Date()).toISOString().split('T')[0]
+  const startDate = sub.startAfterFirstInterval ?
+    moment().add(...sub.interval.split(' ')).format('YYYY-MM-DD') :
+    moment().format('YYYY-MM-DD')
   const subscription = await mollieClient.customers_subscriptions.create({
     customerId: sub.customerId,
-    mandateId: sub.mandateId,
     description: sub.description,
     interval: sub.interval,
     amount: {
       currency: 'EUR',
-      value: sub.price.toString(),
+      value: sub.price.toFixed(2).toString(),
     },
     metadata: sub.credits,
     webhookUrl: config.get('mollie.subscriptionPaymentWebhookUrl'),

@@ -10,15 +10,15 @@ import {
   user as usersRepo,
 } from '../models'
 import {
-  isMandateValid,
+  findValidMandate,
+  firstPayment,
   subscriptionPayment,
   topUpPayment,
   listCustomerPayments,
   cancelSubscription,
-  createUser,
+  createUser, subscriptionFirstPayment,
 } from '../payment-processing'
 import { TransactionType } from '../models/transaction'
-import { db } from '../db'
 
 export class PurchasesController implements BaseController {
   private readonly path = '/purchases'
@@ -66,54 +66,59 @@ export class PurchasesController implements BaseController {
   }
 
   public purchaseSubscription = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
-    const trx = await db.transaction()
-    try {
-      const user = await usersRepo.getOrBootstrapUser(trx, res.locals.authenticatedUser.id)
-      if (!user.ppCustomerId || !user.ppMandateId) {
-        await trx.rollback()
-        return next(new PurchasePreconditionError('no valid payment method available'))
-      }
+    const user = await usersRepo.getOrBootstrapUser(null, res.locals.authenticatedUser.id)
 
-      if (user.subscriptionId === Number(req.params.id)) {
-        await trx.rollback()
-        return next(new PurchasePreconditionError('subscription already active'))
-      }
-
-      const subscription = await subscriptionsRepo.findById(trx, Number(req.params.id))
-      if (!subscription) {
-        await trx.rollback()
-        return next(new NotFoundError('subscription'))
-      }
-
-      if (!(await isMandateValid(user.ppMandateId, user.ppCustomerId))) {
-        await trx.rollback()
-        return next(new PurchasePreconditionError('configured payment method is invalid'))
-      }
-
-      if (user.ppSubscriptionId) {
-        await cancelSubscription(user.ppSubscriptionId, user.ppCustomerId)
-        user.ppSubscriptionId = null
-        user.subscriptionId = null
-      }
-
-      const subscriptionId = await subscriptionPayment({
-        customerId: user.ppCustomerId,
-        mandateId: user.ppMandateId,
-        price: subscription.price,
-        credits: subscription.credits,
-        description: subscription.name,
-        interval: subscription.periodicity,
-      })
-      await usersRepo.update(trx, user.id, {
-        subscriptionId: subscription.id,
-        ppSubscriptionId: subscriptionId,
-      })
-
-      await trx.commit()
-      return res.sendStatus(204)
-    } catch(err) {
-      await trx.rollback()
-      next(err)
+    if (user.subscriptionId === Number(req.params.id)) {
+      return next(new PurchasePreconditionError('subscription already active'))
     }
+
+    const subscription = await subscriptionsRepo.findById(null, Number(req.params.id))
+    if (!subscription) {
+      return next(new NotFoundError('subscription'))
+    }
+
+    if (!user.ppCustomerId) {
+      user.ppCustomerId = await createUser(res.locals.authenticatedUser.name, res.locals.authenticatedUser.email)
+      await usersRepo.update(null, res.locals.authenticatedUser.id, { ppCustomerId: user.ppCustomerId })
+    }
+
+    const mandate = await findValidMandate(user.ppCustomerId)
+    if (!mandate) {
+      const payment = await subscriptionFirstPayment(user.ppCustomerId, subscription)
+      await txnRepo.create(null, {
+        userId: res.locals.authenticatedUser.id,
+        paymentId: payment.id,
+        credits: subscription.credits,
+        verified: false,
+        type: TransactionType.Consent,
+        amount: payment.amount,
+      })
+      await usersRepo.update(null, user.id, {
+        subscriptionId: subscription.id,
+      })
+
+      return res.status(302).redirect(payment.checkoutURL)
+    }
+
+    if (user.ppSubscriptionId) {
+      await cancelSubscription(user.ppSubscriptionId, user.ppCustomerId)
+      user.ppSubscriptionId = null
+      user.subscriptionId = null
+    }
+
+    const subscriptionId = await subscriptionPayment({
+      customerId: user.ppCustomerId,
+      price: subscription.price,
+      credits: subscription.credits,
+      description: subscription.name,
+      interval: subscription.periodicity,
+      startAfterFirstInterval: false,
+    })
+    await usersRepo.update(null, user.id, {
+      subscriptionId: subscription.id,
+      ppSubscriptionId: subscriptionId,
+    })
+
+    return res.sendStatus(204)
   }
 }

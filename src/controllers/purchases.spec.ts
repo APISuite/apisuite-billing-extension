@@ -11,7 +11,6 @@ import {
 } from '../models'
 import { PurchasesController } from './purchases'
 import * as paymentProcessing from '../payment-processing'
-import { db } from '../db'
 
 describe('purchases controller', () => {
   const injectUser = (req: Request, res: Response, next: NextFunction) => {
@@ -178,20 +177,13 @@ describe('purchases controller', () => {
       periodicity: '1 month',
     }
 
-    beforeEach(() => {
-      sinon.stub(db, 'transaction').resolves({
-        commit: sinon.stub(),
-        rollback: sinon.stub(),
-      })
-    })
-
     it('should return 404 when subscription does not exist', (done) => {
       sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
         id: 1,
         credits: 100,
         subscriptionId: null,
-        ppCustomerId: 'x-customer-1234',
-        ppMandateId: 'x-mandate-1234',
+        ppCustomerId: null,
+        ppMandateId: null,
         ppSubscriptionId: null,
       })
       sinon.stub(subscriptionsRepo, 'findById').resolves(null)
@@ -204,44 +196,6 @@ describe('purchases controller', () => {
           expect(res.body.errors).to.be.an('array')
           done()
         })
-        .catch((err: Error) => done(err))
-    })
-
-    it('should return 400 when user has no customer id', (done) => {
-      sinon.stub(subscriptionsRepo, 'findById').resolves(mockSubscription)
-      sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
-        id: 1,
-        credits: 100,
-        subscriptionId: null,
-        ppCustomerId: null,
-        ppMandateId: 'x-mandate-1234',
-        ppSubscriptionId: null,
-      })
-
-      request(testApp)
-        .post('/purchases/subscriptions/99')
-        .expect(400)
-        .expect('Content-Type', /json/)
-        .then(() => done())
-        .catch((err: Error) => done(err))
-    })
-
-    it('should return 400 when user has no mandate id', (done) => {
-      sinon.stub(subscriptionsRepo, 'findById').resolves(mockSubscription)
-      sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
-        id: 1,
-        credits: 100,
-        subscriptionId: null,
-        ppCustomerId: 'x-customer-1234',
-        ppMandateId: null,
-        ppSubscriptionId: null,
-      })
-
-      request(testApp)
-        .post('/purchases/subscriptions/99')
-        .expect(400)
-        .expect('Content-Type', /json/)
-        .then(() => done())
         .catch((err: Error) => done(err))
     })
 
@@ -263,40 +217,96 @@ describe('purchases controller', () => {
         .catch((err: Error) => done(err))
     })
 
-    it('should return 400 when user mandate is invalid', (done) => {
-      sinon.stub(subscriptionsRepo, 'findById').resolves(mockSubscription)
+    it('should return 302 when first subscription payment is successfully created', (done) => {
       sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
         id: 1,
         credits: 100,
         subscriptionId: null,
-        ppCustomerId: 'x-customer-1234',
-        ppMandateId: 'x-mandate-1234',
-        ppSubscriptionId: 'x-subscription-1234',
+        ppCustomerId: null,
+        ppMandateId: null,
+        ppSubscriptionId: null,
       })
-      sinon.stub(paymentProcessing, 'isMandateValid').resolves(false)
+      sinon.stub(subscriptionsRepo, 'findById').resolves(mockSubscription)
+      sinon.stub(paymentProcessing, 'createUser').resolves('customerid123')
+      sinon.stub(usersRepo, 'update').resolves()
+      sinon.stub(paymentProcessing, 'findValidMandate').resolves(null)
+      sinon.stub(paymentProcessing, 'subscriptionFirstPayment').resolves({
+        id: 'pmntid',
+        amount: 123,
+        checkoutURL: 'url',
+        mandateId: 'mmm',
+      })
+      sinon.stub(txnRepo, 'create').resolves()
 
       request(testApp)
         .post('/purchases/subscriptions/99')
-        .expect(400)
-        .expect('Content-Type', /json/)
+        .expect(302)
         .then(() => done())
         .catch((err: Error) => done(err))
     })
 
-    it('should return 204 when subscription is successfully created', (done) => {
-      sinon.stub(subscriptionsRepo, 'findById').resolves(mockSubscription)
+    it('should return 302 when first subscription payment is successfully created (existing customer)', (done) => {
       sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
         id: 1,
         credits: 100,
         subscriptionId: null,
-        ppCustomerId: 'x-customer-1234',
-        ppMandateId: 'x-mandate-1234',
+        ppCustomerId: 'xcustomerid',
+        ppMandateId: null,
         ppSubscriptionId: null,
       })
-      sinon.stub(paymentProcessing, 'isMandateValid').resolves(true)
-      sinon.stub(paymentProcessing, 'cancelSubscription').resolves()
-      sinon.stub(paymentProcessing, 'subscriptionPayment').resolves('sub-id')
+      sinon.stub(subscriptionsRepo, 'findById').resolves(mockSubscription)
       sinon.stub(usersRepo, 'update').resolves()
+      sinon.stub(paymentProcessing, 'findValidMandate').resolves(null)
+      sinon.stub(paymentProcessing, 'subscriptionFirstPayment').resolves({
+        id: 'pmntid',
+        amount: 123,
+        checkoutURL: 'url',
+        mandateId: 'mmm',
+      })
+      sinon.stub(txnRepo, 'create').resolves()
+
+      request(testApp)
+        .post('/purchases/subscriptions/99')
+        .expect(302)
+        .then(() => done())
+        .catch((err: Error) => done(err))
+    })
+
+    it('should return 204 when subscription is successfully created (existing customer)', (done) => {
+      sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
+        id: 1,
+        credits: 100,
+        subscriptionId: null,
+        ppCustomerId: 'xcustomerid',
+        ppMandateId: null,
+        ppSubscriptionId: null,
+      })
+      sinon.stub(subscriptionsRepo, 'findById').resolves(mockSubscription)
+      sinon.stub(usersRepo, 'update').resolves()
+      sinon.stub(paymentProcessing, 'findValidMandate').resolves('xmandateid')
+      sinon.stub(paymentProcessing, 'subscriptionPayment').resolves('xsubid')
+
+      request(testApp)
+        .post('/purchases/subscriptions/99')
+        .expect(204)
+        .then(() => done())
+        .catch((err: Error) => done(err))
+    })
+
+    it('should return 204 when subscription is successfully created (existing customer, subscription change)', (done) => {
+      sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
+        id: 1,
+        credits: 100,
+        subscriptionId: null,
+        ppCustomerId: 'xcustomerid',
+        ppMandateId: null,
+        ppSubscriptionId: 'mysubid',
+      })
+      sinon.stub(subscriptionsRepo, 'findById').resolves(mockSubscription)
+      sinon.stub(usersRepo, 'update').resolves()
+      sinon.stub(paymentProcessing, 'findValidMandate').resolves('xmandateid')
+      sinon.stub(paymentProcessing, 'subscriptionPayment').resolves('xsubid')
+      sinon.stub(paymentProcessing, 'cancelSubscription').resolves()
 
       request(testApp)
         .post('/purchases/subscriptions/99')

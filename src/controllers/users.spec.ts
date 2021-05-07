@@ -131,7 +131,7 @@ describe('users controller', () => {
       })
 
       request(testApp)
-        .delete('/users/1/plans/1')
+        .delete('/users/1/subscriptions')
         .expect(204)
         .then(() => done())
         .catch((err: Error) => done(err))
@@ -148,7 +148,7 @@ describe('users controller', () => {
       })
 
       request(testApp)
-        .delete('/users/1/plans/1')
+        .delete('/users/1/subscriptions')
         .expect(204)
         .then(() => done())
         .catch((err: Error) => done(err))
@@ -165,7 +165,7 @@ describe('users controller', () => {
       })
 
       request(testApp)
-        .delete('/users/1/plans/1')
+        .delete('/users/1/subscriptions')
         .expect(204)
         .then(() => done())
         .catch((err: Error) => done(err))
@@ -182,7 +182,7 @@ describe('users controller', () => {
       })
 
       request(testApp)
-        .delete('/users/1/plans/1')
+        .delete('/users/1/subscriptions')
         .expect(204)
         .then(() => done())
         .catch((err: Error) => done(err))
@@ -201,7 +201,7 @@ describe('users controller', () => {
       sinon.stub(usersRepo, 'update').resolves()
 
       request(testApp)
-        .delete('/users/1/plans/1')
+        .delete('/users/1/subscriptions')
         .expect(204)
         .then(() => done())
         .catch((err: Error) => done(err))
@@ -219,7 +219,7 @@ describe('users controller', () => {
       sinon.stub(paymentProcessing, 'cancelSubscription').rejects()
 
       request(testApp)
-        .delete('/users/1/plans/1')
+        .delete('/users/1/subscriptions')
         .expect(500)
         .expect('Content-Type', /json/)
         .then(() => done())
