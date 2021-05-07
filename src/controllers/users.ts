@@ -15,7 +15,7 @@ export class UsersController implements BaseController {
     router.get(`${this.path}/:id`, authenticated, isSelf, aw(this.getUserDetails))
     router.post(`${this.path}/:id/consent`, authenticated, isSelf, aw(this.setupConsent))
     router.put(`${this.path}/:id/credits`, authenticated, isAdmin, aw(this.manageCredits))
-    router.delete(`${this.path}/:id/plans/:planId`, authenticated, isSelf, aw(this.cancelSubscription))
+    router.delete(`${this.path}/:id/subscriptions`, authenticated, isSelf, aw(this.cancelSubscription))
     return router
   }
 
@@ -42,7 +42,7 @@ export class UsersController implements BaseController {
         user.ppCustomerId = customerId
       }
 
-      const payment = await firstPayment(user.ppCustomerId)
+      const payment = await firstPayment(user.ppCustomerId, 0)
 
       await txnRepo.create(trx, {
         userId: res.locals.authenticatedUser.id,

@@ -386,7 +386,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-  /users/{id}/subscriptions/{subscriptionId}:
+  /users/{id}/subscriptions:
     delete:
       tags: [ users ]
       description: Cancels a user subscription
@@ -396,12 +396,6 @@ paths:
         - name: id
           in: path
           description: User ID
-          required: true
-          schema:
-            type: number
-        - name: subscriptionId
-          in: path
-          description: Subscription ID
           required: true
           schema:
             type: number
@@ -474,6 +468,8 @@ paths:
       responses:
         '204':
           description: No content
+        '302':
+          description: Payment processor checkout page redirect
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
