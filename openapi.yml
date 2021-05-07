@@ -437,6 +437,29 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /purchases/{id}:
+    get:
+      tags: [ purchases ]
+      description: Show purchase/transaction details
+      security:
+        - cookieAuth: [ ]
+      responses:
+        '200':
+          description: Purchase model list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    $ref: '#/components/schemas/Transaction'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /purchases/packages/{id}:
     post:
       tags: [ purchases ]
@@ -557,6 +580,25 @@ components:
             currency:
               type: string
         createdAt:
+          type: string
+    Transaction:
+      type: object
+      properties:
+        paymentId:
+          type: string
+        userId:
+          type: number
+        amount:
+          type: number
+        credits:
+          type: number
+        verified:
+          type: boolean
+        type:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
           type: string
     Health:
       type: object

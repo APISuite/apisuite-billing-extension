@@ -17,3 +17,9 @@ export class NotFoundError extends Error {
     super(`${entity} not found`)
   }
 }
+
+export class ForbiddenError extends Error {
+  constructor() {
+    super()
+  }
+}

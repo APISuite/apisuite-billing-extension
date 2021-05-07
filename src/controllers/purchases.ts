@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response, Router } from 'express'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController, responseBase } from './base'
-import { NotFoundError, PurchasePreconditionError } from './errors'
+import { NotFoundError, PurchasePreconditionError, ForbiddenError } from './errors'
 import { asyncWrap as aw, authenticated } from '../middleware'
 import {
   pkg as pkgsRepo,
@@ -25,6 +25,7 @@ export class PurchasesController implements BaseController {
   public getRouter(): Router {
     const router = Router()
     router.get(`${this.path}/`, authenticated, aw(this.listPurchases))
+    router.get(`${this.path}/:id`, authenticated, aw(this.getPurchase))
     router.post(`${this.path}/packages/:id`, authenticated, aw(this.purchasePackage))
     router.post(`${this.path}/subscriptions/:id`, authenticated, aw(this.purchaseSubscription))
     return router
@@ -38,6 +39,15 @@ export class PurchasesController implements BaseController {
     const payments = await listCustomerPayments(user.ppCustomerId)
 
     return res.status(200).json(responseBase(payments))
+  }
+
+  public getPurchase = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
+    const user = await usersRepo.getOrBootstrapUser(null, res.locals.authenticatedUser.id)
+    const transaction = await txnRepo.findById(null, req.params.id)
+    if (transaction.userId !== user.id) return next(new ForbiddenError())
+    if (!transaction) return next(new NotFoundError('purchase'))
+
+    return res.status(200).json(responseBase(transaction))
   }
 
   public purchasePackage = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {

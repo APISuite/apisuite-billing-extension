@@ -21,6 +21,17 @@ export interface Transaction {
 
 export type TransactionBase = Omit<Transaction, 'createdAt' | 'updatedAt'>
 
+export const findById = async (trx: OptTransaction, id: string): Promise<Transaction> => {
+  const _db = trx ? trx : db
+
+  const rows = await _db
+    .select()
+    .from(TABLE)
+    .where('payment_id', id)
+
+  return rows[0]
+}
+
 export const findAllByUser = async (trx: OptTransaction, userId: number): Promise<Transaction[]> => {
   const _db = trx ? trx : db
 
