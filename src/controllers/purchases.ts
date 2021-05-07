@@ -11,7 +11,6 @@ import {
 } from '../models'
 import {
   findValidMandate,
-  firstPayment,
   subscriptionPayment,
   topUpPayment,
   listCustomerPayments,
