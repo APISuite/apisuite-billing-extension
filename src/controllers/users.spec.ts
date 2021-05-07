@@ -61,7 +61,7 @@ describe('users controller', () => {
       })
     })
 
-    it('should return 302 when the user already has a customerID', (done) => {
+    it('should return 200 when the user already has a customerID', (done) => {
       sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
         id: 1,
         credits: 100,
@@ -81,12 +81,12 @@ describe('users controller', () => {
 
       request(testApp)
         .post('/users/1/consent')
-        .expect(302)
+        .expect(200)
         .then(() => done())
         .catch((err: Error) => done(err))
     })
 
-    it('should return 302 and setup customer when the user has no customerID', (done) => {
+    it('should return 200 and setup customer when the user has no customerID', (done) => {
       sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
         id: 1,
         credits: 100,
@@ -107,7 +107,7 @@ describe('users controller', () => {
 
       request(testApp)
         .post('/users/1/consent')
-        .expect(302)
+        .expect(200)
         .then(() => done())
         .catch((err: Error) => done(err))
     })

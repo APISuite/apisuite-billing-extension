@@ -61,7 +61,7 @@ export class PurchasesController implements BaseController {
       type: TransactionType.TopUp,
       amount: pkg.price,
     })
-    return res.status(302).redirect(payment.checkoutURL)
+    return res.status(200).json(responseBase(payment.checkoutURL))
   }
 
   public purchaseSubscription = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
@@ -96,7 +96,7 @@ export class PurchasesController implements BaseController {
         subscriptionId: subscription.id,
       })
 
-      return res.status(302).redirect(payment.checkoutURL)
+      return res.status(200).json(responseBase(payment.checkoutURL))
     }
 
     if (user.ppSubscriptionId) {

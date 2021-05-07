@@ -348,8 +348,15 @@ paths:
           schema:
             type: number
       responses:
-        '302':
-          description: Payment processor checkout page redirect
+        '200':
+          description: Payment processor checkout page url
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -444,8 +451,15 @@ paths:
           schema:
             type: number
       responses:
-        '302':
-          description: Payment processor checkout page redirect
+        '200':
+          description: Payment processor checkout page url
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -468,8 +482,15 @@ paths:
       responses:
         '204':
           description: No content
-        '302':
-          description: Payment processor checkout page redirect
+        '200':
+          description: Payment processor checkout page url
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':

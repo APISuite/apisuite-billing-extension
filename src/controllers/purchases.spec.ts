@@ -101,7 +101,7 @@ describe('purchases controller', () => {
         .catch((err: Error) => done(err))
     })
 
-    it('should return 302 when purchasing a top up', (done) => {
+    it('should return 200 when purchasing a top up', (done) => {
       sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
         id: 1,
         credits: 100,
@@ -125,12 +125,12 @@ describe('purchases controller', () => {
       request(testApp)
         .post('/purchases/packages/99')
         .send({ planId: 99 })
-        .expect(302)
+        .expect(200)
         .then(() => done())
         .catch((err: Error) => done(err))
     })
 
-    it('should return 302 when purchasing a top up (user has no customer id)', (done) => {
+    it('should return 200 when purchasing a top up (user has no customer id)', (done) => {
       sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
         id: 1,
         credits: 100,
@@ -156,7 +156,7 @@ describe('purchases controller', () => {
       request(testApp)
         .post('/purchases/packages/99')
         .send({ planId: 99 })
-        .expect(302)
+        .expect(200)
         .then(() => done())
         .catch((err: Error) => done(err))
     })
@@ -217,7 +217,7 @@ describe('purchases controller', () => {
         .catch((err: Error) => done(err))
     })
 
-    it('should return 302 when first subscription payment is successfully created', (done) => {
+    it('should return 200 when first subscription payment is successfully created', (done) => {
       sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
         id: 1,
         credits: 100,
@@ -240,12 +240,12 @@ describe('purchases controller', () => {
 
       request(testApp)
         .post('/purchases/subscriptions/99')
-        .expect(302)
+        .expect(200)
         .then(() => done())
         .catch((err: Error) => done(err))
     })
 
-    it('should return 302 when first subscription payment is successfully created (existing customer)', (done) => {
+    it('should return 200 when first subscription payment is successfully created (existing customer)', (done) => {
       sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
         id: 1,
         credits: 100,
@@ -267,7 +267,7 @@ describe('purchases controller', () => {
 
       request(testApp)
         .post('/purchases/subscriptions/99')
-        .expect(302)
+        .expect(200)
         .then(() => done())
         .catch((err: Error) => done(err))
     })

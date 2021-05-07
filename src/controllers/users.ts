@@ -56,7 +56,7 @@ export class UsersController implements BaseController {
         ppMandateId: payment.mandateId,
       })
       await trx.commit()
-      return res.status(302).redirect(payment.checkoutURL)
+      return res.status(200).json(responseBase(payment.checkoutURL))
     } catch(err) {
       await trx.rollback()
       next(err)
