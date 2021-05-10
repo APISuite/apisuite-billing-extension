@@ -7,31 +7,9 @@ const mollieClient = mollie({
   apiKey: config.get('mollie.apiKey'),
 })
 
-export const findValidMandate = async (customerId: string): Promise<string | null> => {
-  let mandates = await mollieClient.customers_mandates.list({
-    customerId,
-  })
-
-  while(mandates) {
-    if (!mandates.count) break
-
-    for(const m of mandates) {
-      if (m.status === MandateStatus.valid) {
-        return m.id
-      }
-    }
-
-    if (mandates.nextPage) {
-      mandates = await mandates.nextPage()
-    }
-  }
-
-  return null
-}
-
-export const isMandateValid = async (mandateId: string, customerId: string): Promise<boolean> => {
-  const mandate = await mollieClient.customers_mandates.get(mandateId, { customerId })
-  return mandate.status === MandateStatus.valid || mandate.status === MandateStatus.pending
+enum PaymentType {
+  TopUp = 'topup',
+  Subscription = 'subscription'
 }
 
 export interface NewMollieCustomer {
@@ -70,6 +48,8 @@ export interface CustomerPayment {
     value: string
     currency: string
   }
+  credits: number
+  type: string
 }
 
 export interface SubscriptionPaymentData {
@@ -85,6 +65,33 @@ const getPaymentCheckoutURL = (payment: Payment): string | null => {
   return payment && payment._links.checkout && payment._links.checkout.href
     ? payment._links.checkout.href
     : null
+}
+
+export const findValidMandate = async (customerId: string): Promise<string | null> => {
+  let mandates = await mollieClient.customers_mandates.list({
+    customerId,
+  })
+
+  while(mandates) {
+    if (!mandates.count) break
+
+    for(const m of mandates) {
+      if (m.status === MandateStatus.valid) {
+        return m.id
+      }
+    }
+
+    if (mandates.nextPage) {
+      mandates = await mandates.nextPage()
+    }
+  }
+
+  return null
+}
+
+export const isMandateValid = async (mandateId: string, customerId: string): Promise<boolean> => {
+  const mandate = await mollieClient.customers_mandates.get(mandateId, { customerId })
+  return mandate.status === MandateStatus.valid || mandate.status === MandateStatus.pending
 }
 
 export const createCustomer = async (newCustomer: NewMollieCustomer): Promise<string> => {
@@ -118,6 +125,8 @@ export const listCustomerPayments = async (id: string): Promise<CustomerPayment[
       currency: payment.amount.currency,
       value: payment.amount.value,
     },
+    credits: payment.metadata?.credits,
+    type: payment.metadata?.type,
   }))
 }
 
@@ -158,6 +167,10 @@ export const subscriptionFirstPayment = async (customerId: string, subscription:
     sequenceType: SequenceType.first,
     webhookUrl: config.get('mollie.subscriptionFirstPaymentWebhookUrl'),
     redirectUrl: config.get('mollie.paymentRedirectUrl'),
+    metadata: {
+      credits: subscription.credits,
+      type: PaymentType.Subscription,
+    },
   })
 
   const checkoutURL = getPaymentCheckoutURL(payment)
@@ -184,6 +197,10 @@ export const topUpPayment = async (price: number, description: string, customerI
     sequenceType: SequenceType.oneoff,
     webhookUrl: config.get('mollie.topUpWebhookUrl'),
     redirectUrl: config.get('mollie.paymentRedirectUrl'),
+    metadata: {
+      credits: 100,
+      type: PaymentType.TopUp,
+    },
   })
 
   const checkoutURL = getPaymentCheckoutURL(payment)
@@ -252,4 +269,8 @@ export const createUser = async (name: string, email: string): Promise<string> =
 
 export const updatePaymentRedirectURL = async (id: string, redirectUrl: string): Promise<void> => {
   await mollieClient.payments.update(id, { redirectUrl })
+}
+
+export const getPaymentDetails = (id: string): Promise<Payment> => {
+  return mollieClient.payments.get(id)
 }

@@ -18,6 +18,7 @@ import {
   createUser,
   subscriptionFirstPayment,
   updatePaymentRedirectURL,
+  getPaymentDetails,
 } from '../payment-processing'
 import { TransactionType } from '../models/transaction'
 import config from '../config'
@@ -46,11 +47,27 @@ export class PurchasesController implements BaseController {
 
   public getPurchase = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
     const user = await usersRepo.getOrBootstrapUser(null, res.locals.authenticatedUser.id)
+
     const transaction = await txnRepo.findById(null, req.params.id)
     if (transaction.userId !== user.id) return next(new ForbiddenError())
-    if (!transaction) return next(new NotFoundError('purchase'))
+    if (!transaction) return next(new NotFoundError('transaction'))
 
-    return res.status(200).json(responseBase(transaction))
+    const payment = await getPaymentDetails(req.params.id)
+    if (!payment) return next(new NotFoundError('payment'))
+
+    return res.status(200).json(responseBase({
+      id: payment.id,
+      description: payment.description,
+      method: payment.method,
+      status: payment.status,
+      createdAt: payment.createdAt,
+      amount: {
+        currency: payment.amount.currency,
+        value: payment.amount.value,
+      },
+      credits: payment.metadata?.credits,
+      type: payment.metadata?.type,
+    }))
   }
 
   public purchasePackage = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
