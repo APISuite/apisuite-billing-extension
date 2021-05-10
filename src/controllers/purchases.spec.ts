@@ -117,6 +117,7 @@ describe('purchases controller', () => {
         credits: 5000,
       })
       sinon.stub(txnRepo, 'create').resolves()
+      sinon.stub(paymentProcessing, 'updatePaymentRedirectURL').resolves()
       sinon.stub(paymentProcessing, 'topUpPayment').resolves({
         id: 'payment-id-12345',
         checkoutURL: 'https://redirected.here',
@@ -148,6 +149,7 @@ describe('purchases controller', () => {
         credits: 5000,
       })
       sinon.stub(txnRepo, 'create').resolves()
+      sinon.stub(paymentProcessing, 'updatePaymentRedirectURL').resolves()
       sinon.stub(paymentProcessing, 'topUpPayment').resolves({
         id: 'payment-id-12345',
         checkoutURL: 'https://redirected.here',
@@ -230,6 +232,7 @@ describe('purchases controller', () => {
       sinon.stub(paymentProcessing, 'createUser').resolves('customerid123')
       sinon.stub(usersRepo, 'update').resolves()
       sinon.stub(paymentProcessing, 'findValidMandate').resolves(null)
+      sinon.stub(paymentProcessing, 'updatePaymentRedirectURL').resolves()
       sinon.stub(paymentProcessing, 'subscriptionFirstPayment').resolves({
         id: 'pmntid',
         amount: 123,
@@ -257,6 +260,7 @@ describe('purchases controller', () => {
       sinon.stub(subscriptionsRepo, 'findById').resolves(mockSubscription)
       sinon.stub(usersRepo, 'update').resolves()
       sinon.stub(paymentProcessing, 'findValidMandate').resolves(null)
+      sinon.stub(paymentProcessing, 'updatePaymentRedirectURL').resolves()
       sinon.stub(paymentProcessing, 'subscriptionFirstPayment').resolves({
         id: 'pmntid',
         amount: 123,

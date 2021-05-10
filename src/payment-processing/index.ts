@@ -183,7 +183,7 @@ export const topUpPayment = async (price: number, description: string, customerI
     },
     sequenceType: SequenceType.oneoff,
     webhookUrl: config.get('mollie.topUpWebhookUrl'),
-    redirectUrl: config.get('mollie.paymentRedirectUrl'), // 'http://localhost:3001?type=topup'
+    redirectUrl: config.get('mollie.paymentRedirectUrl'),
   })
 
   const checkoutURL = getPaymentCheckoutURL(payment)
@@ -248,4 +248,8 @@ export const createUser = async (name: string, email: string): Promise<string> =
     email,
   })
   return customer.id
+}
+
+export const updatePaymentRedirectURL = async (id: string, redirectUrl: string): Promise<void> => {
+  await mollieClient.payments.update(id, { redirectUrl })
 }

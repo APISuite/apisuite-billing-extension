@@ -15,9 +15,12 @@ import {
   topUpPayment,
   listCustomerPayments,
   cancelSubscription,
-  createUser, subscriptionFirstPayment,
+  createUser,
+  subscriptionFirstPayment,
+  updatePaymentRedirectURL,
 } from '../payment-processing'
 import { TransactionType } from '../models/transaction'
+import config from '../config'
 
 export class PurchasesController implements BaseController {
   private readonly path = '/purchases'
@@ -63,6 +66,9 @@ export class PurchasesController implements BaseController {
     }
 
     const payment = await topUpPayment(pkg.price, pkg.name, user.ppCustomerId)
+    const redirectURL = new URL(config.get('mollie.paymentRedirectUrl'))
+    redirectURL.searchParams.append('id', payment.id)
+    await updatePaymentRedirectURL(payment.id, redirectURL.toString())
     await txnRepo.create(null, {
       userId: res.locals.authenticatedUser.id,
       paymentId: payment.id,
@@ -94,6 +100,9 @@ export class PurchasesController implements BaseController {
     const mandate = await findValidMandate(user.ppCustomerId)
     if (!mandate) {
       const payment = await subscriptionFirstPayment(user.ppCustomerId, subscription)
+      const redirectURL = new URL(config.get('mollie.paymentRedirectUrl'))
+      redirectURL.searchParams.append('id', payment.id)
+      await updatePaymentRedirectURL(payment.id, redirectURL.toString())
       await txnRepo.create(null, {
         userId: res.locals.authenticatedUser.id,
         paymentId: payment.id,
