@@ -74,8 +74,7 @@ export class UsersController implements BaseController {
   public cancelSubscription = async (req: Request, res: Response): AsyncHandlerResponse => {
     const user = await usersRepo.getOrBootstrapUser(null, Number(req.params.id))
 
-    if (!user.ppCustomerId || !user.ppSubscriptionId ||
-      !user.subscriptionId || user.subscriptionId !== Number(req.params.id)) return res.sendStatus(204)
+    if (!user.ppCustomerId || !user.ppSubscriptionId || !user.subscriptionId) return res.sendStatus(204)
 
     await cancelSubscription(user.ppSubscriptionId, user.ppCustomerId)
     await usersRepo.update(null, user.id, {
