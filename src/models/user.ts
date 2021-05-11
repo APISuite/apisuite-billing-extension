@@ -18,16 +18,24 @@ export type UserBase = Omit<User, 'ppCustomerId' | 'ppMandateId' | 'ppSubscripti
 export type UserUpdate = Omit<Optional<User>, 'id'>
 
 const getOrBootstrapUser = async (trx: OptTransaction, userID: number): Promise<User> => {
+  const _db = trx ? trx : db
   const user = await findById(trx, userID)
   if (user) return user
 
   const defaultCredits = Number(await settingsRepo.findByName(trx, SettingKeys.DefaultCredits))
 
-  return create(trx, {
-    id: userID,
-    credits: defaultCredits,
-    subscriptionId: null,
-  })
+  const rows = await _db
+    .insert({
+      id: userID,
+      credits: defaultCredits,
+      subscriptionId: null,
+    })
+    .into(TABLE)
+    .onConflict('id')
+    .ignore()
+    .returning('*')
+
+  return rows[0]
 }
 
 const findById = async(trx: OptTransaction, id: number): Promise<User | null> => {

@@ -3,7 +3,7 @@ import { AsyncHandlerResponse } from '../types'
 import { BaseController, responseBase } from './base'
 import { transaction as txnRepo, user as usersRepo } from '../models'
 import { authenticated, isSelf, asyncWrap as aw, isAdmin } from '../middleware/'
-import { createCustomer, firstPayment, cancelSubscription } from '../payment-processing'
+import { createCustomer, firstPayment, cancelSubscription, getSubscriptionNextPaymentDate } from '../payment-processing'
 import { TransactionType } from '../models/transaction'
 import { db } from '../db'
 
@@ -21,7 +21,15 @@ export class UsersController implements BaseController {
 
   public getUserDetails = async (req: Request, res: Response): AsyncHandlerResponse => {
     const user = await usersRepo.getOrBootstrapUser(null, Number(req.params.id))
-    return res.status(200).json(responseBase(user))
+    let nextPaymentDate
+    if (user.ppSubscriptionId && user.ppCustomerId) {
+      nextPaymentDate = await getSubscriptionNextPaymentDate(user.ppSubscriptionId, user.ppCustomerId)
+    }
+    return res.status(200).json(responseBase({
+      id: user.id,
+      subscriptionId: user.subscriptionId,
+      credits: user.credits,
+      nextPaymentDate }))
   }
 
   public setupConsent = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {

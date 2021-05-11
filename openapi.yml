@@ -531,11 +531,7 @@ components:
           type: number
         subscriptionId:
           type: string
-        ppCustomerId:
-          type: string
-        ppMandateId:
-          type: string
-        ppSubscriptionId:
+        nextPaymentDate:
           type: string
     Package:
       type: object

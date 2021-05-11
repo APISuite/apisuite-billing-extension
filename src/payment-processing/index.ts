@@ -274,3 +274,8 @@ export const updatePaymentRedirectURL = async (id: string, redirectUrl: string):
 export const getPaymentDetails = (id: string): Promise<Payment> => {
   return mollieClient.payments.get(id)
 }
+
+export const getSubscriptionNextPaymentDate = async (subscriptionId: string, customerId: string): Promise<string | null> => {
+  const subscription = await mollieClient.customers_subscriptions.get(subscriptionId, { customerId })
+  return subscription?.nextPaymentDate || null
+}
