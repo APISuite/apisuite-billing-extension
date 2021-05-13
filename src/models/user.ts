@@ -101,11 +101,22 @@ const findByPPSubscriptionId = async(trx: OptTransaction, subscriptionId: string
   return null
 }
 
+const deleteUser = async (trx: OptTransaction, id: number): Promise<number> => {
+  const _db = trx ? trx : db
+
+  await _db(TABLE)
+    .where('id', id)
+    .del()
+
+  return id
+}
+
 export {
   getOrBootstrapUser,
   findById,
   create,
   update,
+  deleteUser,
   incrementCredits,
   findByPPSubscriptionId,
 }

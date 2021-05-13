@@ -5,6 +5,8 @@
   "scripts": {
     "start": "ts-node dist/src/index.js",
     "dev": "nodemon --watch 'src/**/*.ts' --exec \"ts-node\" src/index.ts",
+    "consumer": "ts-node dist/src/msg-broker/index.js",
+    "dev-consumer": "nodemon --watch 'src/**/*.ts' --exec \"ts-node\" src/msg-broker/index.ts",
     "lint": "eslint 'src/**/*.ts'",
     "build": "tsc -p .",
     "test": "NODE_ENV=test LOG_LEVEL=silent mocha -r ts-node/register src/**/*.spec.ts",
@@ -14,6 +16,8 @@
   "license": "MPL-2.0",
   "dependencies": {
     "@mollie/api-client": "^3.5.0",
+    "amqp-connection-manager": "3.2.2",
+    "amqplib": "0.7.1",
     "camelcase-keys": "6.2.2",
     "convict": "6.0.1",
     "express": "4.17.1",
