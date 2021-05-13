@@ -8,16 +8,29 @@ import config from '../config'
 import log from '../log'
 import { AsyncHandlerResponse, HandlerResponse } from '../types'
 
+const isAuthorizedRequest = (req: Request): boolean => {
+  return !!(
+    (req.headers.cookie && req.headers.cookie.length) ||
+    (req.headers.authorization && req.headers.authorization.length)
+  )
+}
+
 export const introspect = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
   res.locals.authenticatedUser = null
 
-  if (req.headers.cookie && req.headers.cookie.length) {
+  if (isAuthorizedRequest(req)) {
     const url = config.get('apisuite.api') + config.get('apisuite.introspectEndpoint')
     const options = {
       method: 'GET',
-      headers: {
-        cookie: req.headers.cookie,
-      },
+      headers: {},
+    }
+
+    if (req.headers.authorization) {
+      options.headers = { authorization: req.headers.authorization }
+    }
+
+    if (req.headers.cookie) {
+      options.headers = { cookie: req.headers.cookie }
     }
 
     try {
