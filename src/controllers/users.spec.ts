@@ -171,23 +171,6 @@ describe('users controller', () => {
         .catch((err: Error) => done(err))
     })
 
-    it('should return 204 when user has non matching plan', (done) => {
-      sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
-        id: 1,
-        credits: 100,
-        subscriptionId: 999,
-        ppCustomerId: 'cid',
-        ppMandateId: 'mid',
-        ppSubscriptionId: 'sid',
-      })
-
-      request(testApp)
-        .delete('/users/1/subscriptions')
-        .expect(204)
-        .then(() => done())
-        .catch((err: Error) => done(err))
-    })
-
     it('should return 204 when subscription is cancelled', (done) => {
       sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
         id: 1,

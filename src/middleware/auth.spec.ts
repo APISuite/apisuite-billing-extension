@@ -7,7 +7,7 @@ import { introspect, authenticated, isSelf, isAdmin } from './auth'
 import { error } from './error'
 
 describe('error handler middleware', () => {
-  describe('authenticated', () => {
+  describe('authenticated [cookie]', () => {
     beforeEach(() => {
       sinon.stub(config, 'get').returns('someURL')
     })
@@ -77,8 +77,82 @@ describe('error handler middleware', () => {
         .then(() => done())
         .catch((err: Error) => done(err))
     })
+  })
 
-    it('should continue to route when there is no cookie', (done) => {
+  describe('authenticated [api token]', () => {
+    beforeEach(() => {
+      sinon.stub(config, 'get').returns('someURL')
+    })
+
+    afterEach(() => sinon.restore())
+
+    it('should return 401 when token is not valid', (done) => {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      sinon.stub(fetch, 'Promise').resolves({
+        status: 401,
+      })
+
+      const testApp = express()
+        .use(introspect)
+        .get('/test', (req, res) => {
+          res.sendStatus(200)
+        })
+
+      request(testApp)
+        .get('/test')
+        .set('Authorization', 'myapitoken')
+        .expect(401)
+        .then(() => done())
+        .catch((err: Error) => done(err))
+    })
+
+    it('should return 500 when introspection fails', (done) => {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      sinon.stub(fetch, 'Promise').rejects()
+
+      const testApp = express()
+        .use(introspect)
+        .get('/test', (req, res) => {
+          res.sendStatus(200)
+        })
+        .use(error)
+
+      request(testApp)
+        .get('/test')
+        .set('Authorization', 'myapitoken')
+        .expect(500)
+        .then(() => done())
+        .catch((err: Error) => done(err))
+    })
+
+    it('should call next when token introspection is successful', (done) => {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      sinon.stub(fetch, 'Promise').resolves({
+        status: 200,
+        json: async () => ({ id: 1 }),
+      })
+
+      const testApp = express()
+        .use(introspect)
+        .get('/test', authenticated, (req, res) => {
+          res.sendStatus(200)
+        })
+        .use(error)
+
+      request(testApp)
+        .get('/test')
+        .set('Authorization', 'myapitoken')
+        .expect(200)
+        .then(() => done())
+        .catch((err: Error) => done(err))
+    })
+  })
+
+  describe('authenticated', () => {
+    it('should continue to route when there is no cookie/token', (done) => {
       const testApp = express()
         .use(introspect)
         .get('/test', (req, res) => {
@@ -91,9 +165,7 @@ describe('error handler middleware', () => {
         .then(() => done())
         .catch((err: Error) => done(err))
     })
-  })
 
-  describe('authenticated', () => {
     it('should return 401 when there is no authenticated user', (done) => {
       const testApp = express()
         .get('/test', authenticated, (req, res) => {
