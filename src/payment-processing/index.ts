@@ -2,6 +2,7 @@ import moment from 'moment'
 import mollie, { MandateStatus, Payment, PaymentStatus, SequenceType, SubscriptionStatus } from '@mollie/api-client'
 import config from '../config'
 import { Subscription } from '../models/subscription'
+import { Package } from '../models/package'
 
 const mollieClient = mollie({
   apiKey: config.get('mollie.apiKey'),
@@ -186,19 +187,19 @@ export const subscriptionFirstPayment = async (customerId: string, subscription:
   }
 }
 
-export const topUpPayment = async (price: number, description: string, customerId: string): Promise<TopUpPaymentResult> => {
+export const topUpPayment = async (pkg: Package, customerId: string): Promise<TopUpPaymentResult> => {
   const payment = await mollieClient.payments.create({
     customerId,
-    description,
+    description: pkg.name,
     amount: {
       currency: 'EUR',
-      value: price.toFixed(2).toString(),
+      value: pkg.price.toFixed(2).toString(),
     },
     sequenceType: SequenceType.oneoff,
     webhookUrl: config.get('mollie.topUpWebhookUrl'),
     redirectUrl: config.get('mollie.paymentRedirectUrl'),
     metadata: {
-      credits: 100,
+      credits: pkg.credits,
       type: PaymentType.TopUp,
     },
   })

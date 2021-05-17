@@ -82,7 +82,7 @@ export class PurchasesController implements BaseController {
       return next(new NotFoundError('package'))
     }
 
-    const payment = await topUpPayment(pkg.price, pkg.name, user.ppCustomerId)
+    const payment = await topUpPayment(pkg, user.ppCustomerId)
     const redirectURL = new URL(config.get('mollie.paymentRedirectUrl'))
     redirectURL.searchParams.append('id', payment.id)
     await updatePaymentRedirectURL(payment.id, redirectURL.toString())
