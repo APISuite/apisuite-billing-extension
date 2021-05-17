@@ -1,6 +1,6 @@
 import { expect } from 'chai'
-import { findAll, findById, create, update, deleteSubscription } from './subscription'
-import { db } from '../db'
+import { create, deleteSubscription, findAll, findById, SortFields, update } from './subscription'
+import { db, SortOrder } from '../db'
 
 
 export default function run(): void {
@@ -9,12 +9,18 @@ export default function run(): void {
       expect(r).to.be.an('array')
       expect(r.length).to.eq(3)
     }
-    const res = await findAll(null)
+    const res = await findAll(null, {
+      order: SortOrder.ASC,
+      field: SortFields.PRICE,
+    })
     testAssertions(res)
 
     const trx = await db.transaction()
     try {
-      const trxRes = await findAll(trx)
+      const trxRes = await findAll(trx, {
+        order: SortOrder.ASC,
+        field: SortFields.PRICE,
+      })
       await trx.commit()
       testAssertions(trxRes)
     } catch(err) {

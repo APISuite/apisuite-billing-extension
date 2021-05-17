@@ -1,6 +1,6 @@
 import { expect } from 'chai'
-import { findAll, findById, create, update, deletePackage } from './package'
-import { db } from '../db'
+import { create, deletePackage, findAll, findById, SortFields, update } from './package'
+import { db, SortOrder } from '../db'
 
 export default function run(): void {
   it('should return a list of packages', async () => {
@@ -8,12 +8,18 @@ export default function run(): void {
       expect(r).to.be.an('array')
       expect(r.length).to.eq(3)
     }
-    const res = await findAll(null)
+    const res = await findAll(null, {
+      order: SortOrder.ASC,
+      field: SortFields.PRICE,
+    })
     testAssertions(res)
 
     const trx = await db.transaction()
     try {
-      const trxRes = await findAll(trx)
+      const trxRes = await findAll(trx, {
+        order: SortOrder.ASC,
+        field: SortFields.PRICE,
+      })
       await trx.commit()
       testAssertions(trxRes)
     } catch(err) {
