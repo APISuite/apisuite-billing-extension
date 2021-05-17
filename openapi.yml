@@ -39,6 +39,26 @@ paths:
       description: List credit packages
       security:
         - cookieAuth: [ ]
+      parameters:
+        - name: sort_by
+          description: Sorting field
+          in: query
+          schema:
+            type: string
+            default: price
+            enum:
+              - name
+              - price
+              - credits
+        - name: order
+          description: Sorting order
+          in: query
+          schema:
+            type: string
+            default: asc
+            enum:
+              - asc
+              - desc
       responses:
         '200':
           description: Package model list
@@ -172,6 +192,26 @@ paths:
       description: List subscriptions
       security:
         - cookieAuth: [ ]
+      parameters:
+        - name: sort_by
+          description: Sorting field
+          in: query
+          schema:
+            type: string
+            default: price
+            enum:
+              - name
+              - price
+              - credits
+        - name: order
+          description: Sorting order
+          in: query
+          schema:
+            type: string
+            default: asc
+            enum:
+              - asc
+              - desc
       responses:
         '200':
           description: Subscription model list

@@ -48,3 +48,8 @@ export interface Transaction extends Knex {
 }
 
 export type OptTransaction = Transaction | null
+
+export const enum SortOrder {
+  ASC = 'asc',
+  DESC = 'desc',
+}

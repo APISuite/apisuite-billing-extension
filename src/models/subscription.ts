@@ -1,4 +1,4 @@
-import { db, OptTransaction } from '../db'
+import { db, OptTransaction, SortOrder } from '../db'
 import { Optional } from '../types'
 import log from '../log'
 import { dbErrorParser } from './errors'
@@ -16,12 +16,24 @@ export interface Subscription {
 export type SubscriptionBase = Omit<Subscription, 'id'>
 export type SubscriptionUpdate = Omit<Optional<Subscription>, 'id'>
 
-const findAll = async(trx: OptTransaction): Promise<Subscription[]> => {
+export const enum SortFields {
+  NAME = 'name',
+  PRICE = 'price',
+  CREDITS = 'credits',
+}
+
+export interface SubscriptionSortOptions {
+  field: SortFields
+  order: SortOrder,
+}
+
+const findAll = async(trx: OptTransaction, sort: SubscriptionSortOptions): Promise<Subscription[]> => {
   const _db = trx ? trx : db
 
   return _db
     .select()
     .from(TABLE)
+    .orderBy(sort.field, sort.order)
 }
 
 const findById = async(trx: OptTransaction, id: number): Promise<Subscription | null> => {

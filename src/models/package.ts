@@ -1,4 +1,4 @@
-import { db, OptTransaction } from '../db'
+import { db, OptTransaction, SortOrder } from '../db'
 import { Optional } from '../types'
 import log from '../log'
 import { dbErrorParser } from './errors'
@@ -12,15 +12,27 @@ export interface Package {
   credits: number
 }
 
+export const enum SortFields {
+  NAME = 'name',
+  PRICE = 'price',
+  CREDITS = 'credits',
+}
+
+export interface PackageSortOptions {
+  field: SortFields
+  order: SortOrder,
+}
+
 export type PackageBase = Omit<Package, 'id'>
 export type PackageUpdate = Omit<Optional<Package>, 'id'>
 
-const findAll = async(trx: OptTransaction): Promise<Package[]> => {
+const findAll = async(trx: OptTransaction, sort: PackageSortOptions): Promise<Package[]> => {
   const _db = trx ? trx : db
 
   return _db
     .select()
     .from(TABLE)
+    .orderBy(sort.field, sort.order)
 }
 
 const findById = async(trx: OptTransaction, id: number): Promise<Package | null> => {
