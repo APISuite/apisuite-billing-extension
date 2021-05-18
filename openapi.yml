@@ -372,6 +372,38 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [ users ]
+      description: >
+        Edit user billing info.
+        Used primarily to manage (add/subtract) user's credits. Only accessible to admin users.
+        User can't manage own credits.
+      security:
+        - cookieAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: User ID
+          required: true
+          schema:
+            type: number
+      requestBody:
+        description: User info payload
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                credits:
+                  type: number
+      responses:
+        '302':
+          description: Payment processor checkout page redirect
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /users/{id}/consent:
     post:
       tags: [ users ]
@@ -397,38 +429,6 @@ paths:
                 properties:
                   data:
                     type: string
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-  /users/{id}/credits:
-    post:
-      tags: [ users ]
-      description: >
-        Manage (add/subtract) user's credits. Only accessible to admin users.
-        User can't manage own credits.
-      security:
-        - cookieAuth: [ ]
-      parameters:
-        - name: id
-          in: path
-          description: User ID
-          required: true
-          schema:
-            type: number
-      requestBody:
-        description: Credits management payload
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                credits:
-                  type: number
-      responses:
-        '302':
-          description: Payment processor checkout page redirect
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':

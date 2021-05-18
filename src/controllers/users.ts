@@ -2,10 +2,11 @@ import { NextFunction, Request, Response, Router } from 'express'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController, responseBase } from './base'
 import { transaction as txnRepo, user as usersRepo } from '../models'
-import { authenticated, isSelf, asyncWrap as aw, isAdmin } from '../middleware/'
+import { authenticated, isSelf, asyncWrap as aw, isAdmin, validator } from '../middleware/'
 import { createCustomer, firstPayment, cancelSubscription, getSubscriptionNextPaymentDate } from '../payment-processing'
 import { TransactionType } from '../models/transaction'
 import { db } from '../db'
+import { body, ValidationChain } from 'express-validator'
 
 export class UsersController implements BaseController {
   private readonly path = '/users'
@@ -14,10 +15,19 @@ export class UsersController implements BaseController {
     const router = Router()
     router.get(`${this.path}/:id`, authenticated, isSelf, aw(this.getUserDetails))
     router.post(`${this.path}/:id/consent`, authenticated, isSelf, aw(this.setupConsent))
-    router.put(`${this.path}/:id/credits`, authenticated, isAdmin, aw(this.manageCredits))
     router.delete(`${this.path}/:id/subscriptions`, authenticated, isSelf, aw(this.cancelSubscription))
+    router.patch(`${this.path}/:id`,
+      authenticated,
+      isAdmin,
+      this.getUpdateUserValidations(),
+      validator,
+      aw(this.updateUser))
     return router
   }
+
+  private getUpdateUserValidations = (): ValidationChain[] => ([
+    body('credits').optional().isNumeric(),
+  ])
 
   public getUserDetails = async (req: Request, res: Response): AsyncHandlerResponse => {
     const user = await usersRepo.getOrBootstrapUser(null, Number(req.params.id))
@@ -84,14 +94,14 @@ export class UsersController implements BaseController {
     return res.sendStatus(204)
   }
 
-  public manageCredits = async (req: Request, res: Response): AsyncHandlerResponse => {
+  public updateUser = async (req: Request, res: Response): AsyncHandlerResponse => {
     if (req.params.id === res.locals.authenticatedUser.id) {
-      return res.status(403).json({ errors: ['unable to manage own credits'] })
+      return res.status(403).json({ errors: ['unable to manage own data'] })
     }
 
     let user = await usersRepo.getOrBootstrapUser(null, Number(req.params.id))
     user = await usersRepo.update(null, user.id, {
-      credits: user.credits + Number(req.body.credits),
+      credits: user.credits + Number(req.body.credits || 0),
     })
 
     return res.status(200).json(responseBase(user))
