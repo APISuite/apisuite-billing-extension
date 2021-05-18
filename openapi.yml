@@ -397,6 +397,7 @@ paths:
               properties:
                 credits:
                   type: number
+                  description: A positive number will cause the credits to be added, a negative will deduct
       responses:
         '200':
           description: User model
@@ -492,6 +493,13 @@ paths:
       description: Show purchase/transaction details
       security:
         - cookieAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: Purchase ID
+          required: true
+          schema:
+            type: string
       responses:
         '200':
           description: Purchase model list
