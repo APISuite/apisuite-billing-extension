@@ -398,8 +398,17 @@ paths:
                 credits:
                   type: number
       responses:
-        '302':
-          description: Payment processor checkout page redirect
+        '200':
+          description: User model
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
