@@ -37,9 +37,10 @@ export class UsersController implements BaseController {
     }
     return res.status(200).json(responseBase({
       id: user.id,
-      subscriptionId: user.subscriptionId,
+      subscriptionId: user.ppSubscriptionId ? user.subscriptionId : null,
       credits: user.credits,
-      nextPaymentDate }))
+      nextPaymentDate,
+    }))
   }
 
   public setupConsent = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
