@@ -84,6 +84,8 @@ export const findValidMandate = async (customerId: string): Promise<string | nul
 
     if (mandates.nextPage) {
       mandates = await mandates.nextPage()
+    } else {
+      break
     }
   }
 
