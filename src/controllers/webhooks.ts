@@ -20,7 +20,6 @@ export class WebhooksController implements BaseController {
     router.post(`${this.path}/subscription`, aw(this.subscriptionPaymentSuccess))
     router.post(`${this.path}/subscription_first`, aw(this.subscriptionFirstPaymentHandler))
     router.post(`${this.path}/topup`, aw(this.topUpPaymentWebhookHandler))
-    router.post(`${this.path}/first`, aw(this.firstPaymentWebhookHandler))
     return router
   }
 
@@ -153,21 +152,6 @@ export class WebhooksController implements BaseController {
         await trx.rollback()
         next(err)
       }
-    }
-
-    return res.status(200).json(responseBase('ok'))
-  }
-
-  public firstPaymentWebhookHandler = async (req: Request, res: Response): AsyncHandlerResponse => {
-    if (!req.body.id) {
-      return res.status(400).json({
-        errors: ['missing payment id'],
-      })
-    }
-
-    const payment = await verifyPaymentSuccess(req.body.id)
-    if (payment) {
-      await txnRepo.setVerified(null, payment.id)
     }
 
     return res.status(200).json(responseBase('ok'))

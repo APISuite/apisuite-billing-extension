@@ -133,32 +133,6 @@ export const listCustomerPayments = async (id: string): Promise<CustomerPayment[
   }))
 }
 
-export const firstPayment = async (customerId: string, value: number): Promise<FirstPaymentResult> => {
-  const payment = await mollieClient.payments.create({
-    amount: {
-      currency: 'EUR',
-      value: value.toFixed(2).toString(),
-    },
-    customerId,
-    description: 'Payment authorization',
-    sequenceType: SequenceType.first,
-    webhookUrl: config.get('mollie.firstPaymentWebhookUrl'),
-    redirectUrl: config.get('mollie.paymentRedirectUrl'),
-  })
-
-  const checkoutURL = getPaymentCheckoutURL(payment)
-  if (!checkoutURL) throw new Error('failed to create payment')
-
-  if (!payment.mandateId) throw new Error('failed to create mandate')
-
-  return {
-    id: payment.id,
-    checkoutURL: checkoutURL,
-    mandateId: payment.mandateId,
-    amount: parseFloat(payment.amount.value),
-  }
-}
-
 export const subscriptionFirstPayment = async (customerId: string, subscription: Subscription): Promise<FirstPaymentResult> => {
   const payment = await mollieClient.payments.create({
     amount: {

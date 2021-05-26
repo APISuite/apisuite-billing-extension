@@ -17,6 +17,7 @@ export interface User {
 export type UserBase = Omit<User, 'ppCustomerId' | 'ppMandateId' | 'ppSubscriptionId'>
 export type UserUpdate = Omit<Optional<User>, 'id'>
 
+// take an object instead?s
 const getOrBootstrapUser = async (trx: OptTransaction, userID: number): Promise<User> => {
   const _db = trx ? trx : db
   const user = await findById(trx, userID)

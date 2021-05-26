@@ -68,12 +68,6 @@ export const schema = {
       default: 'http://localhost:6007/webhooks/subscription',
       env: 'WEBHOOKS_SUBSCRIPTION',
     },
-    firstPaymentWebhookUrl: {
-      doc: 'Webhook URL for first payment',
-      format: String,
-      default: 'http://localhost:6007/webhooks/first',
-      env: 'WEBHOOKS_FIRST',
-    },
   },
   apisuite: {
     api: {

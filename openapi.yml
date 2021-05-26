@@ -414,35 +414,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-  /users/{id}/consent:
-    post:
-      tags: [ users ]
-      description: >
-        Creates an associated customer in the payment processor.
-        Creates a first time payment for consent purposes.
-      security:
-        - cookieAuth: [ ]
-      parameters:
-        - name: id
-          in: path
-          description: User ID
-          required: true
-          schema:
-            type: number
-      responses:
-        '200':
-          description: Payment processor checkout page url
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: string
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
   /users/{id}/subscriptions:
     delete:
       tags: [ users ]

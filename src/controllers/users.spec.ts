@@ -2,13 +2,9 @@ import sinon from 'sinon'
 import request from 'supertest'
 import express, { NextFunction, Request, Response } from 'express'
 import { UsersController } from './users'
-import {
-  user as usersRepo,
-  transaction as txnRepo,
-} from '../models'
+import { user as usersRepo } from '../models'
 import { error } from '../middleware'
 import * as paymentProcessing from '../payment-processing'
-import { db } from '../db'
 
 describe('users controller', () => {
   const injectUser = (req: Request, res: Response, next: NextFunction) => {
@@ -41,72 +37,6 @@ describe('users controller', () => {
       request(testApp)
         .get('/users/1')
         .expect('Content-Type', /json/)
-        .expect(200)
-        .then(() => done())
-        .catch((err: Error) => done(err))
-    })
-  })
-
-  describe('user payment consent', () => {
-    const controller = new UsersController()
-    const testApp = express()
-      .use(injectUser)
-      .use(controller.getRouter())
-      .use(error)
-
-    beforeEach(() => {
-      sinon.stub(db, 'transaction').resolves({
-        commit: sinon.stub(),
-        rollback: sinon.stub(),
-      })
-    })
-
-    it('should return 200 when the user already has a customerID', (done) => {
-      sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
-        id: 1,
-        credits: 100,
-        subscriptionId: null,
-        ppCustomerId: 'fakeid',
-        ppMandateId: null,
-        ppSubscriptionId: null,
-      })
-      sinon.stub(paymentProcessing, 'firstPayment').resolves({
-        checkoutURL: 'someURL',
-        id: 'paymentid',
-        mandateId: 'mandateId',
-        amount: 0,
-      })
-      sinon.stub(txnRepo, 'create').resolves()
-      sinon.stub(usersRepo, 'update').resolves()
-
-      request(testApp)
-        .post('/users/1/consent')
-        .expect(200)
-        .then(() => done())
-        .catch((err: Error) => done(err))
-    })
-
-    it('should return 200 and setup customer when the user has no customerID', (done) => {
-      sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
-        id: 1,
-        credits: 100,
-        subscriptionId: null,
-        ppCustomerId: null,
-        ppMandateId: null,
-        ppSubscriptionId: null,
-      })
-      sinon.stub(paymentProcessing, 'createCustomer').resolves('fakeCustomerId')
-      sinon.stub(paymentProcessing, 'firstPayment').resolves({
-        checkoutURL: 'someURL',
-        id: 'paymentid',
-        mandateId: 'mandateId',
-        amount: 0,
-      })
-      sinon.stub(txnRepo, 'create').resolves()
-      sinon.stub(usersRepo, 'update').resolves()
-
-      request(testApp)
-        .post('/users/1/consent')
         .expect(200)
         .then(() => done())
         .catch((err: Error) => done(err))
