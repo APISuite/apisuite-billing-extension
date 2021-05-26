@@ -16,15 +16,15 @@ export class UsersController implements BaseController {
     router.patch(`${this.path}/:id`,
       authenticated,
       isAdmin,
-      this.getUpdateUserValidations(),
+      this.updateUserValidation,
       validator,
       aw(this.updateUser))
     return router
   }
 
-  private getUpdateUserValidations = (): ValidationChain[] => ([
+  readonly updateUserValidation: ValidationChain[] = [
     body('credits').optional().isNumeric(),
-  ])
+  ]
 
   public getUserDetails = async (req: Request, res: Response): AsyncHandlerResponse => {
     const user = await usersRepo.getOrBootstrapUser(null, Number(req.params.id))

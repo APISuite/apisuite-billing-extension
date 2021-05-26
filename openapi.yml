@@ -83,6 +83,13 @@ paths:
         - cookieAuth: [ ]
         - bearerAuth: [ ]
         - bearerAuth: [ ]
+      requestBody:
+        description: Package payload
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PackagePayload'
       responses:
         '201':
           description: Package model
@@ -141,19 +148,12 @@ paths:
           schema:
             type: number
       requestBody:
-        description: New package data
+        description: Package payload
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                price:
-                  type: number
-                credits:
-                  type: number
+              $ref: '#/components/schemas/PackagePayload'
       responses:
         '200':
           description: package model
@@ -241,6 +241,13 @@ paths:
       security:
         - cookieAuth: [ ]
         - bearerAuth: [ ]
+      requestBody:
+        description: Package payload
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionPayload'
       responses:
         '201':
           description: Subscription model
@@ -299,21 +306,12 @@ paths:
           schema:
             type: number
       requestBody:
-        description: New subscription data
+        description: Package payload
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                price:
-                  type: number
-                credits:
-                  type: number
-                periodicity:
-                  type: string
+              $ref: '#/components/schemas/SubscriptionPayload'
       responses:
         '200':
           description: package model
@@ -673,6 +671,19 @@ components:
           type: number
         credits:
           type: number
+    PackagePayload:
+      type: object
+      required:
+        - name
+        - price
+        - credits
+      properties:
+        name:
+          type: string
+        price:
+          type: number
+        credits:
+          type: number
     Subscription:
       type: object
       properties:
@@ -686,6 +697,22 @@ components:
           type: number
         periodicity:
           type: string
+    SubscriptionPayload:
+      type: object
+      required:
+        - name
+        - price
+        - credits
+        - periodicity
+      properties:
+        name:
+          type: string
+        price:
+          type: number
+        credits:
+          type: number
+        periodicity:
+          type: number
     Purchase:
       type: object
       properties:
@@ -734,7 +761,6 @@ components:
           type: array
           items:
             type: string
-
 
   responses:
     BadRequest:

@@ -5,7 +5,7 @@ import { BaseController, responseBase } from './base'
 import { NotFoundError } from './errors'
 import { pkg as pkgsRepo } from '../models'
 import { asyncWrap as aw, authenticated, isAdmin, validator } from '../middleware'
-import { query, ValidationChain } from 'express-validator'
+import { query, body, ValidationChain } from 'express-validator'
 import { SortFields } from '../models/package'
 
 export class PackagesController implements BaseController {
@@ -13,18 +13,47 @@ export class PackagesController implements BaseController {
 
   public getRouter(): Router {
     const router = Router()
-    router.get(`${this.path}`, authenticated, this.getPackagesParamsValidations(), validator, aw(this.getPackages))
-    router.get(`${this.path}/:id`, authenticated, aw(this.getPackage))
-    router.post(`${this.path}`, authenticated, isAdmin, aw(this.createPackage))
-    router.put(`${this.path}/:id`, authenticated, isAdmin, aw(this.updatePackage))
-    router.delete(`${this.path}/:id`, authenticated, isAdmin, aw(this.deletePackage))
+    router.get(
+      `${this.path}`,
+      authenticated,
+      this.packagesParamsValidations,
+      validator,
+      aw(this.getPackages))
+    router.get(
+      `${this.path}/:id`,
+      authenticated,
+      aw(this.getPackage))
+    router.post(
+      `${this.path}`,
+      authenticated,
+      isAdmin,
+      this.packagePayloadValidation,
+      validator,
+      aw(this.createPackage))
+    router.put(
+      `${this.path}/:id`,
+      authenticated,
+      isAdmin,
+      this.packagePayloadValidation,
+      validator,
+      aw(this.updatePackage))
+    router.delete(`${this.path}/:id`,
+      authenticated,
+      isAdmin,
+      aw(this.deletePackage))
     return router
   }
 
-  private getPackagesParamsValidations = (): ValidationChain[] => ([
+  readonly packagesParamsValidations: ValidationChain[] = [
     query('sort_by').optional().isIn(['name', 'price', 'credits']),
     query('order').optional().isIn(['asc', 'desc']),
-  ])
+  ]
+
+  readonly packagePayloadValidation: ValidationChain[] = [
+    body('name').isString(),
+    body('price').isNumeric(),
+    body('credits').isNumeric({ no_symbols: true }),
+  ]
 
   public getPackages = async (req: Request, res: Response): AsyncHandlerResponse => {
     const plans = await pkgsRepo.findAll(null, {
