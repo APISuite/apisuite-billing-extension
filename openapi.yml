@@ -36,9 +36,11 @@ paths:
   /packages:
     get:
       tags: [ packages ]
-      description: List credit packages
+      summary: List credit packages
       security:
         - cookieAuth: [ ]
+        - bearerAuth: [ ]
+        - bearerAuth: [ ]
       parameters:
         - name: sort_by
           description: Sorting field
@@ -77,9 +79,11 @@ paths:
           $ref: '#/components/responses/Forbidden'
     post:
       tags: [ packages ]
-      description: Create a package
+      summary: Create a package
       security:
         - cookieAuth: [ ]
+        - bearerAuth: [ ]
+        - bearerAuth: [ ]
       responses:
         '201':
           description: Package model
@@ -97,9 +101,10 @@ paths:
   /packages/{id}:
     get:
       tags: [ packages ]
-      description: Show a package by id.
+      summary: Retrieve a package
       security:
         - cookieAuth: [ ]
+        - bearerAuth: [ ]
       parameters:
         - name: id
           in: path
@@ -125,9 +130,10 @@ paths:
           $ref: '#/components/responses/NotFound'
     put:
       tags: [ packages ]
-      description: Update a package.
+      description: Update a package
       security:
         - cookieAuth: [ ]
+        - bearerAuth: [ ]
       parameters:
         - name: id
           in: path
@@ -167,9 +173,10 @@ paths:
           $ref: '#/components/responses/NotFound'
     delete:
       tags: [ packages ]
-      description: Delete a package.
+      description: Delete a package
       security:
         - cookieAuth: [ ]
+        - bearerAuth: [ ]
       parameters:
         - name: id
           in: path
@@ -192,6 +199,7 @@ paths:
       description: List subscriptions
       security:
         - cookieAuth: [ ]
+        - bearerAuth: [ ]
       parameters:
         - name: sort_by
           description: Sorting field
@@ -233,6 +241,7 @@ paths:
       description: Create a subscription
       security:
         - cookieAuth: [ ]
+        - bearerAuth: [ ]
       responses:
         '201':
           description: Subscription model
@@ -250,9 +259,10 @@ paths:
   /subscriptions/{id}:
     get:
       tags: [ subscriptions ]
-      description: Show a subscription by id.
+      description: Retrieve a subscription
       security:
         - cookieAuth: [ ]
+        - bearerAuth: [ ]
       parameters:
         - name: id
           in: path
@@ -278,9 +288,10 @@ paths:
           $ref: '#/components/responses/NotFound'
     put:
       tags: [ subscriptions ]
-      description: Update a subscription.
+      description: Update a subscription
       security:
         - cookieAuth: [ ]
+        - bearerAuth: [ ]
       parameters:
         - name: id
           in: path
@@ -322,9 +333,10 @@ paths:
           $ref: '#/components/responses/NotFound'
     delete:
       tags: [ subscriptions ]
-      description: Delete a subscription.
+      description: Delete a subscription
       security:
         - cookieAuth: [ ]
+        - bearerAuth: [ ]
       parameters:
         - name: id
           in: path
@@ -344,11 +356,13 @@ paths:
   /users/{id}:
     get:
       tags: [ users ]
+      summary: Retrieve a user
       description: >
         Returns a user based on the ID.
-        This also sets up the user if it doesn't exist yet in the extension's context.
+        Usable by the user to get information about itself or by admins to retrieve any user.
       security:
         - cookieAuth: [ ]
+        - bearerAuth: [ ]
       parameters:
         - name: id
           in: path
@@ -374,12 +388,13 @@ paths:
           $ref: '#/components/responses/NotFound'
     patch:
       tags: [ users ]
+      summary: Update user credits
       description: >
-        Edit user billing info.
-        Used primarily to manage (add/subtract) user's credits. Only accessible to admin users.
-        User can't manage own credits.
+        Only accessible to admin users (user can't manage their own credits).
+        Used primarily to manage (add/subtract) user's credits.
       security:
         - cookieAuth: [ ]
+        - bearerAuth: [ ]
       parameters:
         - name: id
           in: path
@@ -417,9 +432,11 @@ paths:
   /users/{id}/subscriptions:
     delete:
       tags: [ users ]
-      description: Cancels a user subscription
+      summary: Cancels a user subscription
+      description: Called by the user when it wants to cancel the (only) active credit subscription
       security:
         - cookieAuth: [ ]
+        - bearerAuth: [ ]
       parameters:
         - name: id
           in: path
@@ -439,9 +456,10 @@ paths:
   /purchases:
     get:
       tags: [ purchases ]
-      description: List user's purchases/transactions
+      summary: List user's transactions
       security:
         - cookieAuth: [ ]
+        - bearerAuth: [ ]
       responses:
         '200':
           description: Purchase model list
@@ -461,9 +479,10 @@ paths:
   /purchases/{id}:
     get:
       tags: [ purchases ]
-      description: Show purchase/transaction details
+      summary: Retrieve transaction details
       security:
         - cookieAuth: [ ]
+        - bearerAuth: [ ]
       parameters:
         - name: id
           in: path
@@ -491,9 +510,14 @@ paths:
   /purchases/packages/{id}:
     post:
       tags: [ purchases ]
-      description: Purchase a credits package
+      summary: Purchase a credits package
+      description: >
+        This creates a new payment object in the payment processing provider (PPP).
+        The return of this endpoint is an URL to the payment provider where the user can complete the payment.
+        Only after the provider confirms the payment's success (via webhook) will the credits be available.
       security:
         - cookieAuth: [ ]
+        - bearerAuth: [ ]
       parameters:
         - name: id
           in: path
@@ -520,9 +544,15 @@ paths:
   /purchases/subscriptions/{id}:
     post:
       tags: [ purchases ]
-      description: Purchase a subscription
+      summary: Purchase a subscription
+      description: >
+        This endpoint allows a user to start or change a subscription.
+        If the user has no valid mandate for recurring charges in the payment processing provider, the first payment
+        will require the user's consent. In this case the endpoint returns an URL.
+        Otherwise, if a valid mandate exists, everything happens on the backend and the user has to take no further action (response is 204).
       security:
         - cookieAuth: [ ]
+        - bearerAuth: [ ]
       parameters:
         - name: id
           in: path
@@ -666,3 +696,6 @@ components:
       type: apiKey
       in: cookie
       name: access_token
+    bearerAuth:
+      type: http
+      scheme: bearer
