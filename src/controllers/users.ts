@@ -2,7 +2,7 @@ import { Request, Response, Router } from 'express'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController, responseBase } from './base'
 import { user as usersRepo } from '../models'
-import { authenticated, isSelf, asyncWrap as aw, isAdmin, validator } from '../middleware/'
+import { authenticated, isSelf, asyncWrap as aw, isAdmin, validator, isSelfOrAdmin } from '../middleware/'
 import { cancelSubscription, getSubscriptionNextPaymentDate } from '../payment-processing'
 import { body, ValidationChain } from 'express-validator'
 
@@ -11,7 +11,7 @@ export class UsersController implements BaseController {
 
   public getRouter(): Router {
     const router = Router()
-    router.get(`${this.path}/:id`, authenticated, isSelf, aw(this.getUserDetails))
+    router.get(`${this.path}/:id`, authenticated, isSelfOrAdmin, aw(this.getUserDetails))
     router.delete(`${this.path}/:id/subscriptions`, authenticated, isSelf, aw(this.cancelSubscription))
     router.patch(`${this.path}/:id`,
       authenticated,
