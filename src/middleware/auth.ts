@@ -59,18 +59,29 @@ export const authenticated = (req: Request, res: Response, next: NextFunction): 
   next()
 }
 
+const isSelfCheck = (req: Request, res: Response) => Number(res.locals.authenticatedUser.id) === Number(req.params.id)
+const isAdminCheck = (res: Response) => res.locals.authenticatedUser.role && res.locals.authenticatedUser.role.name === 'admin'
+
 export const isSelf = (req: Request, res: Response, next: NextFunction): HandlerResponse => {
-  if (Number(res.locals.authenticatedUser.id) !== Number(req.params.id)) {
-    return res.status(403).json({ errors: ['forbidden'] })
-  }
-
-  next()
-}
-
-export const isAdmin = (req: Request, res: Response, next: NextFunction): HandlerResponse => {
-  if (res.locals.authenticatedUser.role && res.locals.authenticatedUser.role.name === 'admin') {
+  if (isSelfCheck(req, res)) {
     return next()
   }
 
-  res.status(403).json({ errors: ['forbidden'] })
+  return res.status(403).json({ errors: ['forbidden'] })
+}
+
+export const isAdmin = (req: Request, res: Response, next: NextFunction): HandlerResponse => {
+  if (isAdminCheck(res)) {
+    return next()
+  }
+
+  return res.status(403).json({ errors: ['forbidden'] })
+}
+
+export const isSelfOrAdmin = (req: Request, res: Response, next: NextFunction): HandlerResponse => {
+  if (isSelfCheck(req, res) || isAdminCheck(res)) {
+    return next()
+  }
+
+  return res.status(403).json({ errors: ['forbidden'] })
 }

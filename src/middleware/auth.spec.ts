@@ -3,7 +3,7 @@ import express from 'express'
 import fetch from 'node-fetch'
 import request from 'supertest'
 import config from '../config'
-import { introspect, authenticated, isSelf, isAdmin } from './auth'
+import { introspect, authenticated, isSelf, isAdmin, isSelfOrAdmin } from './auth'
 import { error } from './error'
 
 describe('error handler middleware', () => {
@@ -261,6 +261,60 @@ describe('error handler middleware', () => {
           next()
         })
         .get('/test/:id', isAdmin, (req, res) => {
+          res.sendStatus(200)
+        })
+
+      request(testApp)
+        .get('/test/1')
+        .expect(200)
+        .then(() => done())
+        .catch((err: Error) => done(err))
+    })
+  })
+
+  describe('isSelfOrAdmin', () => {
+    it('should return 403 when user role is not "admin" and not self', (done) => {
+      const testApp = express()
+        .use((req, res, next) => {
+          res.locals.authenticatedUser = { id: 1, role: { name: 'developer' } }
+          next()
+        })
+        .get('/test/:id', isSelfOrAdmin, (req, res) => {
+          res.sendStatus(200)
+        })
+
+      request(testApp)
+        .get('/test/99')
+        .expect('Content-Type', /json/)
+        .expect(403)
+        .then(() => done())
+        .catch((err: Error) => done(err))
+    })
+
+    it('should continue to route when there user is admin', (done) => {
+      const testApp = express()
+        .use((req, res, next) => {
+          res.locals.authenticatedUser = { role: { name: 'admin' } }
+          next()
+        })
+        .get('/test/:id', isSelfOrAdmin, (req, res) => {
+          res.sendStatus(200)
+        })
+
+      request(testApp)
+        .get('/test/99')
+        .expect(200)
+        .then(() => done())
+        .catch((err: Error) => done(err))
+    })
+
+    it('should continue to route when there user is self', (done) => {
+      const testApp = express()
+        .use((req, res, next) => {
+          res.locals.authenticatedUser = { id: 1, role: { name: 'developer' } }
+          next()
+        })
+        .get('/test/:id', isSelfOrAdmin, (req, res) => {
           res.sendStatus(200)
         })
 
