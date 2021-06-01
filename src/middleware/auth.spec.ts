@@ -8,10 +8,6 @@ import { error } from './error'
 
 describe('error handler middleware', () => {
   describe('authenticated [cookie]', () => {
-    beforeEach(() => {
-      sinon.stub(config, 'get').returns('someURL')
-    })
-
     afterEach(() => sinon.restore())
 
     it('should return 401 when cookie is not valid', (done) => {
@@ -80,10 +76,6 @@ describe('error handler middleware', () => {
   })
 
   describe('authenticated [api token]', () => {
-    beforeEach(() => {
-      sinon.stub(config, 'get').returns('someURL')
-    })
-
     afterEach(() => sinon.restore())
 
     it('should return 401 when token is not valid', (done) => {

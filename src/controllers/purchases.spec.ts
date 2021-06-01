@@ -11,10 +11,14 @@ import {
 } from '../models'
 import { PurchasesController } from './purchases'
 import * as paymentProcessing from '../payment-processing'
+import * as core from '../core'
 
 describe('purchases controller', () => {
   const injectUser = (req: Request, res: Response, next: NextFunction) => {
-    res.locals.authenticatedUser = { id: 1 }
+    res.locals.authenticatedUser = {
+      id: 1,
+      role: { name: 'developer' },
+    }
     next()
   }
 
@@ -102,6 +106,7 @@ describe('purchases controller', () => {
     })
 
     it('should return 200 when purchasing a top up', (done) => {
+      sinon.stub(core, 'getPaymentRedirectURL').resolves(new URL('http://localhost:3000'))
       sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
         id: 1,
         credits: 100,
@@ -132,6 +137,7 @@ describe('purchases controller', () => {
     })
 
     it('should return 200 when purchasing a top up (user has no customer id)', (done) => {
+      sinon.stub(core, 'getPaymentRedirectURL').resolves(new URL('http://localhost:3000'))
       sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
         id: 1,
         credits: 100,
@@ -220,6 +226,7 @@ describe('purchases controller', () => {
     })
 
     it('should return 200 when first subscription payment is successfully created', (done) => {
+      sinon.stub(core, 'getPaymentRedirectURL').resolves(new URL('http://localhost:3000'))
       sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
         id: 1,
         credits: 100,
@@ -249,6 +256,7 @@ describe('purchases controller', () => {
     })
 
     it('should return 200 when first subscription payment is successfully created (existing customer)', (done) => {
+      sinon.stub(core, 'getPaymentRedirectURL').resolves(new URL('http://localhost:3000'))
       sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
         id: 1,
         credits: 100,

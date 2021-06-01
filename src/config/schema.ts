@@ -76,11 +76,29 @@ export const schema = {
       default: 'http://localhost:6001',
       env: 'APISUITE_API_URL',
     },
+    portal: {
+      doc: 'APISuite portal url',
+      format: String,
+      default: 'http://localhost:3000',
+      env: 'APISUITE_PORTAL_URL',
+    },
     introspectEndpoint: {
       doc: 'APISuite introspect endpoint',
       format: String,
       default: '/auth/introspect',
       env: 'INTROSPECT_ENDPOINT',
+    },
+    portalSettingsEndpoint: {
+      doc: 'APISuite portal settings endpoint',
+      format: String,
+      default: '/settings/portal',
+      env: 'PORTAL_SETTINGS_ENDPOINT',
+    },
+    paymentRedirectPath: {
+      doc: 'Default redirect path after payment',
+      format: String,
+      default: '/billing/payment',
+      env: 'PAYMENT_REDIRECT_PATH',
     },
   },
   msgBroker: {

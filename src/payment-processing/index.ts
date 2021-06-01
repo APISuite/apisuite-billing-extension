@@ -143,7 +143,7 @@ export const subscriptionFirstPayment = async (customerId: string, subscription:
     description: 'Payment authorization - ' + subscription.name,
     sequenceType: SequenceType.first,
     webhookUrl: config.get('mollie.subscriptionFirstPaymentWebhookUrl'),
-    redirectUrl: config.get('mollie.paymentRedirectUrl'),
+    redirectUrl: config.get('mollie.paymentRedirectUrl'), // URL will be changed to include the payment ID after the payment is created
     metadata: {
       credits: subscription.credits,
       type: PaymentType.Subscription,
@@ -173,7 +173,7 @@ export const topUpPayment = async (pkg: Package, customerId: string): Promise<To
     },
     sequenceType: SequenceType.oneoff,
     webhookUrl: config.get('mollie.topUpWebhookUrl'),
-    redirectUrl: config.get('mollie.paymentRedirectUrl'),
+    redirectUrl: config.get('mollie.paymentRedirectUrl'), // URL will be changed to include the payment ID after the payment is created
     metadata: {
       credits: pkg.credits,
       type: PaymentType.TopUp,

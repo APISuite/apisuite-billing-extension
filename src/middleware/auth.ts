@@ -19,7 +19,7 @@ export const introspect = async (req: Request, res: Response, next: NextFunction
   res.locals.authenticatedUser = null
 
   if (isAuthorizedRequest(req)) {
-    const url = config.get('apisuite.api') + config.get('apisuite.introspectEndpoint')
+    const url = new URL(config.get('apisuite.introspectEndpoint'), config.get('apisuite.api')).href
     const options = {
       method: 'GET',
       headers: {},
