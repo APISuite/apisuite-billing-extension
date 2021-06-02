@@ -97,7 +97,7 @@ export const schema = {
     paymentRedirectPath: {
       doc: 'Default redirect path after payment',
       format: String,
-      default: '/billing/payment',
+      default: '/billing/payments',
       env: 'PAYMENT_REDIRECT_PATH',
     },
   },
