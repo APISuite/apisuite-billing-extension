@@ -17,6 +17,26 @@ export const schema = {
     default: 'debug',
     env: 'LOG_LEVEL',
   },
+  cors: {
+    origin: {
+      doc: 'Access-Control-Allow-Origin',
+      format: Array,
+      default: ['http://localhost:6001'],
+      env: 'CORS_ALLOW_ORIGIN',
+    },
+    credentials: {
+      doc: 'Access-Control-Allow-Credentials',
+      format: Boolean,
+      default: true,
+      env: 'CORS_ALLOW_CREDENTIALS',
+    },
+    methods: {
+      doc: 'Access-Control-Allow-Methods',
+      format: String,
+      default: 'GET,POST,PUT,DELETE,OPTIONS,PATCH',
+      env: 'CORS_ALLOW_METHODS',
+    },
+  },
   dbURI: {
     live: {
       doc: 'Database connection string',
