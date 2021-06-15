@@ -20,8 +20,10 @@ jobs:
     steps:
       - attach_workspace:
           at: ~/
+      - run: ./get_version.sh .orig_version
       - run: cp -r .ssh ../.ssh && rm -rf .ssh
       - run: GH_TOKEN=$GH_TOKEN npx semantic-release
+      - run: ./get_version.sh .new_version
       - persist_to_workspace:
           root: ~/
           paths:
