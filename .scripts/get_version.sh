@@ -2,4 +2,4 @@
 
 OUT_FILE=$1
 
-grep -m1 version package.json | awk -F: '{ print $2 }' | sed 's/[", ]//g' > $OUT_FILE
+grep -m1 version ../package.json | awk -F: '{ print $2 }' | sed 's/[", ]//g' > $OUT_FILE
