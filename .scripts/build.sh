@@ -7,8 +7,6 @@ if [ $CMP -eq 0 ]; then
   exit 0
 fi
 
-cd ..
-
 echo ${DOCKER_PASS} | docker login --username ${DOCKER_USER} --password-stdin
 
 HASH=$(git rev-parse --short HEAD)
