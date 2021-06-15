@@ -13,23 +13,27 @@ export class PackagesController implements BaseController {
 
   public getRouter(): Router {
     const router = Router()
+
     router.get(
-      `${this.path}`,
+      this.path,
       authenticated,
       this.packagesParamsValidations,
       validator,
       aw(this.getPackages))
+
     router.get(
       `${this.path}/:id`,
       authenticated,
       aw(this.getPackage))
+
     router.post(
-      `${this.path}`,
+      this.path,
       authenticated,
       isAdmin,
       this.packagePayloadValidation,
       validator,
       aw(this.createPackage))
+
     router.put(
       `${this.path}/:id`,
       authenticated,
@@ -37,10 +41,12 @@ export class PackagesController implements BaseController {
       this.packagePayloadValidation,
       validator,
       aw(this.updatePackage))
+
     router.delete(`${this.path}/:id`,
       authenticated,
       isAdmin,
       aw(this.deletePackage))
+
     return router
   }
 
@@ -52,7 +58,9 @@ export class PackagesController implements BaseController {
   readonly packagePayloadValidation: ValidationChain[] = [
     body('name').isString(),
     body('price').isNumeric(),
-    body('credits').isNumeric({ no_symbols: true }),
+    body('credits')
+      .isNumeric({ no_symbols: true })
+      .isInt({ min: 0 }),
   ]
 
   public getPackages = async (req: Request, res: Response): AsyncHandlerResponse => {

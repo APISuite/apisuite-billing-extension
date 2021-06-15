@@ -14,7 +14,7 @@ export class SubscriptionsController implements BaseController {
   public getRouter(): Router {
     const router = Router()
     router.get(
-      `${this.path}`,
+      this.path,
       authenticated,
       this.subscriptionsParamsValidation,
       validator,
@@ -24,7 +24,7 @@ export class SubscriptionsController implements BaseController {
       authenticated,
       aw(this.getSubscription))
     router.post(
-      `${this.path}`,
+      this.path,
       authenticated,
       isAdmin,
       this.subscriptionPayloadValidation,

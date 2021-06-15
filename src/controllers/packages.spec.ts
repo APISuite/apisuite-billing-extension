@@ -39,6 +39,44 @@ describe('packages controller', () => {
         .catch((err: Error) => done(err))
     })
 
+    it('should return 200 and package list when using sort params', async () => {
+      sinon.stub(pkgsRepo, 'findAll').resolves([])
+
+      const sortCases = ['name', 'price', 'credits']
+      const orderCases = ['asc', 'desc']
+
+      for (const sort of sortCases) {
+        for (const order of orderCases) {
+          const testRes = await request(testApp)
+            .get('/packages')
+            .query({
+              sort_by: sort,
+              order: order,
+            })
+            .expect('Content-Type', /json/)
+
+          expect(testRes.headers['content-type']).to.match(/json/)
+          expect(testRes.status).to.eq(200)
+          expect(testRes.body.data).to.be.an('array')
+        }
+      }
+    })
+
+    it('should return 400 when a bad param is used', (done) => {
+      request(testApp)
+        .get('/packages')
+        .query({
+          sort_by: 'bad',
+        })
+        .expect('Content-Type', /json/)
+        .expect(400)
+        .then((res) => {
+          expect(res.body.errors).to.be.an('array')
+          done()
+        })
+        .catch((err: Error) => done(err))
+    })
+
     it('should return 500 when a database error occurs', (done) => {
       sinon.stub(pkgsRepo, 'findAll').rejects()
 
@@ -141,6 +179,28 @@ describe('packages controller', () => {
         .catch((err: Error) => done(err))
     })
 
+    it('should return 400 when payload is not valid', async () => {
+      const cases = [
+        { credits: 'notanum', name: 'test', price: 100 },
+        { credits: '$10', name: 'test', price: 100 },
+        { credits: -1, name: 'test', price: 100 },
+        { credits: 10 },
+        { credits: 10, name: 'test' },
+        { price: 10, name: 'test' },
+      ]
+
+      for (const tCase of cases) {
+        const testRes = await request(testApp)
+          .post('/packages')
+          .send(tCase)
+          .expect('Content-Type', /json/)
+
+        expect(testRes.headers['content-type']).to.match(/json/)
+        expect(testRes.status).to.eq(400)
+        expect(testRes.body.errors).to.be.an('array')
+      }
+    })
+
     it('should return 409 when package name already exists', (done) => {
       sinon
         .stub(pkgsRepo, 'create')
@@ -209,6 +269,28 @@ describe('packages controller', () => {
           done()
         })
         .catch((err: Error) => done(err))
+    })
+
+    it('should return 400 when payload is not valid', async () => {
+      const cases = [
+        { credits: 'notanum', name: 'test', price: 100 },
+        { credits: '$10', name: 'test', price: 100 },
+        { credits: -1, name: 'test', price: 100 },
+        { credits: 10 },
+        { credits: 10, name: 'test' },
+        { price: 10, name: 'test' },
+      ]
+
+      for (const tCase of cases) {
+        const testRes = await request(testApp)
+          .put('/packages/1')
+          .send(tCase)
+          .expect('Content-Type', /json/)
+
+        expect(testRes.headers['content-type']).to.match(/json/)
+        expect(testRes.status).to.eq(400)
+        expect(testRes.body.errors).to.be.an('array')
+      }
     })
 
     it('should return 200 when the package is updated', (done) => {
