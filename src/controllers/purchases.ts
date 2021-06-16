@@ -36,8 +36,8 @@ export class PurchasesController implements BaseController {
   }
 
   public listPurchases = async (req: Request, res: Response): AsyncHandlerResponse => {
-    const user = await usersRepo.getOrBootstrapUser(null, res.locals.authenticatedUser.id)
-    if (!user.ppCustomerId) {
+    const user = await usersRepo.findById(null, res.locals.authenticatedUser.id)
+    if (!user?.ppCustomerId) {
       return res.status(200).json(responseBase([]))
     }
     const payments = await listCustomerPayments(user.ppCustomerId)

@@ -32,7 +32,7 @@ describe('purchases controller', () => {
       .use(error)
 
     it('should return 200 and empty purchases list when user has no customer id', (done) => {
-      sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
+      sinon.stub(usersRepo, 'findById').resolves({
         id: 1,
         ppCustomerId: null,
         ppMandateId: null,
@@ -54,7 +54,7 @@ describe('purchases controller', () => {
     })
 
     it('should return 200 and purchases list', (done) => {
-      sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
+      sinon.stub(usersRepo, 'findById').resolves({
         id: 1,
         ppCustomerId: null,
         ppMandateId: null,
