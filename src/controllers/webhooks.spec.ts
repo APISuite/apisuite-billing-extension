@@ -214,4 +214,83 @@ describe('webhooks controller', () => {
         .catch((err: Error) => done(err))
     })
   })
+
+  describe('subscription first payment webhook', () => {
+    afterEach(() => sinon.restore())
+
+    const controller = new WebhooksController()
+    const testApp = express()
+      .use(express.urlencoded({ extended: true }))
+      .use(controller.getRouter())
+      .use(error)
+
+    it('should return 400 when the payload is invalid', (done) => {
+      request(testApp)
+        .post('/webhooks/subscription_first')
+        .send('name=john')
+        .expect('Content-Type', /json/)
+        .expect(400)
+        .then(() => done())
+        .catch((err: Error) => done(err))
+    })
+
+    it('should return 200 when payment is not verified', (done) => {
+      sinon.stub(paymentProcessing, 'verifyPaymentSuccess').resolves(null)
+
+      request(testApp)
+        .post('/webhooks/subscription_first')
+        .send('id=randompaymentid')
+        .expect(200)
+        .expect('Content-Type', /json/)
+        .then(() => done())
+        .catch((err: Error) => done(err))
+    })
+
+    it('should return 200 when payment is verified', (done) => {
+      sinon.stub(paymentProcessing, 'verifyPaymentSuccess').resolves({
+        id: 'paymentid123',
+        amount: 1000,
+      })
+      sinon.stub(db, 'transaction').resolves({
+        commit: sinon.stub(),
+        rollback: sinon.stub(),
+      })
+      sinon.stub(txnRepo, 'setVerified').resolves({
+        userId: 1234,
+        credits: 100,
+        amount: 1000,
+        type: TransactionType.Subscription,
+        verified: true,
+        paymentId: 'paymentid123',
+        createdAt: '',
+        updatedAt: '',
+      })
+      sinon.stub(usersRepo, 'incrementCredits').resolves()
+      sinon.stub(usersRepo, 'findById').resolves({
+        id: 1,
+        ppCustomerId: 'pc1234',
+        ppMandateId: null,
+        ppSubscriptionId: null,
+        credits: 100,
+        subscriptionId: null,
+      })
+      sinon.stub(subscriptionsRepo, 'findById').resolves({
+        id: 1,
+        credits: 10,
+        name: 'test',
+        price: 100,
+        periodicity: '1 month',
+      })
+      sinon.stub(paymentProcessing, 'subscriptionPayment').resolves()
+      sinon.stub(usersRepo, 'update').resolves()
+
+      request(testApp)
+        .post('/webhooks/subscription_first')
+        .send('id=randompaymentid')
+        .expect(200)
+        .expect('Content-Type', /json/)
+        .then(() => done())
+        .catch((err: Error) => done(err))
+    })
+  })
 })
