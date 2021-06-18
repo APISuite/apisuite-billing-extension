@@ -5,6 +5,7 @@ import { UsersController } from './users'
 import { user as usersRepo } from '../models'
 import { error } from '../middleware'
 import * as paymentProcessing from '../payment-processing'
+import {expect} from "chai"
 
 describe('users controller', () => {
   const injectUser = (req: Request, res: Response, next: NextFunction) => {
@@ -20,6 +21,7 @@ describe('users controller', () => {
   describe('get user details', () => {
     const controller = new UsersController()
     const testApp = express()
+      .use(express.json())
       .use(injectUser)
       .use(controller.getRouter())
       .use(error)
@@ -135,6 +137,64 @@ describe('users controller', () => {
         .delete('/users/1/subscriptions')
         .expect(500)
         .expect('Content-Type', /json/)
+        .then(() => done())
+        .catch((err: Error) => done(err))
+    })
+  })
+
+  describe('patch user details', () => {
+    const controller = new UsersController()
+    const testApp = express()
+      .use(injectUser)
+      .use(express.json())
+      .use(controller.getRouter())
+      .use(error)
+
+    it('should return 403 when user updates own data', (done) => {
+      request(testApp)
+        .patch('/users/1')
+        .expect('Content-Type', /json/)
+        .expect(403)
+        .then((res) => {
+          expect(res.body.errors).to.be.an('array')
+          done()
+        })
+        .catch((err: Error) => done(err))
+    })
+
+    it('should return 400 when payload is invalid', (done) => {
+      request(testApp)
+        .patch('/users/9')
+        .send({
+          credits: 'xxx10',
+        })
+        .expect('Content-Type', /json/)
+        .expect(400)
+        .then((res) => {
+          expect(res.body.errors).to.be.an('array')
+          done()
+        })
+        .catch((err: Error) => done(err))
+    })
+
+    it('should return 200 when user updates own data', (done) => {
+      sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
+        id: 9,
+        credits: 100,
+        subscriptionId: 1,
+        ppCustomerId: 'cid',
+        ppMandateId: 'mid',
+        ppSubscriptionId: null,
+      })
+      sinon.stub(usersRepo, 'update').resolves()
+
+      request(testApp)
+        .patch('/users/9')
+        .send({
+          credits: 10,
+        })
+        .expect('Content-Type', /json/)
+        .expect(200)
         .then(() => done())
         .catch((err: Error) => done(err))
     })

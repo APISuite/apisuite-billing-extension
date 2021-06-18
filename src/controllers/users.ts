@@ -54,7 +54,7 @@ export class UsersController implements BaseController {
   }
 
   public updateUser = async (req: Request, res: Response): AsyncHandlerResponse => {
-    if (req.params.id === res.locals.authenticatedUser.id) {
+    if (Number(req.params.id) === res.locals.authenticatedUser.id) {
       return res.status(403).json({ errors: ['unable to manage own data'] })
     }
 
