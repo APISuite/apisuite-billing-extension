@@ -13,16 +13,19 @@ export class SubscriptionsController implements BaseController {
 
   public getRouter(): Router {
     const router = Router()
+
     router.get(
       this.path,
       authenticated,
       this.subscriptionsParamsValidation,
       validator,
       aw(this.getSubscriptions))
+
     router.get(
       `${this.path}/:id`,
       authenticated,
       aw(this.getSubscription))
+
     router.post(
       this.path,
       authenticated,
@@ -30,6 +33,7 @@ export class SubscriptionsController implements BaseController {
       this.subscriptionPayloadValidation,
       validator,
       aw(this.createSubscription))
+
     router.put(
       `${this.path}/:id`,
       authenticated,
@@ -37,11 +41,13 @@ export class SubscriptionsController implements BaseController {
       this.subscriptionPayloadValidation,
       validator,
       aw(this.updateSubscription))
+
     router.delete(
       `${this.path}/:id`,
       authenticated,
       isAdmin,
       aw(this.deleteSubscription))
+
     return router
   }
 

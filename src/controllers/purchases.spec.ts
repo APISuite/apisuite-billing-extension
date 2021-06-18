@@ -1,17 +1,14 @@
 import sinon from 'sinon'
-import { expect } from 'chai'
-import express, { Request, Response, NextFunction } from 'express'
+import {expect} from 'chai'
+import express, {NextFunction, Request, Response} from 'express'
 import request from 'supertest'
-import { error } from '../middleware'
-import {
-  pkg as pkgsRepo,
-  subscription as subscriptionsRepo,
-  transaction as txnRepo,
-  user as usersRepo,
-} from '../models'
-import { PurchasesController } from './purchases'
+import {error} from '../middleware'
+import {pkg as pkgsRepo, subscription as subscriptionsRepo, transaction as txnRepo, user as usersRepo,} from '../models'
+import {PurchasesController} from './purchases'
 import * as paymentProcessing from '../payment-processing'
 import * as core from '../core'
+import {TransactionType} from "../models/transaction"
+import {PaymentMethod, PaymentStatus} from "@mollie/api-client"
 
 describe('purchases controller', () => {
   const injectUser = (req: Request, res: Response, next: NextFunction) => {
@@ -70,6 +67,145 @@ describe('purchases controller', () => {
         .expect(200)
         .then((res) => {
           expect(res.body.data).to.be.an('array')
+          done()
+        })
+        .catch((err: Error) => done(err))
+    })
+  })
+
+  describe('get purchase', () => {
+    const controller = new PurchasesController()
+    const testApp = express()
+      .use(injectUser)
+      .use(controller.getRouter())
+      .use(error)
+
+    it('should return 404 when transaction not found', (done) => {
+      sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
+        id: 1,
+        ppCustomerId: null,
+        ppMandateId: null,
+        ppSubscriptionId: null,
+        credits: 100,
+        subscriptionId: null,
+      })
+      sinon.stub(txnRepo, 'findById').resolves()
+
+      request(testApp)
+        .get('/purchases/123')
+        .expect('Content-Type', /json/)
+        .expect(404)
+        .then((res) => {
+          expect(res.body.errors).to.be.an('array')
+          done()
+        })
+        .catch((err: Error) => done(err))
+    })
+
+    it('should return 403 when transaction belongs to another user', (done) => {
+      sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
+        id: 1,
+        ppCustomerId: null,
+        ppMandateId: null,
+        ppSubscriptionId: null,
+        credits: 100,
+        subscriptionId: null,
+      })
+      sinon.stub(txnRepo, 'findById').resolves({
+        userId: 999,
+        credits: 100,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        paymentId: 'randompaymentid',
+        type: TransactionType.TopUp,
+        amount: 1000,
+        verified: true,
+      })
+
+      request(testApp)
+        .get('/purchases/1')
+        .expect('Content-Type', /json/)
+        .expect(403)
+        .then((res) => {
+          expect(res.body.errors).to.be.an('array')
+          done()
+        })
+        .catch((err: Error) => done(err))
+    })
+
+    it('should return 404 when payment could not be fetched from PP', (done) => {
+      sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
+        id: 1,
+        ppCustomerId: null,
+        ppMandateId: null,
+        ppSubscriptionId: null,
+        credits: 100,
+        subscriptionId: null,
+      })
+      sinon.stub(txnRepo, 'findById').resolves({
+        userId: 1,
+        credits: 100,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        paymentId: 'randompaymentid',
+        type: TransactionType.TopUp,
+        amount: 1000,
+        verified: true,
+      })
+      sinon.stub(paymentProcessing, 'getPaymentDetails').resolves()
+
+      request(testApp)
+        .get('/purchases/1')
+        .expect('Content-Type', /json/)
+        .expect(404)
+        .then((res) => {
+          expect(res.body.errors).to.be.an('array')
+          done()
+        })
+        .catch((err: Error) => done(err))
+    })
+
+    it('should return 200 when payment could not be fetched from PP', (done) => {
+      sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
+        id: 1,
+        ppCustomerId: null,
+        ppMandateId: null,
+        ppSubscriptionId: null,
+        credits: 100,
+        subscriptionId: null,
+      })
+      sinon.stub(txnRepo, 'findById').resolves({
+        userId: 1,
+        credits: 100,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        paymentId: 'randompaymentid',
+        type: TransactionType.TopUp,
+        amount: 1000,
+        verified: true,
+      })
+      sinon.stub(paymentProcessing, 'getPaymentDetails').resolves({
+        id: 'randompaymentid',
+        description: '',
+        method: PaymentMethod.creditcard,
+        status: PaymentStatus.authorized,
+        createdAt: new Date().toISOString(),
+        amount: {
+          currency: 'EUR',
+          value: '100',
+        },
+        metadata: {
+          credits: 10,
+          type: '',
+        },
+      })
+
+      request(testApp)
+        .get('/purchases/1')
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .then((res) => {
+          expect(res.body.data).to.be.an('object')
           done()
         })
         .catch((err: Error) => done(err))

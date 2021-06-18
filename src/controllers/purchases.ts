@@ -49,8 +49,8 @@ export class PurchasesController implements BaseController {
     const user = await usersRepo.getOrBootstrapUser(null, res.locals.authenticatedUser.id)
 
     const transaction = await txnRepo.findById(null, req.params.id)
-    if (transaction.userId !== user.id) return next(new ForbiddenError())
     if (!transaction) return next(new NotFoundError('transaction'))
+    if (transaction.userId !== user.id) return next(new ForbiddenError())
 
     const payment = await getPaymentDetails(req.params.id)
     if (!payment) return next(new NotFoundError('payment'))

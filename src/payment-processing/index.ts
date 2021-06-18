@@ -62,6 +62,9 @@ export interface SubscriptionPaymentData {
   startAfterFirstInterval: boolean
 }
 
+export type SimplifiedPayment = Pick<Payment, 'id' | 'description' | 'method' | 'metadata'
+  | 'status' | 'createdAt' | 'amount'>
+
 const getPaymentCheckoutURL = (payment: Payment): string | null => {
   return payment && payment._links.checkout && payment._links.checkout.href
     ? payment._links.checkout.href
@@ -248,7 +251,7 @@ export const updatePaymentRedirectURL = async (id: string, redirectUrl: string):
   await mollieClient.payments.update(id, { redirectUrl })
 }
 
-export const getPaymentDetails = (id: string): Promise<Payment> => {
+export const getPaymentDetails = (id: string): Promise<SimplifiedPayment> => {
   return mollieClient.payments.get(id)
 }
 

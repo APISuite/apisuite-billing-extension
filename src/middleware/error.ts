@@ -9,7 +9,7 @@ import { HandlerResponse } from '../types'
 import {
   UserInputError,
   PurchasePreconditionError,
-  NotFoundError,
+  NotFoundError, ForbiddenError,
 } from '../controllers'
 import { DuplicateError } from '../models/errors'
 
@@ -21,6 +21,10 @@ export const error = (err: Error, req: Request, res: Response, next: NextFunctio
 
   if (err instanceof PurchasePreconditionError) {
     return res.status(400).json({ errors: [err.message] })
+  }
+
+  if (err instanceof ForbiddenError) {
+    return res.status(403).json({ errors: [err.message] })
   }
 
   if (err instanceof NotFoundError) {
