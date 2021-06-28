@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  slack: circleci/slack@4.4.2
+
 jobs:
   test:
     docker:
@@ -8,6 +11,9 @@ jobs:
       - checkout
       - run: npm install
       - run: npm test
+      - slack/notify:
+          event: fail
+          template: basic_fail_1
       - run: cp -r ../.ssh/ .
       - persist_to_workspace:
           root: ~/
@@ -37,12 +43,19 @@ jobs:
           at: ~/
       - setup_remote_docker
       - run: ./.scripts/build.sh
+      - slack/notify:
+          event: fail
+          template: basic_fail_1
+      - slack/notify:
+          event: pass
+          template: basic_success_1
 
 workflows:
   version: 2
   build:
     jobs:
-      - test
+      - test:
+          context: slack
       - release:
           context: docker
           filters:
@@ -52,7 +65,9 @@ workflows:
           requires:
             - test
       - build:
-          context: docker
+          context:
+            - docker
+            - slack
           filters:
             branches:
               only:
