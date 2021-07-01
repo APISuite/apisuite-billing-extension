@@ -28,7 +28,7 @@ export class UsersController implements BaseController {
 
   public getUserDetails = async (req: Request, res: Response): AsyncHandlerResponse => {
     const user = await usersRepo.getOrBootstrapUser(null, Number(req.params.id))
-    let nextPaymentDate
+    let nextPaymentDate = null
     if (user.ppSubscriptionId && user.ppCustomerId) {
       nextPaymentDate = await getSubscriptionNextPaymentDate(user.ppSubscriptionId, user.ppCustomerId)
     }
