@@ -9,12 +9,40 @@ This repository contains an extension to APISuite Core that provides a backend f
 Docker images are available in our [DockerHub](https://hub.docker.com/r/cloudokihub/apisuite-billing-extension).
 
 Every new image is tagged with:
-- commit hash
-- latest (dev-latest and stg-latest from develop and staging respectively)
-- semantic version from `package.json` (only in main branch)
+- latest (meaning this tag always points to the most recent released version) 
+- semantic version from `package.json`
 
 Depending on your goals, you could use a fixed version like `1.0.0` or
 `latest` to simply get the most recent version every time you pull the image.
+
+## Configuration
+
+Configuration is done through environment variables.
+All variables are declared and documented in `src/config/schema.js`.
+
+### Sample Configuration
+
+Usually, at a minimum, these are the variables that need to be configured.
+
+This ensures connectivity to the core's API and RabbitMQ instance, as well as proper CORS configuration to accept requests from the desired origin.
+
+```
+APISUITE_API_URL=http://apisuite-core-api:6001
+APISUITE_PORTAL_URL=https://my.dev.portal.com
+CORS_ALLOW_ORIGIN=https://my.dev.portal.com
+DB_URI=postgres://db_user:p4ssw0rd@dbserver:5432/marketplace_db 
+
+MOLLIE_API_KEY=secretapikey
+WEBHOOKS_TOPUP=https://billing.api.acme.io/webhooks/topup
+WEBHOOKS_FIRST=https://billing.api.acme.io/webhooks/first
+WEBHOOKS_SUBSCRIPTION=https://billing.api.acme.io/webhooks/subscription
+WEBHOOKS_SUBSCRIPTION_FIRST=https://billing.api.acme.io/webhooks/subscription_first
+PAYMENT_REDIRECT_URL=https://my.dev.portal.com/billing/payments
+
+MSG_BROKER_URL=amqp://apisuite:RW8zBFj2b3KAAwWr2xgu@apisuite-msg-broker:5672
+RABBITMQ_EVENTS_EXCHANGE=apisuite_events_dev
+RABBITMQ_QUEUE=billing-queue
+```
 
 ## Monitoring
 
@@ -41,16 +69,6 @@ Database integration tests live in `src/models` and have `src/models/index.test.
 This is necessary because of the necessity to run migrations and seed data before the test suite is executed.
 
 Integration tests can also be executed with docker-compose: `docker-compose -f docker-compose.test.yaml up --exit-code-from billing`
-
-### Environment variables
-
-All variables used in code are documented in `src/config/schema.js`.
-
-For tests, the following environment variables should be set:
-```
-NODE_ENV=test
-LOG_LEVEL=silent
-```
 
 ## Database migrations
 
