@@ -34,7 +34,7 @@ export class UsersController implements BaseController {
     }
     return res.status(200).json(responseBase({
       id: user.id,
-      subscriptionId: user.ppSubscriptionId ? user.subscriptionId : null,
+      subscriptionId: user.subscriptionId,
       credits: user.credits,
       nextPaymentDate,
     }))
