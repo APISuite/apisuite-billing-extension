@@ -21,8 +21,7 @@ export interface NewMollieCustomer {
 export interface FirstPaymentResult {
   id: string
   checkoutURL: string
-  mandateId: string
-  amount: number,
+  amount: number
 }
 
 export interface TopUpPaymentResult {
@@ -156,12 +155,9 @@ export const subscriptionFirstPayment = async (customerId: string, subscription:
   const checkoutURL = getPaymentCheckoutURL(payment)
   if (!checkoutURL) throw new Error('failed to create payment')
 
-  if (!payment.mandateId) throw new Error('failed to create mandate')
-
   return {
     id: payment.id,
     checkoutURL: checkoutURL,
-    mandateId: payment.mandateId,
     amount: parseFloat(payment.amount.value),
   }
 }

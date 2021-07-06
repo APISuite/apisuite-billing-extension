@@ -3,7 +3,7 @@ import {expect} from 'chai'
 import express, {NextFunction, Request, Response} from 'express'
 import request from 'supertest'
 import {error} from '../middleware'
-import {pkg as pkgsRepo, subscription as subscriptionsRepo, transaction as txnRepo, user as usersRepo,} from '../models'
+import {pkg as pkgsRepo, subscription as subscriptionsRepo, transaction as txnRepo, user as usersRepo} from '../models'
 import {PurchasesController} from './purchases'
 import * as paymentProcessing from '../payment-processing'
 import * as core from '../core'
@@ -380,7 +380,6 @@ describe('purchases controller', () => {
         id: 'pmntid',
         amount: 123,
         checkoutURL: 'url',
-        mandateId: 'mmm',
       })
       sinon.stub(txnRepo, 'create').resolves()
 
@@ -409,7 +408,6 @@ describe('purchases controller', () => {
         id: 'pmntid',
         amount: 123,
         checkoutURL: 'url',
-        mandateId: 'mmm',
       })
       sinon.stub(txnRepo, 'create').resolves()
 
