@@ -17,3 +17,7 @@ export const handleUserDelete = async (userId: number): Promise<void> => {
     await trx.rollback()
   }
 }
+
+export const handleUserCreate = async (userId: number): Promise<void> => {
+  await usersRepo.getOrBootstrapUser(null, userId)
+}
