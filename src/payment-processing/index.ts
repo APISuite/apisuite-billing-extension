@@ -231,8 +231,11 @@ export const subscriptionPayment = async (sub: SubscriptionPaymentData): Promise
 }
 
 export const cancelSubscription = async (id: string, customerId: string): Promise<void> => {
-  const subscription = await mollieClient.customers_subscriptions.cancel(id, { customerId })
-  if (subscription.status !== SubscriptionStatus.canceled) throw new Error('failed to cancel subscription')
+  const subscription = await mollieClient.customers_subscriptions.get(id, { customerId })
+  if (subscription.status == SubscriptionStatus.active) {
+    const cancelled = await mollieClient.customers_subscriptions.cancel(id, { customerId })
+    if (cancelled.status !== SubscriptionStatus.canceled) throw new Error('failed to cancel subscription')
+  }
 }
 
 export const createUser = async (name: string, email: string): Promise<string> => {
