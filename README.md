@@ -1,6 +1,8 @@
 # API Suite - Billing Extension
 
 [![circleci](https://circleci.com/gh/APISuite/apisuite-billing-extension.svg?style=shield)](https://app.circleci.com/pipelines/github/APISuite/apisuite-billing-extension)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=APISuite_apisuite-billing-extension&metric=alert_status)](https://sonarcloud.io/dashboard?id=APISuite_apisuite-billing-extension)
+
 
 This repository contains an extension to APISuite Core that provides a backend for the billing feature.
 
