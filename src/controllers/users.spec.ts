@@ -52,15 +52,16 @@ describe('users controller', () => {
       .use(controller.getRouter())
       .use(error)
 
-    it('should return 204 when user has no customerID', (done) => {
+    it('should return 204 when user has no customerID/subscriptionID', (done) => {
       sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
         id: 1,
         credits: 100,
         subscriptionId: 1,
         ppCustomerId: null,
-        ppMandateId: 'mid',
+        ppMandateId: null,
         ppSubscriptionId: 'sid',
       })
+      sinon.stub(usersRepo, 'update').resolves()
 
       request(testApp)
         .delete('/users/1/subscriptions')
@@ -73,28 +74,13 @@ describe('users controller', () => {
       sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
         id: 1,
         credits: 100,
-        subscriptionId: 1,
-        ppCustomerId: 'cid',
-        ppMandateId: 'mid',
+        subscriptionId: null,
+        ppCustomerId: null,
+        ppMandateId: null,
         ppSubscriptionId: null,
       })
-
-      request(testApp)
-        .delete('/users/1/subscriptions')
-        .expect(204)
-        .then(() => done())
-        .catch((err: Error) => done(err))
-    })
-
-    it('should return 204 when user has no plan', (done) => {
-      sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
-        id: 1,
-        credits: 100,
-        subscriptionId: null,
-        ppCustomerId: 'cid',
-        ppMandateId: 'mid',
-        ppSubscriptionId: 'sid',
-      })
+      sinon.stub(paymentProcessing, 'cancelSubscription').resolves()
+      sinon.stub(usersRepo, 'update').resolves()
 
       request(testApp)
         .delete('/users/1/subscriptions')
