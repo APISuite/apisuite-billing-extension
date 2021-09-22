@@ -99,15 +99,6 @@ export const isMandateValid = async (mandateId: string, customerId: string): Pro
   return mandate.status === MandateStatus.valid || mandate.status === MandateStatus.pending
 }
 
-export const createCustomer = async (newCustomer: NewMollieCustomer): Promise<string> => {
-  const customer = await mollieClient.customers.create({
-    email: newCustomer.email,
-    name: newCustomer.name,
-  })
-
-  return customer.id
-}
-
 export const listCustomerPayments = async (id: string): Promise<CustomerPayment[]> => {
   const payments = await mollieClient.customers_payments.list({
     customerId: id,
@@ -238,7 +229,7 @@ export const cancelSubscription = async (id: string, customerId: string): Promis
   }
 }
 
-export const createUser = async (name: string, email: string): Promise<string> => {
+export const createCustomer = async (name: string, email: string): Promise<string> => {
   const customer = await mollieClient.customers.create({
     name,
     email,

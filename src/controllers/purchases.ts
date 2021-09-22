@@ -10,12 +10,10 @@ import {
   user as usersRepo,
 } from '../models'
 import {
-  findValidMandate,
-  subscriptionPayment,
   topUpPayment,
   listCustomerPayments,
   cancelSubscription,
-  createUser,
+  createCustomer,
   subscriptionFirstPayment,
   updatePaymentRedirectURL,
   getPaymentDetails,
@@ -73,7 +71,7 @@ export class PurchasesController implements BaseController {
   public purchasePackage = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
     const user = await usersRepo.getOrBootstrapUser(null, res.locals.authenticatedUser.id)
     if (!user.ppCustomerId) {
-      user.ppCustomerId = await createUser(res.locals.authenticatedUser.name, res.locals.authenticatedUser.email)
+      user.ppCustomerId = await createCustomer(res.locals.authenticatedUser.name, res.locals.authenticatedUser.email)
       await usersRepo.update(null, res.locals.authenticatedUser.id, { ppCustomerId: user.ppCustomerId })
     }
 
@@ -110,29 +108,8 @@ export class PurchasesController implements BaseController {
     }
 
     if (!user.ppCustomerId) {
-      user.ppCustomerId = await createUser(res.locals.authenticatedUser.name, res.locals.authenticatedUser.email)
+      user.ppCustomerId = await createCustomer(res.locals.authenticatedUser.name, res.locals.authenticatedUser.email)
       await usersRepo.update(null, res.locals.authenticatedUser.id, { ppCustomerId: user.ppCustomerId })
-    }
-
-    const mandate = await findValidMandate(user.ppCustomerId)
-    if (!mandate) {
-      const payment = await subscriptionFirstPayment(user.ppCustomerId, subscription)
-      const redirectURL = await getPaymentRedirectURL(res.locals.authenticatedUser.role.name)
-      redirectURL.searchParams.append('id', payment.id)
-      await updatePaymentRedirectURL(payment.id, redirectURL.toString())
-      await txnRepo.create(null, {
-        userId: res.locals.authenticatedUser.id,
-        paymentId: payment.id,
-        credits: subscription.credits,
-        verified: false,
-        type: TransactionType.Consent,
-        amount: payment.amount,
-      })
-      await usersRepo.update(null, user.id, {
-        subscriptionId: subscription.id,
-      })
-
-      return res.status(200).json(responseBase(payment.checkoutURL))
     }
 
     if (user.ppSubscriptionId) {
@@ -141,19 +118,22 @@ export class PurchasesController implements BaseController {
       user.subscriptionId = null
     }
 
-    const subscriptionId = await subscriptionPayment({
-      customerId: user.ppCustomerId,
-      price: subscription.price,
+    const payment = await subscriptionFirstPayment(user.ppCustomerId, subscription)
+    const redirectURL = await getPaymentRedirectURL(res.locals.authenticatedUser.role.name)
+    redirectURL.searchParams.append('id', payment.id)
+    await updatePaymentRedirectURL(payment.id, redirectURL.toString())
+    await txnRepo.create(null, {
+      userId: res.locals.authenticatedUser.id,
+      paymentId: payment.id,
       credits: subscription.credits,
-      description: subscription.name,
-      interval: subscription.periodicity,
-      startAfterFirstInterval: false,
+      verified: false,
+      type: TransactionType.Consent,
+      amount: payment.amount,
     })
     await usersRepo.update(null, user.id, {
       subscriptionId: subscription.id,
-      ppSubscriptionId: subscriptionId,
     })
 
-    return res.sendStatus(204)
+    return res.status(200).json(responseBase(payment.checkoutURL))
   }
 }

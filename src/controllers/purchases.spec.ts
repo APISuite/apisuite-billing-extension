@@ -282,7 +282,7 @@ describe('purchases controller', () => {
         ppMandateId: null,
         ppSubscriptionId: null,
       })
-      sinon.stub(paymentProcessing, 'createUser').resolves('custmr-id')
+      sinon.stub(paymentProcessing, 'createCustomer').resolves('custmr-id')
       sinon.stub(usersRepo, 'update').resolves()
       sinon.stub(pkgsRepo, 'findById').resolves({
         id: 99,
@@ -372,9 +372,8 @@ describe('purchases controller', () => {
         ppSubscriptionId: null,
       })
       sinon.stub(subscriptionsRepo, 'findById').resolves(mockSubscription)
-      sinon.stub(paymentProcessing, 'createUser').resolves('customerid123')
+      sinon.stub(paymentProcessing, 'createCustomer').resolves('customerid123')
       sinon.stub(usersRepo, 'update').resolves()
-      sinon.stub(paymentProcessing, 'findValidMandate').resolves(null)
       sinon.stub(paymentProcessing, 'updatePaymentRedirectURL').resolves()
       sinon.stub(paymentProcessing, 'subscriptionFirstPayment').resolves({
         id: 'pmntid',
@@ -402,7 +401,6 @@ describe('purchases controller', () => {
       })
       sinon.stub(subscriptionsRepo, 'findById').resolves(mockSubscription)
       sinon.stub(usersRepo, 'update').resolves()
-      sinon.stub(paymentProcessing, 'findValidMandate').resolves(null)
       sinon.stub(paymentProcessing, 'updatePaymentRedirectURL').resolves()
       sinon.stub(paymentProcessing, 'subscriptionFirstPayment').resolves({
         id: 'pmntid',
@@ -414,49 +412,6 @@ describe('purchases controller', () => {
       request(testApp)
         .post('/purchases/subscriptions/99')
         .expect(200)
-        .then(() => done())
-        .catch((err: Error) => done(err))
-    })
-
-    it('should return 204 when subscription is successfully created (existing customer)', (done) => {
-      sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
-        id: 1,
-        credits: 100,
-        subscriptionId: null,
-        ppCustomerId: 'xcustomerid',
-        ppMandateId: null,
-        ppSubscriptionId: null,
-      })
-      sinon.stub(subscriptionsRepo, 'findById').resolves(mockSubscription)
-      sinon.stub(usersRepo, 'update').resolves()
-      sinon.stub(paymentProcessing, 'findValidMandate').resolves('xmandateid')
-      sinon.stub(paymentProcessing, 'subscriptionPayment').resolves('xsubid')
-
-      request(testApp)
-        .post('/purchases/subscriptions/99')
-        .expect(204)
-        .then(() => done())
-        .catch((err: Error) => done(err))
-    })
-
-    it('should return 204 when subscription is successfully created (existing customer, subscription change)', (done) => {
-      sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
-        id: 1,
-        credits: 100,
-        subscriptionId: null,
-        ppCustomerId: 'xcustomerid',
-        ppMandateId: null,
-        ppSubscriptionId: 'mysubid',
-      })
-      sinon.stub(subscriptionsRepo, 'findById').resolves(mockSubscription)
-      sinon.stub(usersRepo, 'update').resolves()
-      sinon.stub(paymentProcessing, 'findValidMandate').resolves('xmandateid')
-      sinon.stub(paymentProcessing, 'subscriptionPayment').resolves('xsubid')
-      sinon.stub(paymentProcessing, 'cancelSubscription').resolves()
-
-      request(testApp)
-        .post('/purchases/subscriptions/99')
-        .expect(204)
         .then(() => done())
         .catch((err: Error) => done(err))
     })
