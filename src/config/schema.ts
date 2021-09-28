@@ -148,4 +148,10 @@ export const schema = {
       env: 'RABBITMQ_QUEUE',
     },
   },
+  vatRate: {
+    doc: 'VAT Rate in %',
+    format: Number,
+    default: 0,
+    env: 'VAT_RATE',
+  },
 }
