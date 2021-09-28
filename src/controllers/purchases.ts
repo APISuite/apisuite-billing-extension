@@ -97,6 +97,7 @@ export class PurchasesController implements BaseController {
 
   public purchaseSubscription = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
     const user = await usersRepo.getOrBootstrapUser(null, res.locals.authenticatedUser.id)
+    let organizationId = res.locals.authenticatedUser.org.id
 
     if (user.subscriptionId === Number(req.params.id)) {
       return next(new PurchasePreconditionError('subscription already active'))
@@ -118,7 +119,10 @@ export class PurchasesController implements BaseController {
       user.subscriptionId = null
     }
 
-    const payment = await subscriptionFirstPayment(user.ppCustomerId, subscription)
+    if (Object.keys(req.body).length && req.body.organizationId) {
+      organizationId = req.body.organizationId
+    }
+    const payment = await subscriptionFirstPayment(user.ppCustomerId, subscription, organizationId)
     const redirectURL = await getPaymentRedirectURL(res.locals.authenticatedUser.role.name)
     redirectURL.searchParams.append('id', payment.id)
     await updatePaymentRedirectURL(payment.id, redirectURL.toString())
