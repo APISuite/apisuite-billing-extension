@@ -46,6 +46,14 @@ RABBITMQ_EVENTS_EXCHANGE=apisuite_events_dev
 RABBITMQ_QUEUE=billing-queue
 ```
 
+### Runtime Settings
+
+Some "dynamic" settings can be managed via the settings database table.
+
+Currentyl existing settings can be found in the `SettingKeys` enum (`src/models/setting.ts`):
+- `default_credits`: default amount of credits attributed to a user when it is created
+
+
 ## Monitoring
 
 This API server provides two monitoring endpoints:
