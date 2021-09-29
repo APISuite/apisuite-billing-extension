@@ -75,12 +75,17 @@ export class PurchasesController implements BaseController {
       await usersRepo.update(null, res.locals.authenticatedUser.id, { ppCustomerId: user.ppCustomerId })
     }
 
+    let organizationId = res.locals.authenticatedUser.org?.id
+    if (Object.keys(req.body).length && req.body.organizationId) {
+      organizationId = req.body.organizationId
+    }
+
     const pkg = await pkgsRepo.findById(null, Number(req.params.id))
     if (!pkg) {
       return next(new NotFoundError('package'))
     }
 
-    const payment = await topUpPayment(pkg, user.ppCustomerId)
+    const payment = await topUpPayment(pkg, user.ppCustomerId, organizationId)
     const redirectURL = await getPaymentRedirectURL(res.locals.authenticatedUser.role.name)
     redirectURL.searchParams.append('id', payment.id)
     await updatePaymentRedirectURL(payment.id, redirectURL.toString())
@@ -97,7 +102,10 @@ export class PurchasesController implements BaseController {
 
   public purchaseSubscription = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
     const user = await usersRepo.getOrBootstrapUser(null, res.locals.authenticatedUser.id)
-    let organizationId = res.locals.authenticatedUser.org.id
+    let organizationId = res.locals.authenticatedUser.org?.id
+    if (Object.keys(req.body).length && req.body.organizationId) {
+      organizationId = req.body.organizationId
+    }
 
     if (user.subscriptionId === Number(req.params.id)) {
       return next(new PurchasePreconditionError('subscription already active'))
@@ -119,9 +127,6 @@ export class PurchasesController implements BaseController {
       user.subscriptionId = null
     }
 
-    if (Object.keys(req.body).length && req.body.organizationId) {
-      organizationId = req.body.organizationId
-    }
     const payment = await subscriptionFirstPayment(user.ppCustomerId, subscription, organizationId)
     const redirectURL = await getPaymentRedirectURL(res.locals.authenticatedUser.role.name)
     redirectURL.searchParams.append('id', payment.id)
