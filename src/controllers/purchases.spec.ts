@@ -215,6 +215,7 @@ describe('purchases controller', () => {
   describe('purchase top up', () => {
     const controller = new PurchasesController()
     const testApp = express()
+      .use(express.json())
       .use(injectUser)
       .use(controller.getRouter())
       .use(error)
@@ -229,6 +230,7 @@ describe('purchases controller', () => {
         ppSubscriptionId: null,
       })
       sinon.stub(pkgsRepo, 'findById').resolves(null)
+
 
       request(testApp)
         .post('/purchases/packages/666')
@@ -272,6 +274,37 @@ describe('purchases controller', () => {
         .catch((err: Error) => done(err))
     })
 
+    it('should return 200 when purchasing a top up and organization ID in body', (done) => {
+      sinon.stub(core, 'getPaymentRedirectURL').resolves(new URL('http://localhost:3000'))
+      sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
+        id: 1,
+        credits: 100,
+        subscriptionId: null,
+        ppCustomerId: 'x-customer-id-123',
+        ppMandateId: null,
+        ppSubscriptionId: null,
+      })
+      sinon.stub(pkgsRepo, 'findById').resolves({
+        id: 99,
+        name: '5k creds',
+        price: 123,
+        credits: 5000,
+      })
+      sinon.stub(txnRepo, 'create').resolves()
+      sinon.stub(paymentProcessing, 'updatePaymentRedirectURL').resolves()
+      sinon.stub(paymentProcessing, 'topUpPayment').resolves({
+        id: 'payment-id-12345',
+        checkoutURL: 'https://redirected.here',
+      })
+
+      request(testApp)
+        .post('/purchases/packages/99')
+        .send({body: { organizationId: 1}, planId: 99 })
+        .expect(200)
+        .then(() => done())
+        .catch((err: Error) => done(err))
+    })
+
     it('should return 200 when purchasing a top up (user has no customer id)', (done) => {
       sinon.stub(core, 'getPaymentRedirectURL').resolves(new URL('http://localhost:3000'))
       sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
@@ -309,6 +342,7 @@ describe('purchases controller', () => {
   describe('purchase subscription', () => {
     const controller = new PurchasesController()
     const testApp = express()
+      .use(express.json())
       .use(injectUser)
       .use(controller.getRouter())
       .use(error)
@@ -411,6 +445,34 @@ describe('purchases controller', () => {
 
       request(testApp)
         .post('/purchases/subscriptions/99')
+        .expect(200)
+        .then(() => done())
+        .catch((err: Error) => done(err))
+    })
+
+    it('should return 200 when first subscription payment is successfully created (existing customer) and organization ID in body', (done) => {
+      sinon.stub(core, 'getPaymentRedirectURL').resolves(new URL('http://localhost:3000'))
+      sinon.stub(usersRepo, 'getOrBootstrapUser').resolves({
+        id: 1,
+        credits: 100,
+        subscriptionId: null,
+        ppCustomerId: 'xcustomerid',
+        ppMandateId: null,
+        ppSubscriptionId: null,
+      })
+      sinon.stub(subscriptionsRepo, 'findById').resolves(mockSubscription)
+      sinon.stub(usersRepo, 'update').resolves()
+      sinon.stub(paymentProcessing, 'updatePaymentRedirectURL').resolves()
+      sinon.stub(paymentProcessing, 'subscriptionFirstPayment').resolves({
+        id: 'pmntid',
+        amount: 123,
+        checkoutURL: 'url',
+      })
+      sinon.stub(txnRepo, 'create').resolves()
+
+      request(testApp)
+        .post('/purchases/subscriptions/99')
+        .send({body: { organizationId: 1}})
         .expect(200)
         .then(() => done())
         .catch((err: Error) => done(err))

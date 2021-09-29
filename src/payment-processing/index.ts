@@ -126,7 +126,7 @@ export const listCustomerPayments = async (id: string): Promise<CustomerPayment[
   }))
 }
 
-export const subscriptionFirstPayment = async (customerId: string, subscription: Subscription): Promise<FirstPaymentResult> => {
+export const subscriptionFirstPayment = async (customerId: string, subscription: Subscription, organizationId: string): Promise<FirstPaymentResult> => {
   const payment = await mollieClient.payments.create({
     amount: {
       currency: 'EUR',
@@ -138,11 +138,11 @@ export const subscriptionFirstPayment = async (customerId: string, subscription:
     webhookUrl: config.get('mollie.subscriptionFirstPaymentWebhookUrl'),
     redirectUrl: config.get('mollie.paymentRedirectUrl'), // URL will be changed to include the payment ID after the payment is created
     metadata: {
+      organizationId: organizationId,
       credits: subscription.credits,
       type: PaymentType.Subscription,
     },
   })
-
   const checkoutURL = getPaymentCheckoutURL(payment)
   if (!checkoutURL) throw new Error('failed to create payment')
 
@@ -153,7 +153,7 @@ export const subscriptionFirstPayment = async (customerId: string, subscription:
   }
 }
 
-export const topUpPayment = async (pkg: Package, customerId: string): Promise<TopUpPaymentResult> => {
+export const topUpPayment = async (pkg: Package, customerId: string, organizationId: string): Promise<TopUpPaymentResult> => {
   const payment = await mollieClient.payments.create({
     customerId,
     description: pkg.name,
@@ -165,6 +165,7 @@ export const topUpPayment = async (pkg: Package, customerId: string): Promise<To
     webhookUrl: config.get('mollie.topUpWebhookUrl'),
     redirectUrl: config.get('mollie.paymentRedirectUrl'), // URL will be changed to include the payment ID after the payment is created
     metadata: {
+      organizationId: organizationId,
       credits: pkg.credits,
       type: PaymentType.TopUp,
     },
