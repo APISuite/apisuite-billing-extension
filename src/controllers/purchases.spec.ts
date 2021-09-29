@@ -9,7 +9,6 @@ import * as paymentProcessing from '../payment-processing'
 import * as core from '../core'
 import {TransactionType} from "../models/transaction"
 import {PaymentMethod, PaymentStatus} from "@mollie/api-client"
-import {body} from "express-validator";
 
 describe('purchases controller', () => {
   const injectUser = (req: Request, res: Response, next: NextFunction) => {
@@ -235,7 +234,7 @@ describe('purchases controller', () => {
 
       request(testApp)
         .post('/purchases/packages/666')
-          .expect('Content-Type', /json/)
+        .expect('Content-Type', /json/)
         .expect(404)
         .then((res) => {
           expect(res.body.errors).to.be.an('array')
@@ -299,11 +298,11 @@ describe('purchases controller', () => {
       })
 
       request(testApp)
-          .post('/purchases/packages/99')
-          .send({body: { organizationId: 1}, planId: 99 })
-          .expect(200)
-          .then(() => done())
-          .catch((err: Error) => done(err))
+        .post('/purchases/packages/99')
+        .send({body: { organizationId: 1}, planId: 99 })
+        .expect(200)
+        .then(() => done())
+        .catch((err: Error) => done(err))
     })
 
     it('should return 200 when purchasing a top up (user has no customer id)', (done) => {
@@ -472,11 +471,11 @@ describe('purchases controller', () => {
       sinon.stub(txnRepo, 'create').resolves()
 
       request(testApp)
-          .post('/purchases/subscriptions/99')
-          .send({body: { organizationId: 1}})
-          .expect(200)
-          .then(() => done())
-          .catch((err: Error) => done(err))
+        .post('/purchases/subscriptions/99')
+        .send({body: { organizationId: 1}})
+        .expect(200)
+        .then(() => done())
+        .catch((err: Error) => done(err))
     })
 
     it('should return 500 when subscription payment fails', (done) => {
