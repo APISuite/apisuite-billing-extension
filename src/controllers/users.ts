@@ -18,7 +18,7 @@ export class UsersController implements BaseController {
       isAdmin,
       this.updateUserValidation,
       validator,
-      aw(this.updateUser)),
+      aw(this.updateUser))
     router.get(`${this.path}/:id/invoice-notes`,
         authenticated,
         isAdmin,
