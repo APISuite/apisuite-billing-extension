@@ -18,7 +18,17 @@ export class UsersController implements BaseController {
       isAdmin,
       this.updateUserValidation,
       validator,
-      aw(this.updateUser))
+      aw(this.updateUser)),
+    router.get(`${this.path}/:id/invoice-notes`,
+        authenticated,
+        isAdmin,
+        validator,
+        aw(this.getUserInvoice))
+    router.patch(`${this.path}/:id/invoice-notes`,
+      authenticated,
+      isAdmin,
+      validator,
+      aw(this.updateUserInvoice))
     return router
   }
 
@@ -65,5 +75,31 @@ export class UsersController implements BaseController {
     })
 
     return res.status(200).json(responseBase(user))
+  }
+
+  public updateUserInvoice = async (req: Request, res: Response): AsyncHandlerResponse => {
+
+    const invoiceUpdate = await usersRepo.update(null, Number(req.params.id), {
+      invoiceNotes: req.body.invoiceNotes,
+    })
+
+    if (!invoiceUpdate) {
+      return res.status(500).json(responseBase('Unable to Update Data'))
+    }
+
+    return res.status(200).json(responseBase('Invoice Notes Updated'))
+  }
+
+  public getUserInvoice = async (req: Request, res: Response): AsyncHandlerResponse => {
+
+    const invoiceData = await usersRepo.findById (null, Number(req.params.id))
+
+    if (!invoiceData) {
+      return res.status(404).json(responseBase('User not Found'))
+    }
+
+    const returnObj = {id: invoiceData.id, invoiceNotes: invoiceData.invoiceNotes}
+
+    return res.status(200).json(responseBase(returnObj))
   }
 }
