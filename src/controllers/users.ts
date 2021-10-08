@@ -1,10 +1,11 @@
-import { Request, Response, Router } from 'express'
+import {NextFunction, Request, Response, Router} from 'express'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController, responseBase } from './base'
 import { user as usersRepo } from '../models'
 import { authenticated, isSelf, asyncWrap as aw, isAdmin, validator, isSelfOrAdmin } from '../middleware/'
 import { cancelSubscription, getSubscriptionNextPaymentDate } from '../payment-processing'
 import { body, ValidationChain } from 'express-validator'
+import { NotFoundError, PurchasePreconditionError, ForbiddenError } from './errors'
 
 export class UsersController implements BaseController {
   private readonly path = '/users'
@@ -77,29 +78,25 @@ export class UsersController implements BaseController {
     return res.status(200).json(responseBase(user))
   }
 
-  public updateUserInvoice = async (req: Request, res: Response): AsyncHandlerResponse => {
-
+  public updateUserInvoice = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
     const invoiceUpdate = await usersRepo.update(null, Number(req.params.id), {
       invoiceNotes: req.body.invoiceNotes,
     })
 
     if (!invoiceUpdate) {
-      return res.status(500).json(responseBase('Unable to Update Data'))
+      return next (new NotFoundError('users'))
     }
 
-    return res.status(200).json(responseBase('Invoice Notes Updated'))
+    return res.status(200).json(responseBase({ invoiceNotes: invoiceUpdate.invoiceNotes }))
   }
 
-  public getUserInvoice = async (req: Request, res: Response): AsyncHandlerResponse => {
-
+  public getUserInvoice = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
     const invoiceData = await usersRepo.findById (null, Number(req.params.id))
 
     if (!invoiceData) {
-      return res.status(404).json(responseBase('User not Found'))
+      return next (new NotFoundError('users'))
     }
 
-    const returnObj = {id: invoiceData.id, invoiceNotes: invoiceData.invoiceNotes}
-
-    return res.status(200).json(responseBase(returnObj))
+    return res.status(200).json(responseBase({invoiceNotes: invoiceData.invoiceNotes}))
   }
 }

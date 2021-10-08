@@ -1,9 +1,9 @@
 exports.up = function(knex) {
   return knex.raw(`
-    alter table users add invoice_notes TEXT;
+    ALTER TABLE users ADD invoice_notes TEXT;
   `)
 }
 
 exports.down = function(knex) {
-  return knex.raw('alter table users drop column invoice_notes;')
+  return knex.raw('ALTER TABLE users DROP COLUMN invoice_notes;')
 }
