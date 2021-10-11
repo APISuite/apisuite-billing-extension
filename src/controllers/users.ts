@@ -12,8 +12,14 @@ export class UsersController implements BaseController {
 
   public getRouter(): Router {
     const router = Router()
-    router.get(`${this.path}/:id`, authenticated, isSelfOrAdmin, aw(this.getUserDetails))
-    router.delete(`${this.path}/:id/subscriptions`, authenticated, isSelf, aw(this.cancelSubscription))
+    router.get(`${this.path}/:id`,
+      authenticated,
+      isSelfOrAdmin,
+      aw(this.getUserDetails))
+    router.delete(`${this.path}/:id/subscriptions`,
+      authenticated,
+      isSelf,
+      aw(this.cancelSubscription))
     router.patch(`${this.path}/:id`,
       authenticated,
       isAdmin,
