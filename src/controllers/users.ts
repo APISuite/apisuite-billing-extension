@@ -1,11 +1,11 @@
-import {NextFunction, Request, Response, Router} from 'express'
+import { NextFunction, Request, Response, Router } from 'express'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController, responseBase } from './base'
 import { user as usersRepo } from '../models'
 import { authenticated, isSelf, asyncWrap as aw, isAdmin, validator, isSelfOrAdmin } from '../middleware/'
 import { cancelSubscription, getSubscriptionNextPaymentDate } from '../payment-processing'
 import { body, ValidationChain } from 'express-validator'
-import { NotFoundError, PurchasePreconditionError, ForbiddenError } from './errors'
+import { NotFoundError } from './errors'
 
 export class UsersController implements BaseController {
   private readonly path = '/users'
@@ -21,15 +21,15 @@ export class UsersController implements BaseController {
       validator,
       aw(this.updateUser))
     router.get(`${this.path}/:id/invoice-notes`,
-        authenticated,
-        isAdmin,
-        validator,
-        aw(this.getUserInvoice))
+      authenticated,
+      isSelf,
+      validator,
+      aw(this.getUserInvoiceNotes))
     router.patch(`${this.path}/:id/invoice-notes`,
       authenticated,
       isAdmin,
       validator,
-      aw(this.updateUserInvoice))
+      aw(this.updateUserInvoiceNotes))
     return router
   }
 
@@ -78,7 +78,7 @@ export class UsersController implements BaseController {
     return res.status(200).json(responseBase(user))
   }
 
-  public updateUserInvoice = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
+  public updateUserInvoiceNotes = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
     const invoiceUpdate = await usersRepo.update(null, Number(req.params.id), {
       invoiceNotes: req.body.invoiceNotes,
     })
@@ -90,13 +90,13 @@ export class UsersController implements BaseController {
     return res.status(200).json(responseBase({ invoiceNotes: invoiceUpdate.invoiceNotes }))
   }
 
-  public getUserInvoice = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
+  public getUserInvoiceNotes = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
     const invoiceData = await usersRepo.findById (null, Number(req.params.id))
 
     if (!invoiceData) {
       return next (new NotFoundError('users'))
     }
 
-    return res.status(200).json(responseBase({invoiceNotes: invoiceData.invoiceNotes}))
+    return res.status(200).json(responseBase({ invoiceNotes: invoiceData.invoiceNotes }))
   }
 }

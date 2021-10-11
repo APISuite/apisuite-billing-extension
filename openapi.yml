@@ -453,7 +453,7 @@ paths:
   /users/{id}/invoice-notes:
     get:
       tags: [ users ]
-      summary: Retrieve a user
+      summary: User's invoice notes
       description: >
         Returns invoice data based on the ID.
         Usable by the user to get information about itself or by admins to retrieve any user.
@@ -499,7 +499,7 @@ paths:
           schema:
             type: number
       requestBody:
-        description: User info payload
+        description: User invoice notes
         required: true
         content:
           application/json:
@@ -518,7 +518,7 @@ paths:
                 type: object
                 properties:
                   data:
-                    $ref: '#/components/schemas/User'
+                    $ref: '#/components/schemas/InvoiceNotes'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':

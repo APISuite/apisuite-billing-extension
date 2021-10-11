@@ -1,14 +1,14 @@
 import sinon from 'sinon'
-import {expect} from 'chai'
-import express, {NextFunction, Request, Response} from 'express'
+import { expect } from 'chai'
+import express, { NextFunction, Request, Response } from 'express'
 import request from 'supertest'
-import {error} from '../middleware'
-import {pkg as pkgsRepo, subscription as subscriptionsRepo, transaction as txnRepo, user as usersRepo} from '../models'
-import {PurchasesController} from './purchases'
+import { error } from '../middleware'
+import { pkg as pkgsRepo, subscription as subscriptionsRepo, transaction as txnRepo, user as usersRepo } from '../models'
+import { PurchasesController } from './purchases'
 import * as paymentProcessing from '../payment-processing'
 import * as core from '../core'
-import {TransactionType} from "../models/transaction"
-import {PaymentMethod, PaymentStatus} from "@mollie/api-client"
+import { TransactionType } from "../models/transaction"
+import { PaymentMethod, PaymentStatus } from "@mollie/api-client"
 
 describe('purchases controller', () => {
   const injectUser = (req: Request, res: Response, next: NextFunction) => {
@@ -308,7 +308,7 @@ describe('purchases controller', () => {
 
       request(testApp)
         .post('/purchases/packages/99')
-        .send({body: { organizationId: 1}, planId: 99 })
+        .send({ body: { organizationId: 1 }, planId: 99 })
         .expect(200)
         .then(() => done())
         .catch((err: Error) => done(err))
@@ -487,7 +487,7 @@ describe('purchases controller', () => {
 
       request(testApp)
         .post('/purchases/subscriptions/99')
-        .send({body: { organizationId: 1}})
+        .send({ body: { organizationId: 1 } })
         .expect(200)
         .then(() => done())
         .catch((err: Error) => done(err))

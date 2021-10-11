@@ -5,7 +5,7 @@ import { UsersController } from './users'
 import { user as usersRepo } from '../models'
 import { error } from '../middleware'
 import * as paymentProcessing from '../payment-processing'
-import {expect} from "chai"
+import { expect } from "chai"
 
 describe('users controller', () => {
   const injectUser = (req: Request, res: Response, next: NextFunction) => {
