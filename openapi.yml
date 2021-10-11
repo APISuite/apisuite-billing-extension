@@ -469,7 +469,7 @@ paths:
             type: number
       responses:
         '200':
-          description: User model
+          description: Invoice Notes model
           content:
             application/json:
               schema:
@@ -504,11 +504,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                invoiceNotes:
-                  type: string
-                  description: Update invoice data
+              $ref: '#/components/schemas/InvoiceNotes'
       responses:
         '200':
           description: User model

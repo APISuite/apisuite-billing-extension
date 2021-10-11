@@ -22,12 +22,12 @@ export class UsersController implements BaseController {
       aw(this.updateUser))
     router.get(`${this.path}/:id/invoice-notes`,
       authenticated,
-      isSelf,
+      isSelfOrAdmin,
       validator,
       aw(this.getUserInvoiceNotes))
     router.patch(`${this.path}/:id/invoice-notes`,
       authenticated,
-      isAdmin,
+      isSelf,
       validator,
       aw(this.updateUserInvoiceNotes))
     return router
