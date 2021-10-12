@@ -30,7 +30,6 @@ export class PurchasesController implements BaseController {
     router.get(`${this.path}/:id`, authenticated, aw(this.getPurchase))
     router.post(`${this.path}/packages/:id`, authenticated, aw(this.purchasePackage))
     router.post(`${this.path}/subscriptions/:id`, authenticated, aw(this.purchaseSubscription))
-    router.patch(`${this.path}/subscriptions/`, authenticated, aw(this.updatePayment))
     return router
   }
 
@@ -147,11 +146,4 @@ export class PurchasesController implements BaseController {
     return res.status(200).json(responseBase(payment.checkoutURL))
   }
 
-  public updatePayment = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
-    const user = await usersRepo.getOrBootstrapUser(null, res.locals.authenticatedUser.id)
-    console.log(user)
-    if (!user.subscriptionId) {
-      return next(new NotFoundError('subscription'))
-    }
-  }
 }
