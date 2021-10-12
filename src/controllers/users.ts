@@ -29,11 +29,11 @@ export class UsersController implements BaseController {
     router.get(`${this.path}/:id/invoice-notes`,
       authenticated,
       isSelfOrAdmin,
-      validator,
       aw(this.getUserInvoiceNotes))
     router.patch(`${this.path}/:id/invoice-notes`,
       authenticated,
       isSelf,
+      this.updateUserInvoiceNotesValidation,
       validator,
       aw(this.updateUserInvoiceNotes))
     return router
@@ -41,6 +41,10 @@ export class UsersController implements BaseController {
 
   readonly updateUserValidation: ValidationChain[] = [
     body('credits').optional().isNumeric(),
+  ]
+
+  readonly updateUserInvoiceNotesValidation: ValidationChain[] = [
+    body('invoiceNotes').exists(),
   ]
 
   public getUserDetails = async (req: Request, res: Response): AsyncHandlerResponse => {
