@@ -145,4 +145,5 @@ export class PurchasesController implements BaseController {
 
     return res.status(200).json(responseBase(payment.checkoutURL))
   }
+
 }
