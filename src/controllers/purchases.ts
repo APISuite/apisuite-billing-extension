@@ -30,6 +30,7 @@ export class PurchasesController implements BaseController {
     router.get(`${this.path}/:id`, authenticated, aw(this.getPurchase))
     router.post(`${this.path}/packages/:id`, authenticated, aw(this.purchasePackage))
     router.post(`${this.path}/subscriptions/:id`, authenticated, aw(this.purchaseSubscription))
+    router.patch(`${this.path}/subscriptions`, authenticated, aw(this.updatePayment))
     return router
   }
 
@@ -145,4 +146,37 @@ export class PurchasesController implements BaseController {
 
     return res.status(200).json(responseBase(payment.checkoutURL))
   }
+
+  public updatePayment = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
+    const user = await usersRepo.getOrBootstrapUser(null, res.locals.authenticatedUser.id)
+
+    if (!user.subscriptionId || !user.ppCustomerId) {
+      return next(new NotFoundError('subscription'))
+    }
+
+    const subscription = await subscriptionsRepo.findById(null, user.id)
+    if (!subscription) {
+      return next(new NotFoundError('subscription'))
+    }
+
+    subscription.price = 0
+    const payment = await subscriptionFirstPayment(user.ppCustomerId, subscription, res.locals.authenticatedUser.org.id)
+    const redirectURL = await getPaymentRedirectURL(res.locals.authenticatedUser.role.name)
+    redirectURL.searchParams.append('id', payment.id)
+    await updatePaymentRedirectURL(payment.id, redirectURL.toString())
+    await txnRepo.create(null, {
+      userId: res.locals.authenticatedUser.id,
+      paymentId: payment.id,
+      credits: subscription.credits,
+      verified: false,
+      type: TransactionType.Consent,
+      amount: payment.amount,
+    })
+    await usersRepo.update(null, user.id, {
+      subscriptionId: subscription.id,
+    })
+    return res.status(200).json(responseBase(payment.checkoutURL))
+
+  }
+
 }

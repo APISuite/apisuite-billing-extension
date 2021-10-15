@@ -32,6 +32,7 @@ export interface TopUpPaymentResult {
 export interface VerifiedPayment {
   id: string
   amount: number
+  mandateId: string
 }
 
 export interface VerifiedSubscriptionPayment extends VerifiedPayment {
@@ -184,9 +185,11 @@ export const verifyPaymentSuccess = async (id: string): Promise<VerifiedPayment 
   const payment = await mollieClient.payments.get(id)
   if (!payment) throw new Error('failed to check payment')
   if (payment.status !== PaymentStatus.paid) return null
+  if (!payment.mandateId) return null
   return {
     id: payment.id,
     amount: parseFloat(payment.amount.value),
+    mandateId: payment.mandateId,
   }
 }
 
@@ -195,10 +198,12 @@ export const verifySubscriptionPaymentSuccess = async (id: string): Promise<Veri
   if (!payment) throw new Error('failed to check payment')
   if (!payment.subscriptionId) return null
   if (payment.status !== PaymentStatus.paid) return null
+  if (!payment.mandateId) return null
   return {
     id: payment.id,
     amount: parseFloat(payment.amount.value),
     subscriptionId: payment.subscriptionId,
+    mandateId: payment.mandateId,
   }
 }
 
@@ -249,4 +254,9 @@ export const getPaymentDetails = (id: string): Promise<SimplifiedPayment> => {
 export const getSubscriptionNextPaymentDate = async (subscriptionId: string, customerId: string): Promise<string | null> => {
   const subscription = await mollieClient.customers_subscriptions.get(subscriptionId, { customerId })
   return subscription?.nextPaymentDate || null
+}
+
+export const updateSubscription = async (subscriptionId: string, customerId: string, mandateId: string): Promise<unknown> => {
+  const updateSubscription = await  mollieClient.customers_subscriptions.update(subscriptionId,{ customerId: customerId, mandateId: mandateId } )
+  return updateSubscription
 }
