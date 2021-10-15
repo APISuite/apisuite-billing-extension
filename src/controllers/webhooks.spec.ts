@@ -137,6 +137,7 @@ describe('webhooks controller', () => {
         ppCustomerId: 'x-customer-1234',
         ppMandateId: 'x-mandate-1234',
         ppSubscriptionId: 'subsId123',
+        invoiceNotes: null,
       })
       sinon.stub(subscriptionsRepo, 'findById').resolves({
         id: 1,
@@ -175,6 +176,7 @@ describe('webhooks controller', () => {
         ppCustomerId: 'x-customer-1234',
         ppMandateId: 'x-mandate-1234',
         ppSubscriptionId: 'subsId123',
+        invoiceNotes: null,
       })
       sinon.stub(subscriptionsRepo, 'findById').resolves(null)
       sinon.stub(usersRepo, 'incrementCredits').resolves()
@@ -207,6 +209,7 @@ describe('webhooks controller', () => {
         ppCustomerId: null,
         ppMandateId: 'x-mandate-1234',
         ppSubscriptionId: null,
+        invoiceNotes: null,
       })
 
       request(testApp)
@@ -278,6 +281,7 @@ describe('webhooks controller', () => {
         ppSubscriptionId: null,
         credits: 100,
         subscriptionId: null,
+        invoiceNotes: null,
       })
       sinon.stub(subscriptionsRepo, 'findById').resolves({
         id: 1,

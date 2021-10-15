@@ -1,14 +1,14 @@
 import sinon from 'sinon'
-import {expect} from 'chai'
-import express, {NextFunction, Request, Response} from 'express'
+import { expect } from 'chai'
+import express, { NextFunction, Request, Response } from 'express'
 import request from 'supertest'
-import {error} from '../middleware'
-import {pkg as pkgsRepo, subscription as subscriptionsRepo, transaction as txnRepo, user as usersRepo} from '../models'
-import {PurchasesController} from './purchases'
+import { error } from '../middleware'
+import { pkg as pkgsRepo, subscription as subscriptionsRepo, transaction as txnRepo, user as usersRepo } from '../models'
+import { PurchasesController } from './purchases'
 import * as paymentProcessing from '../payment-processing'
 import * as core from '../core'
-import {TransactionType} from "../models/transaction"
-import {PaymentMethod, PaymentStatus} from "@mollie/api-client"
+import { TransactionType } from "../models/transaction"
+import { PaymentMethod, PaymentStatus } from "@mollie/api-client"
 
 describe('purchases controller', () => {
   const injectUser = (req: Request, res: Response, next: NextFunction) => {
@@ -36,6 +36,7 @@ describe('purchases controller', () => {
         ppSubscriptionId: null,
         credits: 100,
         subscriptionId: null,
+        invoiceNotes: null,
       })
       sinon.stub(paymentProcessing, 'listCustomerPayments').resolves([])
 
@@ -58,6 +59,7 @@ describe('purchases controller', () => {
         ppSubscriptionId: null,
         credits: 100,
         subscriptionId: null,
+        invoiceNotes: null,
       })
       sinon.stub(paymentProcessing, 'listCustomerPayments').resolves([])
 
@@ -88,6 +90,7 @@ describe('purchases controller', () => {
         ppSubscriptionId: null,
         credits: 100,
         subscriptionId: null,
+        invoiceNotes: null,
       })
       sinon.stub(txnRepo, 'findById').resolves()
 
@@ -110,6 +113,7 @@ describe('purchases controller', () => {
         ppSubscriptionId: null,
         credits: 100,
         subscriptionId: null,
+        invoiceNotes: null,
       })
       sinon.stub(txnRepo, 'findById').resolves({
         userId: 999,
@@ -141,6 +145,7 @@ describe('purchases controller', () => {
         ppSubscriptionId: null,
         credits: 100,
         subscriptionId: null,
+        invoiceNotes: null,
       })
       sinon.stub(txnRepo, 'findById').resolves({
         userId: 1,
@@ -173,6 +178,7 @@ describe('purchases controller', () => {
         ppSubscriptionId: null,
         credits: 100,
         subscriptionId: null,
+        invoiceNotes: null,
       })
       sinon.stub(txnRepo, 'findById').resolves({
         userId: 1,
@@ -228,6 +234,7 @@ describe('purchases controller', () => {
         ppCustomerId: 'x-customer-id-123',
         ppMandateId: null,
         ppSubscriptionId: null,
+        invoiceNotes: null,
       })
       sinon.stub(pkgsRepo, 'findById').resolves(null)
 
@@ -252,6 +259,7 @@ describe('purchases controller', () => {
         ppCustomerId: 'x-customer-id-123',
         ppMandateId: null,
         ppSubscriptionId: null,
+        invoiceNotes: null,
       })
       sinon.stub(pkgsRepo, 'findById').resolves({
         id: 99,
@@ -283,6 +291,7 @@ describe('purchases controller', () => {
         ppCustomerId: 'x-customer-id-123',
         ppMandateId: null,
         ppSubscriptionId: null,
+        invoiceNotes: null,
       })
       sinon.stub(pkgsRepo, 'findById').resolves({
         id: 99,
@@ -299,7 +308,7 @@ describe('purchases controller', () => {
 
       request(testApp)
         .post('/purchases/packages/99')
-        .send({body: { organizationId: 1}, planId: 99 })
+        .send({ body: { organizationId: 1 }, planId: 99 })
         .expect(200)
         .then(() => done())
         .catch((err: Error) => done(err))
@@ -314,6 +323,7 @@ describe('purchases controller', () => {
         ppCustomerId: null,
         ppMandateId: null,
         ppSubscriptionId: null,
+        invoiceNotes: null,
       })
       sinon.stub(paymentProcessing, 'createCustomer').resolves('custmr-id')
       sinon.stub(usersRepo, 'update').resolves()
@@ -363,6 +373,7 @@ describe('purchases controller', () => {
         ppCustomerId: null,
         ppMandateId: null,
         ppSubscriptionId: null,
+        invoiceNotes: null,
       })
       sinon.stub(subscriptionsRepo, 'findById').resolves(null)
 
@@ -385,6 +396,7 @@ describe('purchases controller', () => {
         ppCustomerId: 'x-customer-1234',
         ppMandateId: 'x-mandate-1234',
         ppSubscriptionId: 'x-subscription-1234',
+        invoiceNotes: null,
       })
 
       request(testApp)
@@ -404,6 +416,7 @@ describe('purchases controller', () => {
         ppCustomerId: null,
         ppMandateId: null,
         ppSubscriptionId: null,
+        invoiceNotes: null,
       })
       sinon.stub(subscriptionsRepo, 'findById').resolves(mockSubscription)
       sinon.stub(paymentProcessing, 'createCustomer').resolves('customerid123')
@@ -432,6 +445,7 @@ describe('purchases controller', () => {
         ppCustomerId: 'xcustomerid',
         ppMandateId: null,
         ppSubscriptionId: null,
+        invoiceNotes: null,
       })
       sinon.stub(subscriptionsRepo, 'findById').resolves(mockSubscription)
       sinon.stub(usersRepo, 'update').resolves()
@@ -459,6 +473,7 @@ describe('purchases controller', () => {
         ppCustomerId: 'xcustomerid',
         ppMandateId: null,
         ppSubscriptionId: null,
+        invoiceNotes: null,
       })
       sinon.stub(subscriptionsRepo, 'findById').resolves(mockSubscription)
       sinon.stub(usersRepo, 'update').resolves()
@@ -472,7 +487,7 @@ describe('purchases controller', () => {
 
       request(testApp)
         .post('/purchases/subscriptions/99')
-        .send({body: { organizationId: 1}})
+        .send({ body: { organizationId: 1 } })
         .expect(200)
         .then(() => done())
         .catch((err: Error) => done(err))
@@ -487,6 +502,7 @@ describe('purchases controller', () => {
         ppCustomerId: 'x-customer-1234',
         ppMandateId: 'x-mandate-1234',
         ppSubscriptionId: null,
+        invoiceNotes: null,
       })
       sinon.stub(paymentProcessing, 'isMandateValid').resolves(true)
       sinon.stub(paymentProcessing, 'cancelSubscription').resolves()

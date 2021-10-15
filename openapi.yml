@@ -450,6 +450,77 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /users/{id}/invoice-notes:
+    get:
+      tags: [ users ]
+      summary: User's invoice notes
+      description: >
+        Returns invoice data based on the ID.
+        Usable by the user to get information about itself or by admins to retrieve any user.
+      security:
+        - cookieAuth: [ ]
+        - bearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: ID of user to fetch
+          required: true
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Invoice Notes model
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/InvoiceNotes'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [ users ]
+      summary: Update invoice data
+      description: >
+        Used primarily to manage invoice data.
+      security:
+        - cookieAuth: [ ]
+        - bearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: User ID
+          required: true
+          schema:
+            type: number
+      requestBody:
+        description: User invoice notes
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvoiceNotes'
+      responses:
+        '200':
+          description: User model
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/InvoiceNotes'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /purchases:
     get:
       tags: [ purchases ]
@@ -860,6 +931,12 @@ components:
           type: array
           items:
             type: string
+    InvoiceNotes:
+      type: object
+      properties:
+        invoiceNotes:
+          type: string
+
 
   responses:
     BadRequest:
