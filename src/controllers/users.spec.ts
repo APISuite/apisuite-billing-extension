@@ -5,7 +5,7 @@ import { UsersController } from './users'
 import { user as usersRepo } from '../models'
 import { error } from '../middleware'
 import * as paymentProcessing from '../payment-processing'
-import {expect} from "chai"
+import { expect } from "chai"
 
 describe('users controller', () => {
   const injectUser = (req: Request, res: Response, next: NextFunction) => {
@@ -34,6 +34,7 @@ describe('users controller', () => {
         ppCustomerId: null,
         ppMandateId: null,
         ppSubscriptionId: null,
+        invoiceNotes: null,
       })
 
       request(testApp)
@@ -60,6 +61,7 @@ describe('users controller', () => {
         ppCustomerId: null,
         ppMandateId: null,
         ppSubscriptionId: 'sid',
+        invoiceNotes: null,
       })
       sinon.stub(usersRepo, 'update').resolves()
 
@@ -78,6 +80,7 @@ describe('users controller', () => {
         ppCustomerId: null,
         ppMandateId: null,
         ppSubscriptionId: null,
+        invoiceNotes: null,
       })
       sinon.stub(paymentProcessing, 'cancelSubscription').resolves()
       sinon.stub(usersRepo, 'update').resolves()
@@ -97,6 +100,7 @@ describe('users controller', () => {
         ppCustomerId: 'cid',
         ppMandateId: 'mid',
         ppSubscriptionId: 'sid',
+        invoiceNotes: null,
       })
       sinon.stub(paymentProcessing, 'cancelSubscription').resolves()
       sinon.stub(usersRepo, 'update').resolves()
@@ -116,6 +120,7 @@ describe('users controller', () => {
         ppCustomerId: 'cid',
         ppMandateId: 'mid',
         ppSubscriptionId: 'sid',
+        invoiceNotes: null,
       })
       sinon.stub(paymentProcessing, 'cancelSubscription').rejects()
 
@@ -171,6 +176,7 @@ describe('users controller', () => {
         ppCustomerId: 'cid',
         ppMandateId: 'mid',
         ppSubscriptionId: null,
+        invoiceNotes: null,
       })
       sinon.stub(usersRepo, 'update').resolves()
 

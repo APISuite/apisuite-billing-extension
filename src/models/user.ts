@@ -12,6 +12,7 @@ export interface User {
   ppCustomerId: string | null
   ppMandateId: string | null
   ppSubscriptionId: string | null
+  invoiceNotes: string | null
 }
 
 export type UserBase = Omit<User, 'ppCustomerId' | 'ppMandateId' | 'ppSubscriptionId'>
