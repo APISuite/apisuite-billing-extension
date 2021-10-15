@@ -256,6 +256,10 @@ export const getSubscriptionNextPaymentDate = async (subscriptionId: string, cus
   return subscription?.nextPaymentDate || null
 }
 
-export const updateSubscription = async (subscriptionId: string, customerId: string, mandateId: string): Promise<unknown> => {
-  return mollieClient.customers_subscriptions.update(subscriptionId,{ customerId: customerId, mandateId: mandateId } )
+export const updateSubscription = async (subscriptionId: string, customerId: string, mandateId: string): Promise<void> => {
+  await mollieClient.customers_subscriptions.update(subscriptionId,{ customerId: customerId, mandateId: mandateId } )
+}
+
+export const getSubscription = async (subscriptionId: string, customerId: string): Promise<unknown> => {
+  return mollieClient.customers_subscriptions.update(subscriptionId,{ customerId: customerId } )
 }

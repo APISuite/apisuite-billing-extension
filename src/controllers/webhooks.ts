@@ -7,7 +7,12 @@ import {
   user as usersRepo,
   subscription as subscriptionsRepo,
 } from '../models'
-import { subscriptionPayment, verifyPaymentSuccess, verifySubscriptionPaymentSuccess, updateSubscription } from '../payment-processing'
+import {
+  subscriptionPayment,
+  verifyPaymentSuccess,
+  verifySubscriptionPaymentSuccess,
+  updateSubscription,
+} from '../payment-processing'
 import { asyncWrap as aw } from '../middleware'
 import { db } from '../db'
 import { TransactionType } from '../models/transaction'
@@ -20,7 +25,7 @@ export class WebhooksController implements BaseController {
     router.post(`${this.path}/subscription`, aw(this.subscriptionPaymentSuccess))
     router.post(`${this.path}/subscription_first`, aw(this.subscriptionFirstPaymentHandler))
     router.post(`${this.path}/topup`, aw(this.topUpPaymentWebhookHandler))
-    router.post(`${this.path}/update_payment`, aw(this.updatePaymentHandler))
+    router.post(`${this.path}/update_payment_information`, aw(this.updatePaymentInformationHandler))
     return router
   }
 
@@ -157,7 +162,7 @@ export class WebhooksController implements BaseController {
     return res.status(200).json(responseBase('ok'))
   }
 
-  public updatePaymentHandler = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
+  public updatePaymentInformationHandler = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
     const payment = await verifyPaymentSuccess(req.body.id)
 
     if (!payment) {
@@ -205,13 +210,10 @@ export class WebhooksController implements BaseController {
       return
     }
 
-    const update = await updateSubscription(user.ppSubscriptionId, user.ppCustomerId, payment.mandateId)
-    if (!update) {
-      log.error('update_payment: unable to update subscription')
-      return
-    }
+    await updateSubscription(user.ppSubscriptionId, user.ppCustomerId, payment.mandateId)
 
     await usersRepo.update(null, res.locals.authenticatedUser.id, { ppMandateId: payment.mandateId })
+
   }
 }
 

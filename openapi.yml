@@ -597,7 +597,7 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-    /purchases/subscriptions/:
+  /purchases/subscriptions/:
     patch:
       tags: [ purchases ]
       summary: Purchase a subscription
@@ -722,11 +722,11 @@ paths:
                             type: string
                 '400':
                   $ref: '#/components/responses/BadRequest'
-  /webhooks/update_payment:
+  /webhooks/update_payment_information:
     post:
       tags: [ webhooks ]
       summary: Payment Update webhook
-      description: Called by the payment processing provider on subscription payment changes.
+      description: Called by the payment processing provider on subscription payment information changes.
       requestBody:
         description: Webhook request payload
         required: true
