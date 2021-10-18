@@ -82,7 +82,6 @@ paths:
       security:
         - cookieAuth: [ ]
         - bearerAuth: [ ]
-        - bearerAuth: [ ]
       requestBody:
         description: Package payload
         required: true
@@ -567,7 +566,6 @@ paths:
                 type: object
                 properties:
                   data:
-                    type: object
                     $ref: '#/components/schemas/Purchase'
         '401':
           $ref: '#/components/responses/Unauthorized'
@@ -675,7 +673,7 @@ paths:
       description:
         This endpoint allows a user to update the payment method in use for the active subscription.
         will require the user's consent. In this case the endpoint returns an URL.
-        Otherwise, if a valid mandate exists, everything happens on the backend and the user has to take no further action (response is 204).
+        It will update the mandateId on the backend for further use.
       security:
         - cookieAuth: [ ]
         - bearerAuth: [ ]
