@@ -1,5 +1,5 @@
 import moment from 'moment'
-import mollie, { MandateStatus, Payment, PaymentStatus, SequenceType, SubscriptionStatus } from '@mollie/api-client'
+import mollie, { MandateStatus, Payment, PaymentStatus, SequenceType, SubscriptionStatus, SubscriptionUpdateParams } from '@mollie/api-client'
 import config from '../config'
 import { Subscription } from '../models/subscription'
 import { Package } from '../models/package'
@@ -62,13 +62,10 @@ export interface SubscriptionPaymentData {
   startAfterFirstInterval: boolean
 }
 
-export interface SubscriptionUpdateParameters {
-  customerId: string
-  mandateId: string
-}
-
 export type SimplifiedPayment = Pick<Payment, 'id' | 'description' | 'method' | 'metadata'
   | 'status' | 'createdAt' | 'amount' >
+
+export type SubscriptionUpdateParameters = Pick<SubscriptionUpdateParams, 'customerId' | 'mandateId'>
 
 const getPaymentCheckoutURL = (payment: Payment): string | null => {
   return payment && payment._links.checkout && payment._links.checkout.href
@@ -264,5 +261,5 @@ export const getSubscriptionNextPaymentDate = async (subscriptionId: string, cus
 }
 
 export const updateSubscription = async (subscriptionId: string, updatable: SubscriptionUpdateParameters): Promise<void> => {
-  await mollieClient.customers_subscriptions.update(subscriptionId,{ customerId: updatable.customerId, mandateId: updatable.mandateId } )
+  await mollieClient.customers_subscriptions.update(subscriptionId, updatable)
 }
