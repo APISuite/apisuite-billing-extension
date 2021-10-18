@@ -62,14 +62,13 @@ export interface SubscriptionPaymentData {
   startAfterFirstInterval: boolean
 }
 
-export interface updatable {
-  subscriptionId: string
+export interface SubscriptionUpdateParameters {
   customerId: string
   mandateId: string
 }
 
 export type SimplifiedPayment = Pick<Payment, 'id' | 'description' | 'method' | 'metadata'
-  | 'status' | 'createdAt' | 'amount'>
+  | 'status' | 'createdAt' | 'amount' >
 
 const getPaymentCheckoutURL = (payment: Payment): string | null => {
   return payment && payment._links.checkout && payment._links.checkout.href
@@ -264,6 +263,6 @@ export const getSubscriptionNextPaymentDate = async (subscriptionId: string, cus
   return subscription?.nextPaymentDate || null
 }
 
-export const updateSubscription = async (updatable: updatable): Promise<void> => {
-  await mollieClient.customers_subscriptions.update(updatable.subscriptionId,{ customerId: updatable.customerId, mandateId: updatable.mandateId } )
+export const updateSubscription = async (subscriptionId: string, updatable: SubscriptionUpdateParameters): Promise<void> => {
+  await mollieClient.customers_subscriptions.update(subscriptionId,{ customerId: updatable.customerId, mandateId: updatable.mandateId } )
 }

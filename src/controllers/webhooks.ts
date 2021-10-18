@@ -168,6 +168,7 @@ export class WebhooksController implements BaseController {
         errors: ['missing payment id'],
       })
     }
+
     const payment = await verifyPaymentSuccess(req.body.id)
 
     if (!payment) {
@@ -208,16 +209,12 @@ export class WebhooksController implements BaseController {
       return
     }
 
-    const updatable = {
-      subscriptionId: user.ppSubscriptionId,
+    const UpdatableSubscription = {
       customerId: user.ppCustomerId,
       mandateId: payment.mandateId,
     }
 
-    await updateSubscription(updatable)
-
-    await usersRepo.update(null, user.id, { ppMandateId: updatable.mandateId })
-
+    await updateSubscription(user.ppSubscriptionId, UpdatableSubscription)
   }
 }
 

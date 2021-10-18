@@ -154,13 +154,13 @@ export class PurchasesController implements BaseController {
       return next(new NotFoundError('subscription'))
     }
 
-
     const subscription = await subscriptionsRepo.findById(null, user.subscriptionId)
     if (!subscription) {
       return next(new NotFoundError('subscription'))
     }
 
     subscription.price = 0
+    subscription.credits = 0
     const payment = await subscriptionFirstPayment(user.ppCustomerId, subscription, res.locals.authenticatedUser.org.id, true)
     const redirectURL = await getPaymentRedirectURL(res.locals.authenticatedUser.role.name)
     redirectURL.searchParams.append('id', payment.id)
