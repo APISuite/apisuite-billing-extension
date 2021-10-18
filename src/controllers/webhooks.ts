@@ -170,7 +170,6 @@ export class WebhooksController implements BaseController {
     }
 
     const payment = await verifyPaymentSuccess(req.body.id)
-
     if (!payment) {
       log.info(`subscriptionFirstPaymentSuccess: payment ${req.body.id} not verified as successful`)
       return res.status(200).json(responseBase('ok'))
@@ -184,8 +183,8 @@ export class WebhooksController implements BaseController {
       log.info('update_payment: halting due to missing transaction')
       return
     }
-    const user = await usersRepo.findById(null, transaction.userId)
 
+    const user = await usersRepo.findById(null, transaction.userId)
     if (!user) {
       log.error('update_payment: payment successful but could not find user')
       return
@@ -209,12 +208,10 @@ export class WebhooksController implements BaseController {
       return
     }
 
-    const UpdatableSubscription = {
+    await updateSubscription(user.ppSubscriptionId, {
       customerId: user.ppCustomerId,
       mandateId: payment.mandateId,
-    }
-
-    await updateSubscription(user.ppSubscriptionId, UpdatableSubscription)
+    })
   }
 }
 

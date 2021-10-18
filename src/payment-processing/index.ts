@@ -1,5 +1,12 @@
 import moment from 'moment'
-import mollie, { MandateStatus, Payment, PaymentStatus, SequenceType, SubscriptionStatus, SubscriptionUpdateParams } from '@mollie/api-client'
+import mollie, {
+  MandateStatus,
+  Payment,
+  PaymentStatus,
+  SequenceType,
+  SubscriptionStatus,
+  SubscriptionUpdateParams,
+} from '@mollie/api-client'
 import config from '../config'
 import { Subscription } from '../models/subscription'
 import { Package } from '../models/package'
@@ -11,11 +18,6 @@ const mollieClient = mollie({
 enum PaymentType {
   TopUp = 'topup',
   Subscription = 'subscription'
-}
-
-export interface NewMollieCustomer {
-  name: string
-  email: string
 }
 
 export interface FirstPaymentResult {
@@ -71,30 +73,6 @@ const getPaymentCheckoutURL = (payment: Payment): string | null => {
   return payment && payment._links.checkout && payment._links.checkout.href
     ? payment._links.checkout.href
     : null
-}
-
-export const findValidMandate = async (customerId: string): Promise<string | null> => {
-  let mandates = await mollieClient.customers_mandates.list({
-    customerId,
-  })
-
-  while(mandates) {
-    if (!mandates.count) break
-
-    for(const m of mandates) {
-      if (m.status === MandateStatus.valid) {
-        return m.id
-      }
-    }
-
-    if (mandates.nextPage) {
-      mandates = await mandates.nextPage()
-    } else {
-      break
-    }
-  }
-
-  return null
 }
 
 export const isMandateValid = async (mandateId: string, customerId: string): Promise<boolean> => {
