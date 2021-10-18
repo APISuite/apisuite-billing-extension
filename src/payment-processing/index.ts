@@ -62,6 +62,12 @@ export interface SubscriptionPaymentData {
   startAfterFirstInterval: boolean
 }
 
+export interface updatable {
+  subscriptionId: string
+  customerId: string
+  mandateId: string
+}
+
 export type SimplifiedPayment = Pick<Payment, 'id' | 'description' | 'method' | 'metadata'
   | 'status' | 'createdAt' | 'amount'>
 
@@ -127,7 +133,10 @@ export const listCustomerPayments = async (id: string): Promise<CustomerPayment[
   }))
 }
 
-export const subscriptionFirstPayment = async (customerId: string, subscription: Subscription, organizationId: string): Promise<FirstPaymentResult> => {
+export const subscriptionFirstPayment = async (customerId: string, subscription: Subscription, organizationId: string, update: boolean): Promise<FirstPaymentResult> => {
+  let webHookUrl = config.get('mollie.subscriptionFirstPaymentWebhookUrl')
+  if (update) webHookUrl = config.get('mollie.subscriptionPaymentUpdateWebhookUrl')
+
   const payment = await mollieClient.payments.create({
     amount: {
       currency: 'EUR',
@@ -136,7 +145,7 @@ export const subscriptionFirstPayment = async (customerId: string, subscription:
     customerId,
     description: 'Payment authorization - ' + subscription.name,
     sequenceType: SequenceType.first,
-    webhookUrl: config.get('mollie.subscriptionFirstPaymentWebhookUrl'),
+    webhookUrl: webHookUrl,
     redirectUrl: config.get('mollie.paymentRedirectUrl'), // URL will be changed to include the payment ID after the payment is created
     metadata: {
       organizationId: organizationId,
@@ -185,11 +194,10 @@ export const verifyPaymentSuccess = async (id: string): Promise<VerifiedPayment 
   const payment = await mollieClient.payments.get(id)
   if (!payment) throw new Error('failed to check payment')
   if (payment.status !== PaymentStatus.paid) return null
-  if (!payment.mandateId) return null
   return {
     id: payment.id,
     amount: parseFloat(payment.amount.value),
-    mandateId: payment.mandateId,
+    mandateId: payment.mandateId ?? '',
   }
 }
 
@@ -203,7 +211,7 @@ export const verifySubscriptionPaymentSuccess = async (id: string): Promise<Veri
     id: payment.id,
     amount: parseFloat(payment.amount.value),
     subscriptionId: payment.subscriptionId,
-    mandateId: payment.mandateId,
+    mandateId: payment.mandateId ?? '',
   }
 }
 
@@ -256,10 +264,6 @@ export const getSubscriptionNextPaymentDate = async (subscriptionId: string, cus
   return subscription?.nextPaymentDate || null
 }
 
-export const updateSubscription = async (subscriptionId: string, customerId: string, mandateId: string): Promise<void> => {
-  await mollieClient.customers_subscriptions.update(subscriptionId,{ customerId: customerId, mandateId: mandateId } )
-}
-
-export const getSubscription = async (subscriptionId: string, customerId: string): Promise<unknown> => {
-  return mollieClient.customers_subscriptions.update(subscriptionId,{ customerId: customerId } )
+export const updateSubscription = async (updatable: updatable): Promise<void> => {
+  await mollieClient.customers_subscriptions.update(updatable.subscriptionId,{ customerId: updatable.customerId, mandateId: updatable.mandateId } )
 }

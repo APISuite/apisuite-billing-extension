@@ -128,7 +128,7 @@ export class PurchasesController implements BaseController {
       user.subscriptionId = null
     }
 
-    const payment = await subscriptionFirstPayment(user.ppCustomerId, subscription, organizationId)
+    const payment = await subscriptionFirstPayment(user.ppCustomerId, subscription, organizationId, false)
     const redirectURL = await getPaymentRedirectURL(res.locals.authenticatedUser.role.name)
     redirectURL.searchParams.append('id', payment.id)
     await updatePaymentRedirectURL(payment.id, redirectURL.toString())
@@ -150,7 +150,7 @@ export class PurchasesController implements BaseController {
   public updatePaymentInformation = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
     const user = await usersRepo.getOrBootstrapUser(null, res.locals.authenticatedUser.id)
 
-    if (!user.subscriptionId || !user.ppCustomerId) {
+    if (!user.subscriptionId || !user.ppCustomerId){
       return next(new NotFoundError('subscription'))
     }
 
@@ -161,7 +161,7 @@ export class PurchasesController implements BaseController {
     }
 
     subscription.price = 0
-    const payment = await subscriptionFirstPayment(user.ppCustomerId, subscription, res.locals.authenticatedUser.org.id)
+    const payment = await subscriptionFirstPayment(user.ppCustomerId, subscription, res.locals.authenticatedUser.org.id, true)
     const redirectURL = await getPaymentRedirectURL(res.locals.authenticatedUser.role.name)
     redirectURL.searchParams.append('id', payment.id)
     await updatePaymentRedirectURL(payment.id, redirectURL.toString())
@@ -173,9 +173,7 @@ export class PurchasesController implements BaseController {
       type: TransactionType.Consent,
       amount: payment.amount,
     })
-    await usersRepo.update(null, user.id, {
-      subscriptionId: subscription.id,
-    })
+
     return res.status(200).json(responseBase(payment.checkoutURL))
 
   }

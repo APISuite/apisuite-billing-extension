@@ -25,7 +25,7 @@ export class WebhooksController implements BaseController {
     router.post(`${this.path}/subscription`, aw(this.subscriptionPaymentSuccess))
     router.post(`${this.path}/subscription_first`, aw(this.subscriptionFirstPaymentHandler))
     router.post(`${this.path}/topup`, aw(this.topUpPaymentWebhookHandler))
-    router.post(`${this.path}/update_payment_information`, aw(this.updatePaymentInformationHandler))
+    router.post(`${this.path}/update_payment_method`, aw(this.updatePaymentInformationHandler))
     return router
   }
 
@@ -162,7 +162,12 @@ export class WebhooksController implements BaseController {
     return res.status(200).json(responseBase('ok'))
   }
 
-  public updatePaymentInformationHandler = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
+  public updatePaymentInformationHandler = async (req: Request, res: Response): AsyncHandlerResponse => {
+    if (!req.body.id) {
+      return res.status(400).json({
+        errors: ['missing payment id'],
+      })
+    }
     const payment = await verifyPaymentSuccess(req.body.id)
 
     if (!payment) {
@@ -170,14 +175,7 @@ export class WebhooksController implements BaseController {
       return res.status(200).json(responseBase('ok'))
     }
 
-    let transaction
-    const trx = await db.transaction()
-    try {
-      transaction = await txnRepo.setVerified(trx, payment.id)
-    } catch (err) {
-      await trx.rollback()
-      next(err)
-    }
+    const transaction = await txnRepo.setVerified(null, payment.id)
 
     res.status(200).json(responseBase('ok'))
 
@@ -210,9 +208,15 @@ export class WebhooksController implements BaseController {
       return
     }
 
-    await updateSubscription(user.ppSubscriptionId, user.ppCustomerId, payment.mandateId)
+    const updatable = {
+      subscriptionId: user.ppSubscriptionId,
+      customerId: user.ppCustomerId,
+      mandateId: payment.mandateId,
+    }
 
-    await usersRepo.update(null, res.locals.authenticatedUser.id, { ppMandateId: payment.mandateId })
+    await updateSubscription(updatable)
+
+    await usersRepo.update(null, user.id, { ppMandateId: updatable.mandateId })
 
   }
 }
