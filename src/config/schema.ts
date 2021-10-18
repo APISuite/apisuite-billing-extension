@@ -94,6 +94,15 @@ export const schema = {
       default: 'http://localhost:6007/webhooks/subscription',
       env: 'WEBHOOKS_SUBSCRIPTION',
     },
+    subscriptionPaymentUpdateWebhookUrl: {
+      doc: `Webhook URL for subscription payment. 
+        Called by Mollie on payment updates.
+        Used only on subscription recurring payments.`,
+      format: String,
+      default: 'http://localhost:6007/webhooks/update_payment_method',
+      env: 'WEBHOOKS_SUBSCRIPTION_UPDATE_PAYMENT',
+    },
+
   },
   apisuite: {
     api: {

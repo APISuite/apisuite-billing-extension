@@ -7,7 +7,12 @@ import {
   user as usersRepo,
   subscription as subscriptionsRepo,
 } from '../models'
-import { subscriptionPayment, verifyPaymentSuccess, verifySubscriptionPaymentSuccess } from '../payment-processing'
+import {
+  subscriptionPayment,
+  verifyPaymentSuccess,
+  verifySubscriptionPaymentSuccess,
+  updateSubscription,
+} from '../payment-processing'
 import { asyncWrap as aw } from '../middleware'
 import { db } from '../db'
 import { TransactionType } from '../models/transaction'
@@ -20,6 +25,7 @@ export class WebhooksController implements BaseController {
     router.post(`${this.path}/subscription`, aw(this.subscriptionPaymentSuccess))
     router.post(`${this.path}/subscription_first`, aw(this.subscriptionFirstPaymentHandler))
     router.post(`${this.path}/topup`, aw(this.topUpPaymentWebhookHandler))
+    router.post(`${this.path}/update_payment_method`, aw(this.updatePaymentInformationHandler))
     return router
   }
 
@@ -81,7 +87,6 @@ export class WebhooksController implements BaseController {
       log.info(`subscriptionFirstPaymentSuccess: payment ${req.body.id} not verified as successful`)
       return res.status(200).json(responseBase('ok'))
     }
-
     let transaction
     const trx = await db.transaction()
     try {
@@ -156,4 +161,58 @@ export class WebhooksController implements BaseController {
 
     return res.status(200).json(responseBase('ok'))
   }
+
+  public updatePaymentInformationHandler = async (req: Request, res: Response): AsyncHandlerResponse => {
+    if (!req.body.id) {
+      return res.status(400).json({
+        errors: ['missing payment id'],
+      })
+    }
+
+    const payment = await verifyPaymentSuccess(req.body.id)
+    if (!payment) {
+      log.info(`subscriptionFirstPaymentSuccess: payment ${req.body.id} not verified as successful`)
+      return res.status(200).json(responseBase('ok'))
+    }
+
+    const transaction = await txnRepo.setVerified(null, payment.id)
+
+    res.status(200).json(responseBase('ok'))
+
+    if (!transaction) {
+      log.info('update_payment: halting due to missing transaction')
+      return
+    }
+
+    const user = await usersRepo.findById(null, transaction.userId)
+    if (!user) {
+      log.error('update_payment: payment successful but could not find user')
+      return
+    }
+    if (!user.ppCustomerId) {
+      log.error('update_payment: payment successful but user has no customerId')
+      return
+    }
+    if (!user.subscriptionId) {
+      log.error('update_payment: payment successful but user has no associated subscription')
+      return
+    }
+    if (!user.ppSubscriptionId) {
+      log.error('update_payment: payment successful but user has no ppSubscriptionId')
+      return
+    }
+
+    const subscription = await subscriptionsRepo.findById(null, user.subscriptionId)
+    if (!subscription) {
+      log.error('update_payment: payment successful but could not find subscription')
+      return
+    }
+
+    await updateSubscription(user.ppSubscriptionId, {
+      customerId: user.ppCustomerId,
+      mandateId: payment.mandateId,
+    })
+  }
 }
+
+

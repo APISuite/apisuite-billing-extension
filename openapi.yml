@@ -82,7 +82,6 @@ paths:
       security:
         - cookieAuth: [ ]
         - bearerAuth: [ ]
-        - bearerAuth: [ ]
       requestBody:
         description: Package payload
         required: true
@@ -567,7 +566,6 @@ paths:
                 type: object
                 properties:
                   data:
-                    type: object
                     $ref: '#/components/schemas/Purchase'
         '401':
           $ref: '#/components/responses/Unauthorized'
@@ -668,6 +666,35 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /purchases/subscriptions/:
+    patch:
+      tags: [ purchases ]
+      summary: Update subscription payment
+      description:
+        This endpoint allows a user to update the payment method in use for the active subscription.
+        will require the user's consent. In this case the endpoint returns an URL.
+        It will update the mandateId on the backend for further use.
+      security:
+        - cookieAuth: [ ]
+        - bearerAuth: [ ]
+      responses:
+        '204':
+          description: No content
+        '200':
+          description: Payment processor checkout page url
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /webhooks/subscription:
     post:
       tags: [ webhooks ]
@@ -721,6 +748,30 @@ paths:
       tags: [ webhooks ]
       summary: Package (topup) payment webhook
       description: Called by the payment processing provider on isolated payment status changes.
+      requestBody:
+        description: Webhook request payload
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentWebhook'
+      responses:
+        '200':
+          description: Webhook response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /webhooks/update_payment_method:
+    patch:
+      tags: [ webhooks ]
+      summary: Payment Update webhook
+      description: Called by the payment processing provider on subscription payment method changes.
       requestBody:
         description: Webhook request payload
         required: true

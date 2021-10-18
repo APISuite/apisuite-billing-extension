@@ -60,6 +60,7 @@ describe('webhooks controller', () => {
       sinon.stub(paymentProcessing, 'verifyPaymentSuccess').resolves({
         id: 'paymentid123',
         amount: 1000,
+        mandateId: '',
       })
       sinon.stub(db, 'transaction').resolves({
         commit: sinon.stub(),
@@ -123,6 +124,7 @@ describe('webhooks controller', () => {
         id: 'paymentid123',
         amount: 1000,
         subscriptionId: 'subsId123',
+        mandateId: '',
       })
       sinon.stub(db, 'transaction').resolves({
         commit: sinon.stub(),
@@ -161,6 +163,7 @@ describe('webhooks controller', () => {
         id: 'paymentid123',
         amount: 1000,
         subscriptionId: 'subsId123',
+        mandateId: '',
       })
       sinon.stub(db, 'transaction').resolves({
         commit: sinon.stub(),
@@ -193,6 +196,7 @@ describe('webhooks controller', () => {
         id: 'paymentid123',
         amount: 1000,
         subscriptionId: 'subsId123',
+        mandateId: '',
       })
       sinon.stub(db, 'transaction').resolves({
         commit: sinon.stub(),
@@ -253,6 +257,7 @@ describe('webhooks controller', () => {
       sinon.stub(paymentProcessing, 'verifyPaymentSuccess').resolves({
         id: 'paymentid123',
         amount: 1000,
+        mandateId: '',
       })
       sinon.stub(db, 'transaction').resolves({
         commit: sinon.stub(),
