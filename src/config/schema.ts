@@ -163,4 +163,64 @@ export const schema = {
     default: 0,
     env: 'VAT_RATE',
   },
+  mailer: {
+    from: {
+      doc: '"from" email address for outgoing emails',
+      format: String,
+      default: 'no-reply@apisuite.io',
+      env: 'FROM_EMAIL',
+    },
+    title: {
+      doc: 'The email subject content title for the client',
+      format: String,
+      default: 'API Suite',
+      env: 'APISUITE_API_MAILER_TITLE',
+    },
+    smtpConfig: {
+      pool: {
+        doc: 'Use SMTP connection pool',
+        format: Boolean,
+        default: true,
+        env: 'MAILER_SMTP_POOL',
+      },
+      host: {
+        doc: 'SMTP host',
+        format: String,
+        default: 'API Suite Billing',
+        env: 'MAILER_SMTP_HOST',
+      },
+      port: {
+        doc: 'SMTP port',
+        format: Number,
+        default: 25,
+        env: 'MAILER_SMTP_PORT',
+      },
+      secure: {
+        doc: 'Use SMTP over TLS',
+        format: Boolean,
+        default: true,
+        env: 'MAILER_SMTP_SECURE',
+      },
+      auth: {
+        type: {
+          doc: 'SMTP authentication method',
+          format: ['login', 'oauth2'],
+          default: 'login',
+          env: 'MAILER_SMTP_AUTH_TYPE',
+        },
+        user: {
+          doc: 'SMTP username',
+          format: String,
+          default: 'myuser',
+          env: 'MAILER_SMTP_USER',
+        },
+        pass: {
+          doc: 'SMTP password',
+          format: String,
+          default: 'mypassword',
+          env: 'MAILER_SMTP_PASSWORD',
+        },
+      },
+    },
+  },
 }
