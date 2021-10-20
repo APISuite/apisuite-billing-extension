@@ -2,6 +2,8 @@ import log from '../log'
 import { NextFunction, Request, Response, Router } from 'express'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController, responseBase } from './base'
+import {getOwnerData, getUserData} from '../core'
+import { sendPaymentConfirmation } from '../email'
 import {
   transaction as txnRepo,
   user as usersRepo,
@@ -146,16 +148,33 @@ export class WebhooksController implements BaseController {
     }
 
     const payment = await verifyPaymentSuccess(req.body.id)
+    let transaction
     if (payment) {
       const trx = await db.transaction()
       try {
-        const transaction = await txnRepo.setVerified(trx, payment.id)
+        transaction = await txnRepo.setVerified(trx, payment.id)
         await usersRepo.incrementCredits(trx, transaction.userId, transaction.credits)
         await trx.commit()
-        // TODO send invoice email?
       } catch (err) {
         await trx.rollback()
         next(err)
+      }
+
+      if (transaction) {
+        const user = await getUserData(transaction.userId)
+        const owner = await getOwnerData()
+        if (user) {
+          await sendPaymentConfirmation({
+            email: user.email,
+            paymentID: payment.id,
+            paymentTitle: 'Top up payment',
+            credits: transaction.credits,
+            price: transaction.amount,
+            createdAt: transaction.createdAt,
+          }, {
+            logo: owner?.logo,
+          })
+        }
       }
     }
 

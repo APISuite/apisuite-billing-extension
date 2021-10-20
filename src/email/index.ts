@@ -46,15 +46,15 @@ export interface PaymentConfirmationMessage extends BaseMesssage {
 }
 
 export interface EmailOptions {
-  logo: string
+  logo?: string
 }
 
-export const sendPaymentConfirmation = async (message: PaymentConfirmationMessage, options: EmailOptions): Promise<void> => {
+export const sendPaymentConfirmation = async (message: PaymentConfirmationMessage, options?: EmailOptions): Promise<void> => {
   const source = getTemplateContent('payment-confirmation')
   const template = handlebars.compile(source.toString())
 
   const html = template({
-    logo: options.logo || DEFAULT_LOGO,
+    logo: options?.logo || DEFAULT_LOGO,
     ...message,
   })
 
