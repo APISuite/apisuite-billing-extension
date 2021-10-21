@@ -35,6 +35,13 @@ export interface VerifiedPayment {
   id: string
   amount: number
   mandateId: string
+  metadata: {
+    userId: number
+    organizationId: number
+    credits: number
+    type: string
+    invoiceNotes: string
+  }
 }
 
 export interface VerifiedSubscriptionPayment extends VerifiedPayment {
@@ -182,6 +189,7 @@ export const verifyPaymentSuccess = async (id: string): Promise<VerifiedPayment 
     id: payment.id,
     amount: parseFloat(payment.amount.value),
     mandateId: payment.mandateId ?? '',
+    metadata: payment.metadata,
   }
 }
 
@@ -196,10 +204,11 @@ export const verifySubscriptionPaymentSuccess = async (id: string): Promise<Veri
     amount: parseFloat(payment.amount.value),
     subscriptionId: payment.subscriptionId,
     mandateId: payment.mandateId ?? '',
+    metadata: payment.metadata,
   }
 }
 
-export const subscriptionPayment = async (sub: SubscriptionPaymentData): Promise<string> => {
+export const subscriptionPayment = async (sub: SubscriptionPaymentData, userInformation: UserInformation): Promise<string> => {
   const startDate = sub.startAfterFirstInterval ?
     moment().add(...sub.interval.split(' ')).format('YYYY-MM-DD') :
     moment().format('YYYY-MM-DD')
@@ -211,7 +220,13 @@ export const subscriptionPayment = async (sub: SubscriptionPaymentData): Promise
       currency: 'EUR',
       value: sub.price.toFixed(2).toString(),
     },
-    metadata: sub.credits,
+    metadata:{
+      userId: userInformation.userId,
+      organizationId: userInformation.organizationId,
+      credits: sub.credits,
+      type: PaymentType.Subscription,
+      invoiceNotes: userInformation.invoiceNotes,
+    },
     webhookUrl: config.get('mollie.subscriptionPaymentWebhookUrl'),
     startDate,
   })

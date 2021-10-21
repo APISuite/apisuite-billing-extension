@@ -61,6 +61,13 @@ describe('webhooks controller', () => {
         id: 'paymentid123',
         amount: 1000,
         mandateId: '',
+        metadata: {
+          userId: 1,
+          organizationId: 3,
+          credits: 1000,
+          type: "subscription",
+          invoiceNotes: "qwertyuiop",
+        },
       })
       sinon.stub(db, 'transaction').resolves({
         commit: sinon.stub(),
@@ -125,6 +132,13 @@ describe('webhooks controller', () => {
         amount: 1000,
         subscriptionId: 'subsId123',
         mandateId: '',
+        metadata: {
+          userId: 1,
+          organizationId: 3,
+          credits: 1000,
+          type: "subscription",
+          invoiceNotes: "qwertyuiop",
+        },
       })
       sinon.stub(db, 'transaction').resolves({
         commit: sinon.stub(),
@@ -164,6 +178,13 @@ describe('webhooks controller', () => {
         amount: 1000,
         subscriptionId: 'subsId123',
         mandateId: '',
+        metadata: {
+          userId: 1,
+          organizationId: 3,
+          credits: 1000,
+          type: "subscription",
+          invoiceNotes: "qwertyuiop",
+        },
       })
       sinon.stub(db, 'transaction').resolves({
         commit: sinon.stub(),
@@ -197,6 +218,13 @@ describe('webhooks controller', () => {
         amount: 1000,
         subscriptionId: 'subsId123',
         mandateId: '',
+        metadata: {
+          userId: 1,
+          organizationId: 3,
+          credits: 1000,
+          type: "subscription",
+          invoiceNotes: "qwertyuiop",
+        },
       })
       sinon.stub(db, 'transaction').resolves({
         commit: sinon.stub(),
@@ -258,6 +286,13 @@ describe('webhooks controller', () => {
         id: 'paymentid123',
         amount: 1000,
         mandateId: '',
+        metadata: {
+          userId: 1,
+          organizationId: 3,
+          credits: 1000,
+          type: "subscription",
+          invoiceNotes: "qwertyuiop",
+        },
       })
       sinon.stub(db, 'transaction').resolves({
         commit: sinon.stub(),

@@ -125,14 +125,21 @@ export class WebhooksController implements BaseController {
       return
     }
 
-    const subscriptionId = await subscriptionPayment({
+    const subscriptionData = {
       customerId: user.ppCustomerId,
       price: subscription.price,
       credits: subscription.credits,
       description: subscription.name,
       interval: subscription.periodicity,
       startAfterFirstInterval: true,
-    })
+    }
+
+    const userInformation = {
+      organizationId: payment.metadata.organizationId,
+      userId: payment.metadata.userId,
+      invoiceNotes: payment.metadata.invoiceNotes ?? '',
+    }
+    const subscriptionId = await subscriptionPayment(subscriptionData, userInformation)
     await usersRepo.update(null, user.id, {
       ppSubscriptionId: subscriptionId,
     })
