@@ -64,6 +64,12 @@ export interface SubscriptionPaymentData {
   startAfterFirstInterval: boolean
 }
 
+export interface UserInformation {
+  userId: number
+  organizationId: number
+  invoiceNotes: string
+}
+
 export type SimplifiedPayment = Pick<Payment, 'id' | 'description' | 'method' | 'metadata'
   | 'status' | 'createdAt' | 'amount' >
 
@@ -107,7 +113,7 @@ export const listCustomerPayments = async (id: string): Promise<CustomerPayment[
   }))
 }
 
-export const subscriptionFirstPayment = async (customerId: string, subscription: Subscription, organizationId: string, update: boolean): Promise<FirstPaymentResult> => {
+export const subscriptionFirstPayment = async (customerId: string, subscription: Subscription, userInformation: UserInformation, update: boolean): Promise<FirstPaymentResult> => {
   let webHookUrl = config.get('mollie.subscriptionFirstPaymentWebhookUrl')
   if (update) webHookUrl = config.get('mollie.subscriptionPaymentUpdateWebhookUrl')
 
@@ -122,9 +128,11 @@ export const subscriptionFirstPayment = async (customerId: string, subscription:
     webhookUrl: webHookUrl,
     redirectUrl: config.get('mollie.paymentRedirectUrl'), // URL will be changed to include the payment ID after the payment is created
     metadata: {
-      organizationId: organizationId,
+      userId: userInformation.userId,
+      organizationId: userInformation.organizationId,
       credits: subscription.credits,
       type: PaymentType.Subscription,
+      invoiceNotes: userInformation.invoiceNotes,
     },
   })
   const checkoutURL = getPaymentCheckoutURL(payment)
@@ -137,7 +145,7 @@ export const subscriptionFirstPayment = async (customerId: string, subscription:
   }
 }
 
-export const topUpPayment = async (pkg: Package, customerId: string, organizationId: string): Promise<TopUpPaymentResult> => {
+export const topUpPayment = async (pkg: Package, customerId: string, userInformation: UserInformation): Promise<TopUpPaymentResult> => {
   const payment = await mollieClient.payments.create({
     customerId,
     description: pkg.name,
@@ -149,9 +157,11 @@ export const topUpPayment = async (pkg: Package, customerId: string, organizatio
     webhookUrl: config.get('mollie.topUpWebhookUrl'),
     redirectUrl: config.get('mollie.paymentRedirectUrl'), // URL will be changed to include the payment ID after the payment is created
     metadata: {
-      organizationId: organizationId,
+      userId: userInformation.userId,
+      organizationId: userInformation.organizationId,
       credits: pkg.credits,
       type: PaymentType.TopUp,
+      invoiceNotes: userInformation.invoiceNotes,
     },
   })
 
