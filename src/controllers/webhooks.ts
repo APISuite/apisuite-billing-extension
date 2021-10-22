@@ -17,7 +17,8 @@ import {
   subscriptionPayment,
   verifyPaymentSuccess,
   verifySubscriptionPaymentSuccess,
-  updateSubscription, VerifiedPayment,
+  updateSubscription,
+  VerifiedPayment,
 } from '../payment-processing'
 import { asyncWrap as aw } from '../middleware'
 import { db } from '../db'
