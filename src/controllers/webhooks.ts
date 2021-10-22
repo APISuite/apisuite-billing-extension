@@ -17,11 +17,11 @@ import {
   subscriptionPayment,
   verifyPaymentSuccess,
   verifySubscriptionPaymentSuccess,
-  updateSubscription,
+  updateSubscription, VerifiedPayment,
 } from '../payment-processing'
 import { asyncWrap as aw } from '../middleware'
 import { db } from '../db'
-import { TransactionType } from '../models/transaction'
+import { Transaction, TransactionType } from '../models/transaction'
 import moment from "moment"
 
 export class WebhooksController implements BaseController {
@@ -34,6 +34,28 @@ export class WebhooksController implements BaseController {
     router.post(`${this.path}/topup`, aw(this.topUpPaymentWebhookHandler))
     router.post(`${this.path}/update_payment_method`, aw(this.updatePaymentInformationHandler))
     return router
+  }
+
+  private sendConfirmationEmail = async (title: string, transaction: Transaction, payment: VerifiedPayment): Promise<void> => {
+    const [user, owner, settings] = await Promise.all([
+      getUserData(transaction.userId),
+      getOwnerData(),
+      getPortalSettings(),
+    ])
+    if (user) {
+      await sendPaymentConfirmation({
+        email: user.email,
+        paymentID: payment.id,
+        paymentTitle: title,
+        credits: transaction.credits,
+        price: transaction.amount,
+        createdAt: moment(transaction.createdAt).format('Do MMMM YYYY, hh:mm'),
+        portalName: settings?.portalName || owner?.name || '',
+        supportURL: settings?.supportURL || '',
+      }, {
+        logo: owner?.logo,
+      })
+    }
   }
 
   public subscriptionPaymentSuccess = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
@@ -59,7 +81,7 @@ export class WebhooksController implements BaseController {
           throw new Error('invalid subscription')
         }
 
-        await Promise.all([
+        const [, transaction] = await Promise.all([
           await usersRepo.incrementCredits(trx, user.id, subscription.credits),
           await txnRepo.create(trx, {
             paymentId: req.body.id,
@@ -72,7 +94,10 @@ export class WebhooksController implements BaseController {
         ])
 
         await trx.commit()
-        // TODO send invoice email?
+
+        if (transaction) {
+          this.sendConfirmationEmail('Subscription payment', transaction, payment)
+        }
       } catch (err) {
         await trx.rollback()
         next(err)
@@ -143,6 +168,10 @@ export class WebhooksController implements BaseController {
     await usersRepo.update(null, user.id, {
       ppSubscriptionId: subscriptionId,
     })
+
+    if (transaction) {
+      this.sendConfirmationEmail('Subscription payment', transaction, payment)
+    }
   }
 
   public topUpPaymentWebhookHandler = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
@@ -171,25 +200,7 @@ export class WebhooksController implements BaseController {
     res.status(200).json(responseBase('ok'))
 
     if (transaction) {
-      const [user, owner, settings] = await Promise.all([
-        getUserData(transaction.userId),
-        getOwnerData(),
-        getPortalSettings(),
-      ])
-      if (user) {
-        await sendPaymentConfirmation({
-          email: user.email,
-          paymentID: payment.id,
-          paymentTitle: 'Top up payment',
-          credits: transaction.credits,
-          price: transaction.amount,
-          createdAt: moment(transaction.createdAt).format('Do MMMM YYYY, hh:mm'),
-          portalName: settings?.portalName || owner?.name || '',
-          supportURL: settings?.supportURL || '',
-        }, {
-          logo: owner?.logo,
-        })
-      }
+      this.sendConfirmationEmail('Top up payment', transaction, payment)
     }
   }
 
