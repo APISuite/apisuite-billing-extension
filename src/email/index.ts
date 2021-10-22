@@ -4,11 +4,17 @@ import log from '../log'
 import handlebars from "handlebars"
 import fs from "fs"
 import path from "path"
+import moment from "moment"
 
 const DEFAULT_LOGO = 'https://cloudcdn.apisuite.io/apisuite_logo.png'
 
-// TODO check if this config works
-const transporter = nodemailer.createTransport(config.get('mailer'))
+const smtpOptions = {
+  ...config.get('mailer.smtpConfig'),
+}
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+const transporter = nodemailer.createTransport(smtpOptions)
 
 interface MailerMessage {
   from: string
@@ -43,6 +49,8 @@ export interface PaymentConfirmationMessage extends BaseMesssage {
   credits: number
   price: number
   createdAt: string
+  portalName: string
+  supportURL: string
 }
 
 export interface EmailOptions {
@@ -54,6 +62,9 @@ export const sendPaymentConfirmation = async (message: PaymentConfirmationMessag
   const template = handlebars.compile(source.toString())
 
   const html = template({
+    assetsBaseURI: 'https://cloudcdn.apisuite.io',
+    date: moment().format('DD-MM-YYYY'),
+    billingURL: (new URL('/billing', config.get('apisuite.portal'))).href,
     logo: options?.logo || DEFAULT_LOGO,
     ...message,
   })

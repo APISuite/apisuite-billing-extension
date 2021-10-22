@@ -252,7 +252,7 @@
                     <!-- Illustration -->
                     <tr>
                       <td align="center" style="background-color: #ffffff;margin: 0 auto;">
-                        <img alt="success" src="{{assetsBaseURI}}check_circle.png" width="50" height="50" border="0" style="height: 50px;padding-top: 34px;width: 50px;" />
+                        <img alt="success" src="{{assetsBaseURI}}/check_circle.png" width="50" height="50" border="0" style="height: 50px;padding-top: 34px;width: 50px;" />
                       </td>
                     </tr>
                     <tr>
@@ -264,7 +264,7 @@
                                 Payment successfull!
                               </h1>
                               <p style="border-collapse:collapse;color:#14283c;font-family:Roboto,arial;font-size:16px;font-weight:lighter;line-height:18px;margin:0;padding-top:16px;text-align:center;">
-                                We have received your payment for <b>{{transactionTitle}}</b>.
+                                We have received your payment for <b>{{paymentTitle}}</b>.
                               </p>
                             </td>
                           </tr>
@@ -287,7 +287,7 @@
                                           <table cellpadding="6" border="0" width="100%">
                                             <tr style="font-family:Roboto,arial,sans-serif; font-size: 16px; line-height: 18px; color: #85909a;">
                                               <td align="left">Reference:</td>
-                                              <td align="right" style="color: #51606e;">{{transactionID}}</td>
+                                              <td align="right" style="color: #51606e;">{{paymentID}}</td>
                                             </tr>
                                           </table>
                                           <table cellpadding="6" border="0" width="100%">
@@ -305,7 +305,7 @@
                                           <table cellpadding="6" border="0" width="100%">
                                             <tr style="font-family:Roboto,arial,sans-serif; font-size: 16px; line-height: 18px; color: #85909a;">
                                               <td align="left">Date of purchase:</td>
-                                              <td align="right" style="color: #51606e;">{{dateOfPurchase}}</td>
+                                              <td align="right" style="color: #51606e;">{{createdAt}}</td>
                                             </tr>
                                           </table>
                                         </td>

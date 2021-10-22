@@ -2,8 +2,12 @@ import log from '../log'
 import { NextFunction, Request, Response, Router } from 'express'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController, responseBase } from './base'
-import {getOwnerData, getUserData} from '../core'
 import { sendPaymentConfirmation } from '../email'
+import {
+  getOwnerData,
+  getPortalSettings,
+  getUserData,
+} from '../core'
 import {
   transaction as txnRepo,
   user as usersRepo,
@@ -18,6 +22,7 @@ import {
 import { asyncWrap as aw } from '../middleware'
 import { db } from '../db'
 import { TransactionType } from '../models/transaction'
+import moment from "moment"
 
 export class WebhooksController implements BaseController {
   private readonly path = '/webhooks'
@@ -148,37 +153,44 @@ export class WebhooksController implements BaseController {
     }
 
     const payment = await verifyPaymentSuccess(req.body.id)
-    let transaction
-    if (payment) {
-      const trx = await db.transaction()
-      try {
-        transaction = await txnRepo.setVerified(trx, payment.id)
-        await usersRepo.incrementCredits(trx, transaction.userId, transaction.credits)
-        await trx.commit()
-      } catch (err) {
-        await trx.rollback()
-        next(err)
-      }
-
-      if (transaction) {
-        const user = await getUserData(transaction.userId)
-        const owner = await getOwnerData()
-        if (user) {
-          await sendPaymentConfirmation({
-            email: user.email,
-            paymentID: payment.id,
-            paymentTitle: 'Top up payment',
-            credits: transaction.credits,
-            price: transaction.amount,
-            createdAt: transaction.createdAt,
-          }, {
-            logo: owner?.logo,
-          })
-        }
-      }
+    if (!payment) {
+      return res.status(400).json(responseBase('ok'))
     }
 
-    return res.status(200).json(responseBase('ok'))
+    let transaction
+    const trx = await db.transaction()
+    try {
+      transaction = await txnRepo.setVerified(trx, payment.id)
+      await usersRepo.incrementCredits(trx, transaction.userId, transaction.credits)
+      await trx.commit()
+    } catch (err) {
+      await trx.rollback()
+      next(err)
+    }
+
+    res.status(200).json(responseBase('ok'))
+
+    if (transaction) {
+      const [user, owner, settings] = await Promise.all([
+        getUserData(transaction.userId),
+        getOwnerData(),
+        getPortalSettings(),
+      ])
+      if (user) {
+        await sendPaymentConfirmation({
+          email: user.email,
+          paymentID: payment.id,
+          paymentTitle: 'Top up payment',
+          credits: transaction.credits,
+          price: transaction.amount,
+          createdAt: moment(transaction.createdAt).format('Do MMMM YYYY, hh:mm'),
+          portalName: settings?.portalName || owner?.name || '',
+          supportURL: settings?.supportURL || '',
+        }, {
+          logo: owner?.logo,
+        })
+      }
+    }
   }
 
   public updatePaymentInformationHandler = async (req: Request, res: Response): AsyncHandlerResponse => {

@@ -204,8 +204,8 @@ export const schema = {
       auth: {
         type: {
           doc: 'SMTP authentication method',
-          format: ['login', 'oauth2'],
-          default: 'login',
+          format: ['LOGIN'],
+          default: 'LOGIN',
           env: 'MAILER_SMTP_AUTH_TYPE',
         },
         user: {

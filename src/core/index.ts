@@ -82,7 +82,36 @@ export const getOwnerData = async (): Promise<CoreOwnerData|null> => {
       logo: data.logo,
     }
   } catch (err) {
-    log.error(err, '[getUserData]')
+    log.error(err, '[getOwnerData]')
+  }
+
+  return null
+}
+
+interface CoreSettingsData {
+  portalName: string
+  supportURL: string
+}
+
+export const getPortalSettings = async (): Promise<CoreSettingsData|null> => {
+  const url = new URL('/settings', config.get('apisuite.api')).href
+
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {},
+    })
+    if (!response || response.status !== 200) {
+      return null
+    }
+
+    const data = await response.json()
+    return {
+      portalName: data.portalName,
+      supportURL: data.supportURL,
+    }
+  } catch (err) {
+    log.error(err, '[getPortalSettings]')
   }
 
   return null
