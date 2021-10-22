@@ -86,7 +86,13 @@ export class PurchasesController implements BaseController {
       return next(new NotFoundError('package'))
     }
 
-    const payment = await topUpPayment(pkg, user.ppCustomerId, organizationId)
+    const userInformation = {
+      organizationId: organizationId,
+      userId: user.id,
+      invoiceNotes: user.invoiceNotes ?? '',
+    }
+
+    const payment = await topUpPayment(pkg, user.ppCustomerId, userInformation)
     const redirectURL = await getPaymentRedirectURL(res.locals.authenticatedUser.role.name)
     redirectURL.searchParams.append('id', payment.id)
     await updatePaymentRedirectURL(payment.id, redirectURL.toString())
@@ -128,7 +134,13 @@ export class PurchasesController implements BaseController {
       user.subscriptionId = null
     }
 
-    const payment = await subscriptionFirstPayment(user.ppCustomerId, subscription, organizationId, false)
+    const userInformation = {
+      organizationId: organizationId,
+      userId: user.id,
+      invoiceNotes: user.invoiceNotes ?? '',
+    }
+
+    const payment = await subscriptionFirstPayment(user.ppCustomerId, subscription, userInformation, false)
     const redirectURL = await getPaymentRedirectURL(res.locals.authenticatedUser.role.name)
     redirectURL.searchParams.append('id', payment.id)
     await updatePaymentRedirectURL(payment.id, redirectURL.toString())
@@ -149,6 +161,10 @@ export class PurchasesController implements BaseController {
 
   public updatePaymentInformation = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
     const user = await usersRepo.getOrBootstrapUser(null, res.locals.authenticatedUser.id)
+    let organizationId = res.locals.authenticatedUser.org?.id
+    if (Object.keys(req.body).length && req.body.organizationId) {
+      organizationId = req.body.organizationId
+    }
 
     if (!user.subscriptionId || !user.ppCustomerId){
       return next(new NotFoundError('subscription'))
@@ -159,9 +175,15 @@ export class PurchasesController implements BaseController {
       return next(new NotFoundError('subscription'))
     }
 
+    const userInformation = {
+      organizationId: organizationId,
+      userId: user.id,
+      invoiceNotes: user.invoiceNotes ?? '',
+    }
+
     subscription.price = 0
     subscription.credits = 0
-    const payment = await subscriptionFirstPayment(user.ppCustomerId, subscription, res.locals.authenticatedUser.org.id, true)
+    const payment = await subscriptionFirstPayment(user.ppCustomerId, subscription, userInformation, true)
     const redirectURL = await getPaymentRedirectURL(res.locals.authenticatedUser.role.name)
     redirectURL.searchParams.append('id', payment.id)
     await updatePaymentRedirectURL(payment.id, redirectURL.toString())
