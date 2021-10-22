@@ -15,7 +15,7 @@
   },
   "license": "MPL-2.0",
   "dependencies": {
-    "@mollie/api-client": "^3.5.1",
+    "@mollie/api-client": "3.5.1",
     "amqp-connection-manager": "3.2.2",
     "amqplib": "0.8.0",
     "camelcase-keys": "6.2.2",
@@ -24,16 +24,18 @@
     "express": "4.17.1",
     "express-prom-bundle": "6.3.6",
     "express-validator": "6.12.0",
+    "handlebars": "4.7.7",
     "helmet": "4.6.0",
     "knex": "0.95.6",
     "moment": "2.29.1",
     "morgan": "1.10.0",
     "node-fetch": "2.6.1",
+    "nodemailer": "6.7.0",
     "pg": "8.6.0",
     "pg-types": "3.0.1",
     "pino": "6.11.3",
     "prom-client": "13.1.0",
-    "uuid": "^8.3.2"
+    "uuid": "8.3.2"
   },
   "devDependencies": {
     "@semantic-release/git": "^9.0.0",
@@ -47,6 +49,7 @@
     "@types/morgan": "^1.9.2",
     "@types/node": "^15.12.2",
     "@types/node-fetch": "^2.5.10",
+    "@types/nodemailer": "^6.4.4",
     "@types/pg": "^8.6.0",
     "@types/pg-types": "^2.2.0",
     "@types/pino": "^6.3.8",

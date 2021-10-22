@@ -44,13 +44,13 @@ describe('webhooks controller', () => {
         .catch((err: Error) => done(err))
     })
 
-    it('should return 200 when payment is not verified', (done) => {
+    it('should return 400 when payment is not verified', (done) => {
       sinon.stub(paymentProcessing, 'verifyPaymentSuccess').resolves(null)
 
       request(testApp)
         .post('/webhooks/topup')
         .send('id=randompaymentid')
-        .expect(200)
+        .expect(400)
         .expect('Content-Type', /json/)
         .then(() => done())
         .catch((err: Error) => done(err))

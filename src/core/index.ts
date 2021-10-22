@@ -27,3 +27,92 @@ export const getPaymentRedirectURL = async (role: string): Promise<URL> => {
 
   return paymentRedirectURL(config.get('apisuite.paymentRedirectPath'))
 }
+
+interface CoreUserData {
+  name: string
+  email: string
+}
+
+export const getUserData = async (userId: string|number): Promise<CoreUserData|null> => {
+  const url = new URL(`/users/${userId}`, config.get('apisuite.api')).href
+
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {},
+    })
+    if (!response || response.status !== 200) {
+      return null
+    }
+
+    const data = await response.json()
+    return {
+      name: data.name,
+      email: data.email,
+    }
+  } catch (err) {
+    log.error(err, '[getUserData]')
+  }
+
+  return null
+}
+
+interface CoreOwnerData {
+  name: string
+  description: string
+  logo: string
+}
+
+export const getOwnerData = async (): Promise<CoreOwnerData|null> => {
+  const url = new URL('/owner', config.get('apisuite.api')).href
+
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {},
+    })
+    if (!response || response.status !== 200) {
+      return null
+    }
+
+    const data = await response.json()
+    return {
+      name: data.name,
+      description: data.description,
+      logo: data.logo,
+    }
+  } catch (err) {
+    log.error(err, '[getOwnerData]')
+  }
+
+  return null
+}
+
+interface CoreSettingsData {
+  portalName: string
+  supportURL: string
+}
+
+export const getPortalSettings = async (): Promise<CoreSettingsData|null> => {
+  const url = new URL('/settings', config.get('apisuite.api')).href
+
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {},
+    })
+    if (!response || response.status !== 200) {
+      return null
+    }
+
+    const data = await response.json()
+    return {
+      portalName: data.portalName,
+      supportURL: data.supportURL,
+    }
+  } catch (err) {
+    log.error(err, '[getPortalSettings]')
+  }
+
+  return null
+}
