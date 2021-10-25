@@ -11,7 +11,8 @@
     "build": "tsc -p .",
     "test": "NODE_ENV=test LOG_LEVEL=silent mocha -r ts-node/register src/**/*.spec.ts",
     "itest": "NODE_ENV=test LOG_LEVEL=silent mocha -r ts-node/register --exit src/models/index.test.ts",
-    "migrate": "knex migrate:latest --client pg --migrations-directory ./migrations --connection \"$DB_URI\""
+    "migrate": "knex migrate:latest --client pg --migrations-directory ./migrations --connection \"$DB_URI\"",
+    "precommit": "npm run lint && npm test"
   },
   "license": "MPL-2.0",
   "dependencies": {

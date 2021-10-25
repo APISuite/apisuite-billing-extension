@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response, Router } from 'express'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController, responseBase } from './base'
+import config from '../config'
 import { NotFoundError, PurchasePreconditionError, ForbiddenError } from './errors'
 import { asyncWrap as aw, authenticated } from '../middleware'
 import {
@@ -184,7 +185,7 @@ export class PurchasesController implements BaseController {
     subscription.price = 0
     subscription.credits = 0
     const payment = await subscriptionFirstPayment(user.ppCustomerId, subscription, userInformation, true)
-    const redirectURL = await getPaymentRedirectURL(res.locals.authenticatedUser.role.name)
+    const redirectURL = new URL(config.get('apisuite.editPaymentMethodRedirectPath'), config.get('apisuite.api'))
     redirectURL.searchParams.append('id', payment.id)
     await updatePaymentRedirectURL(payment.id, redirectURL.toString())
     await txnRepo.create(null, {

@@ -136,6 +136,12 @@ export const schema = {
       default: '/billing/payments',
       env: 'PAYMENT_REDIRECT_PATH',
     },
+    editPaymentMethodRedirectPath: {
+      doc: 'Default portal redirect path after editing payment method.',
+      format: String,
+      default: '/edit/confirm',
+      env: 'PAYMENT_REDIRECT_PATH',
+    },
   },
   msgBroker: {
     url: {
