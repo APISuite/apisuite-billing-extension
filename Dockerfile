@@ -11,6 +11,6 @@ COPY package*.json ./
 RUN npm install --only=production --no-audit && npm install ts-node
 COPY --from=build_phase /usr/src/app/dist ./dist
 COPY --from=build_phase /usr/src/app/migrations ./migrations
-COPY src/email/templates/* /usr/src/app/dist/src/email/templates/
+COPY src/email/templates/* /usr/src/app/templates/
 
 ENTRYPOINT ["npm", "run"]
