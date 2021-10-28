@@ -36,7 +36,7 @@ const send = async (message: MailerMessage): Promise<void> => {
 }
 
 const getTemplateContent = (templateName: string): Buffer => {
-  return fs.readFileSync(path.join(__dirname, `templates/${templateName}.hbs`))
+  return fs.readFileSync(path.join(process.cwd(), `templates/${templateName}.hbs`))
 }
 
 export interface BaseMesssage {
