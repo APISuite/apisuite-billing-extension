@@ -139,7 +139,7 @@ export const schema = {
     editPaymentMethodRedirectPath: {
       doc: 'Default portal redirect path after editing payment method.',
       format: String,
-      default: '/edit/confirm',
+      default: '/billing/edit/confirm',
       env: 'EDIT_PAYMENT_REDIRECT_PATH',
     },
   },
