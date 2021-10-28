@@ -185,7 +185,7 @@ export class PurchasesController implements BaseController {
     subscription.price = 0
     subscription.credits = 0
     const payment = await subscriptionFirstPayment(user.ppCustomerId, subscription, userInformation, true)
-    const redirectURL = new URL(config.get('apisuite.editPaymentMethodRedirectPath'), config.get('apisuite.api'))
+    const redirectURL = new URL(config.get('apisuite.editPaymentMethodRedirectPath'), config.get('apisuite.portal'))
     redirectURL.searchParams.append('id', payment.id)
     await updatePaymentRedirectURL(payment.id, redirectURL.toString())
     await txnRepo.create(null, {
