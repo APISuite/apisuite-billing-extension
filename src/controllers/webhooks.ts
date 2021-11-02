@@ -50,7 +50,7 @@ export class WebhooksController implements BaseController {
         paymentTitle: title,
         credits: transaction.credits,
         price: transaction.amount,
-        createdAt: moment(transaction.createdAt).format('Do MMMM YYYY, hh:mm'),
+        createdAt: moment(transaction.createdAt).format('Do MMMM YYYY, HH:mm'),
         portalName: settings?.portalName || owner?.name || '',
         supportURL: settings?.supportURL || '',
       }, {
