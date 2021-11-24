@@ -7,6 +7,8 @@ import { pkg as pkgsRepo } from '../models'
 import { asyncWrap as aw, authenticated, isAdmin, validator } from '../middleware'
 import { query, body, ValidationChain } from 'express-validator'
 import { SortFields } from '../models/package'
+import config from '../config'
+import { applyVAT } from '../vat'
 
 export class PackagesController implements BaseController {
   private readonly path = '/packages'
@@ -64,22 +66,35 @@ export class PackagesController implements BaseController {
   ]
 
   public getPackages = async (req: Request, res: Response): AsyncHandlerResponse => {
-    const plans = await pkgsRepo.findAll(null, {
+    let plans = await pkgsRepo.findAll(null, {
       field: req.query.sort_by as SortFields || SortFields.PRICE,
       order: req.query.order as SortOrder || SortOrder.ASC,
     })
+
+    const vat = config.get('vatRate')
+    if (vat) {
+      plans = plans.map((m) => {
+        m.price = applyVAT(m.price, vat)
+        return m
+      })
+    }
 
     return res.status(200).json(responseBase(plans))
   }
 
   public getPackage = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
-    const plan = await pkgsRepo.findById(null, Number(req.params.id))
+    const pkg = await pkgsRepo.findById(null, Number(req.params.id))
 
-    if (!plan) {
+    if (!pkg) {
       return next(new NotFoundError('package'))
     }
 
-    return res.status(200).json(responseBase(plan))
+    const vat = config.get('vatRate')
+    if (vat) {
+      pkg.price = applyVAT(pkg.price, vat)
+    }
+
+    return res.status(200).json(responseBase(pkg))
   }
 
   public createPackage = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {

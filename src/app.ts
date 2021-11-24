@@ -17,7 +17,9 @@ import {
   WebhooksController,
   PackagesController,
   PurchasesController,
-  SubscriptionsController, NotFoundError,
+  SubscriptionsController,
+  SettingsController,
+  NotFoundError,
 } from './controllers'
 
 export default class App {
@@ -74,6 +76,7 @@ export default class App {
       new PackagesController(),
       new PurchasesController(),
       new SubscriptionsController(),
+      new SettingsController(),
       new WebhooksController(),
     ]
   }

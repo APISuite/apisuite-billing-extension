@@ -21,6 +21,7 @@ import {
 } from '../payment-processing'
 import { TransactionType } from '../models/transaction'
 import { getPaymentRedirectURL } from '../core'
+import { applyVAT } from '../vat'
 
 export class PurchasesController implements BaseController {
   private readonly path = '/purchases'
@@ -87,6 +88,11 @@ export class PurchasesController implements BaseController {
       return next(new NotFoundError('package'))
     }
 
+    const vat = config.get('vatRate')
+    if (vat) {
+      pkg.price = applyVAT(pkg.price, vat)
+    }
+
     const userInformation = {
       organizationId: organizationId,
       userId: user.id,
@@ -122,6 +128,11 @@ export class PurchasesController implements BaseController {
     const subscription = await subscriptionsRepo.findById(null, Number(req.params.id))
     if (!subscription) {
       return next(new NotFoundError('subscription'))
+    }
+
+    const vat = config.get('vatRate')
+    if (vat) {
+      subscription.price = applyVAT(subscription.price, vat)
     }
 
     if (!user.ppCustomerId) {

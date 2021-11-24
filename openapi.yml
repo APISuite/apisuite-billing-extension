@@ -791,6 +791,30 @@ paths:
                     type: string
         '400':
           $ref: '#/components/responses/BadRequest'
+  /settings:
+    get:
+      tags: [ settings ]
+      summary: List settings
+      security:
+        - cookieAuth: [ ]
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Settings list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        vatRate:
+                          type: number
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 components:
   schemas:
     User:

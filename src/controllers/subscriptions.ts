@@ -7,6 +7,8 @@ import { subscription as subscriptionsRepo } from '../models'
 import { authenticated, isAdmin, asyncWrap as aw, validator } from '../middleware'
 import { body, query, ValidationChain } from 'express-validator'
 import { SortFields } from '../models/subscription'
+import config from "../config"
+import { applyVAT } from "../vat"
 
 export class SubscriptionsController implements BaseController {
   private readonly path = '/subscriptions'
@@ -64,10 +66,18 @@ export class SubscriptionsController implements BaseController {
   ]
 
   public getSubscriptions = async (req: Request, res: Response): AsyncHandlerResponse => {
-    const subscriptions = await subscriptionsRepo.findAll(null, {
+    let subscriptions = await subscriptionsRepo.findAll(null, {
       field: req.query.sort_by as SortFields || SortFields.PRICE,
       order: req.query.order as SortOrder || SortOrder.ASC,
     })
+
+    const vat = config.get('vatRate')
+    if (vat) {
+      subscriptions = subscriptions.map((s) => {
+        s.price = applyVAT(s.price, vat)
+        return s
+      })
+    }
 
     return res.status(200).json(responseBase(subscriptions))
   }
@@ -77,6 +87,11 @@ export class SubscriptionsController implements BaseController {
 
     if (!subscription) {
       return next(new NotFoundError('subscription'))
+    }
+
+    const vat = config.get('vatRate')
+    if (vat) {
+      subscription.price = applyVAT(subscription.price, vat)
     }
 
     return res.status(200).json(responseBase(subscription))
