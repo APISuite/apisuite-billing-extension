@@ -191,6 +191,178 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /organizations:
+    post:
+      tags: [ organizations ]
+      summary: Setup an organization
+      security:
+        - cookieAuth: [ ]
+        - bearerAuth: [ ]
+      requestBody:
+        description: Initial organization data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: number
+                credits:
+                  type: number
+      responses:
+        '201':
+          description: Organization model
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Organization'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /organizations/{id}:
+    get:
+      tags: [ organizations ]
+      summary: Retrieve an organization
+      description: >
+        Returns an organization based on the ID.
+        Usable by admins.
+      security:
+        - cookieAuth: [ ]
+        - bearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: ID of organization to fetch
+          required: true
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Organization model
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Organization'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [ organizations ]
+      summary: Update organization credits
+      description: >
+        Only accessible to admins.
+        Used primarily to manage (add/subtract) user's credits.
+      security:
+        - cookieAuth: [ ]
+        - bearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: Organization ID
+          required: true
+          schema:
+            type: number
+      requestBody:
+        description: Organization info payload
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                credits:
+                  type: number
+                  description: A positive number will cause the credits to be added, a negative will deduct
+      responses:
+        '200':
+          description: Organization model
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Organization'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /organizations/{id}/subscriptions:
+    delete:
+      tags: [ organizations ]
+      summary: Cancels an organization subscription
+      description: Invoked by a user when it wants to cancel the (only) active credit subscription
+      security:
+        - cookieAuth: [ ]
+        - bearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: Organization ID
+          required: true
+          schema:
+            type: number
+      responses:
+        '204':
+          description: No content
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /organizations/{id}/invoice-notes:
+    patch:
+      tags: [ organizations ]
+      summary: Update invoice data
+      description: >
+        Used primarily to manage invoice data.
+      security:
+        - cookieAuth: [ ]
+        - bearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: Organization ID
+          required: true
+          schema:
+            type: number
+      requestBody:
+        description: Organization invoice notes
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvoiceNotes'
+      responses:
+        '200':
+          description: Organization model
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Organization'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /subscriptions:
     get:
       tags: [ subscriptions ]
@@ -817,6 +989,19 @@ paths:
           $ref: '#/components/responses/Unauthorized'
 components:
   schemas:
+    Organization:
+      type: object
+      properties:
+        id:
+          type: number
+        credits:
+          type: number
+        subscriptionId:
+          type: string
+        nextPaymentDate:
+          type: string
+        invoiceNotes:
+          type: string
     User:
       type: object
       properties:
