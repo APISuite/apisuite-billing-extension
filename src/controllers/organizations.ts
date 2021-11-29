@@ -2,10 +2,11 @@ import { NextFunction, Request, Response, Router } from 'express'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController, responseBase } from './base'
 import { organization as orgsRepo } from '../models'
-import { authenticated, asyncWrap as aw, isAdmin, validator } from '../middleware'
+import { authenticated, asyncWrap as aw, isAdmin, validator, isOrgOwner } from '../middleware'
 import { cancelSubscription, getSubscriptionNextPaymentDate } from '../payment-processing'
 import { body, ValidationChain } from 'express-validator'
 import { NotFoundError } from './errors'
+import { OrgPurchasesController } from './organizations.purchases'
 
 export class OrganizationsController implements BaseController {
   private readonly path = '/organizations'
@@ -17,6 +18,9 @@ export class OrganizationsController implements BaseController {
     router.delete(`${this.path}/:id/subscriptions`, authenticated, isAdmin, aw(this.cancelSubscription))
     router.patch(`${this.path}/:id`, authenticated, isAdmin, this.updOrgValidation, validator, aw(this.updateOrganizationCredits))
     router.patch(`${this.path}/:id/invoice-notes`, authenticated, isAdmin, this.updOrgInvoiceNotesValidation, validator, aw(this.updateOrganizationInvoiceNotes))
+
+    const or = new OrgPurchasesController()
+    router.use('/:id/purchases', authenticated, isOrgOwner, or.getRouter())
     return router
   }
 

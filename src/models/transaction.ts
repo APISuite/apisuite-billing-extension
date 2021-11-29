@@ -10,7 +10,8 @@ export enum TransactionType {
 
 export interface Transaction {
   paymentId: string
-  userId: number
+  userId: number | null
+  organizationId: number
   credits: number
   verified: boolean
   type: TransactionType
@@ -30,15 +31,6 @@ export const findById = async (trx: OptTransaction, id: string): Promise<Transac
     .where('payment_id', id)
 
   return rows[0]
-}
-
-export const findAllByUser = async (trx: OptTransaction, userId: number): Promise<Transaction[]> => {
-  const _db = trx ? trx : db
-
-  return _db
-    .select()
-    .from(TABLE)
-    .where('user_id', userId)
 }
 
 export const create = async (trx: OptTransaction, transaction: TransactionBase): Promise<Transaction> => {

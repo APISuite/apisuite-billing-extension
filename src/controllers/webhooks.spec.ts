@@ -7,6 +7,7 @@ import {
   user as usersRepo,
   transaction as txnRepo,
   subscription as subscriptionsRepo,
+  organization as orgsRepo,
 } from '../models'
 import * as paymentProcessing from '../payment-processing'
 import { db } from '../db'
@@ -73,9 +74,10 @@ describe('webhooks controller', () => {
         commit: sinon.stub(),
         rollback: sinon.stub(),
       })
-      sinon.stub(usersRepo, 'incrementCredits').resolves()
+      sinon.stub(orgsRepo, 'updateCredits').resolves()
       sinon.stub(txnRepo, 'setVerified').resolves({
         userId: 1,
+        organizationId: 1,
         credits: 100,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -144,12 +146,11 @@ describe('webhooks controller', () => {
         commit: sinon.stub(),
         rollback: sinon.stub(),
       })
-      sinon.stub(usersRepo, 'findByPPSubscriptionId').resolves({
+      sinon.stub(orgsRepo, 'findByPPSubscriptionId').resolves({
         id: 1,
         credits: 100,
         subscriptionId: 1,
         ppCustomerId: 'x-customer-1234',
-        ppMandateId: 'x-mandate-1234',
         ppSubscriptionId: 'subsId123',
         invoiceNotes: null,
       })
@@ -160,7 +161,7 @@ describe('webhooks controller', () => {
         price: 100,
         periodicity: '1 month',
       })
-      sinon.stub(usersRepo, 'incrementCredits').resolves()
+      sinon.stub(orgsRepo, 'updateCredits').resolves()
       sinon.stub(txnRepo, 'create').resolves()
 
       request(testApp)
@@ -190,17 +191,16 @@ describe('webhooks controller', () => {
         commit: sinon.stub(),
         rollback: sinon.stub(),
       })
-      sinon.stub(usersRepo, 'findByPPSubscriptionId').resolves({
+      sinon.stub(orgsRepo, 'findByPPSubscriptionId').resolves({
         id: 1,
         credits: 100,
         subscriptionId: 1,
         ppCustomerId: 'x-customer-1234',
-        ppMandateId: 'x-mandate-1234',
         ppSubscriptionId: 'subsId123',
         invoiceNotes: null,
       })
       sinon.stub(subscriptionsRepo, 'findById').resolves(null)
-      sinon.stub(usersRepo, 'incrementCredits').resolves()
+      sinon.stub(orgsRepo, 'updateCredits').resolves()
       sinon.stub(txnRepo, 'create').resolves()
 
       request(testApp)
@@ -230,12 +230,11 @@ describe('webhooks controller', () => {
         commit: sinon.stub(),
         rollback: sinon.stub(),
       })
-      sinon.stub(usersRepo, 'findByPPSubscriptionId').resolves({
+      sinon.stub(orgsRepo, 'findByPPSubscriptionId').resolves({
         id: 1,
         credits: 100,
         subscriptionId: 1,
         ppCustomerId: null,
-        ppMandateId: 'x-mandate-1234',
         ppSubscriptionId: null,
         invoiceNotes: null,
       })
@@ -300,6 +299,7 @@ describe('webhooks controller', () => {
       })
       sinon.stub(txnRepo, 'setVerified').resolves({
         userId: 1234,
+        organizationId: 1,
         credits: 100,
         amount: 1000,
         type: TransactionType.Subscription,
@@ -308,11 +308,10 @@ describe('webhooks controller', () => {
         createdAt: '',
         updatedAt: '',
       })
-      sinon.stub(usersRepo, 'incrementCredits').resolves()
-      sinon.stub(usersRepo, 'findById').resolves({
+      sinon.stub(orgsRepo, 'updateCredits').resolves()
+      sinon.stub(orgsRepo, 'findById').resolves({
         id: 1,
         ppCustomerId: 'pc1234',
-        ppMandateId: null,
         ppSubscriptionId: null,
         credits: 100,
         subscriptionId: null,
@@ -326,7 +325,7 @@ describe('webhooks controller', () => {
         periodicity: '1 month',
       })
       sinon.stub(paymentProcessing, 'subscriptionPayment').resolves()
-      sinon.stub(usersRepo, 'update').resolves()
+      sinon.stub(orgsRepo, 'update').resolves()
 
       request(testApp)
         .post('/webhooks/subscription_first')

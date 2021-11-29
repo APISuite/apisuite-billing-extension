@@ -12,6 +12,7 @@ import {
   transaction as txnRepo,
   user as usersRepo,
   subscription as subscriptionsRepo,
+  organization as orgsRepo,
 } from '../models'
 import {
   subscriptionPayment,
@@ -39,7 +40,7 @@ export class WebhooksController implements BaseController {
 
   private sendConfirmationEmail = async (title: string, transaction: Transaction, payment: VerifiedPayment): Promise<void> => {
     const [user, owner, settings] = await Promise.all([
-      getUserData(transaction.userId),
+      getUserData(payment.metadata.userId),
       getOwnerData(),
       getPortalSettings(),
     ])
@@ -70,24 +71,22 @@ export class WebhooksController implements BaseController {
     if (payment) {
       const trx = await db.transaction()
       try {
-        const user = await usersRepo.findByPPSubscriptionId(trx, payment.subscriptionId)
-        if (!user || !user.subscriptionId) {
-          await trx.rollback()
-          throw new Error('invalid subscription user')
-        }
+        const org = await orgsRepo.findByPPSubscriptionId(trx, payment.subscriptionId)
+        if (!org) throw new Error('invalid subscription organization')
 
-        const subscription = await subscriptionsRepo.findById(trx, user?.subscriptionId)
-        if (!subscription) {
-          await trx.rollback()
-          throw new Error('invalid subscription')
-        }
+        const subId = org.subscriptionId
+        if (!subId) throw new Error('invalid subscription id')
+
+        const subscription = await subscriptionsRepo.findById(trx, subId)
+        if (!subscription) throw new Error('invalid subscription')
 
         const [, transaction] = await Promise.all([
-          await usersRepo.incrementCredits(trx, user.id, subscription.credits),
+          await orgsRepo.updateCredits(trx, org.id, subscription.credits),
           await txnRepo.create(trx, {
+            userId: null,
+            organizationId: org.id,
             paymentId: req.body.id,
             credits: subscription.credits,
-            userId: user.id,
             verified: true,
             type: TransactionType.Subscription,
             amount: payment.amount,
@@ -124,7 +123,7 @@ export class WebhooksController implements BaseController {
     const trx = await db.transaction()
     try {
       transaction = await txnRepo.setVerified(trx, payment.id)
-      await usersRepo.incrementCredits(trx, transaction.userId, transaction.credits)
+      await orgsRepo.updateCredits(trx, transaction.organizationId, transaction.credits)
       await trx.commit()
     } catch (err) {
       await trx.rollback()
@@ -138,28 +137,28 @@ export class WebhooksController implements BaseController {
       return
     }
 
-    const user = await usersRepo.findById(null, transaction.userId)
-    if (!user) {
-      log.error('subscriptionFirstPaymentSuccess: payment successful but could not find user')
+    const org = await orgsRepo.findById(null, transaction.organizationId)
+    if (!org) {
+      log.error('subscriptionFirstPaymentSuccess: payment successful but could not find org')
       return
     }
-    if (!user.ppCustomerId) {
-      log.error('subscriptionFirstPaymentSuccess: payment successful but user has no customerId')
+    if (!org.ppCustomerId) {
+      log.error('subscriptionFirstPaymentSuccess: payment successful but org has no customerId')
       return
     }
-    if (!user.subscriptionId) {
-      log.error('subscriptionFirstPaymentSuccess: payment successful but user has no associated subscription')
+    if (!org.subscriptionId) {
+      log.error('subscriptionFirstPaymentSuccess: payment successful but org has no associated subscription')
       return
     }
 
-    const subscription = await subscriptionsRepo.findById(null, user.subscriptionId)
+    const subscription = await subscriptionsRepo.findById(null, org.subscriptionId)
     if (!subscription) {
       log.error('subscriptionFirstPaymentSuccess: payment successful but could not find subscription')
       return
     }
 
     const subscriptionData = {
-      customerId: user.ppCustomerId,
+      customerId: org.ppCustomerId,
       price: subscription.price,
       credits: subscription.credits,
       description: subscription.name,
@@ -173,7 +172,7 @@ export class WebhooksController implements BaseController {
       invoiceNotes: payment.metadata.invoiceNotes ?? '',
     }
     const subscriptionId = await subscriptionPayment(subscriptionData, userInformation)
-    await usersRepo.update(null, user.id, {
+    await orgsRepo.update(null, transaction.organizationId, {
       ppSubscriptionId: subscriptionId,
     })
 
@@ -198,7 +197,7 @@ export class WebhooksController implements BaseController {
     const trx = await db.transaction()
     try {
       transaction = await txnRepo.setVerified(trx, payment.id)
-      await usersRepo.incrementCredits(trx, transaction.userId, transaction.credits)
+      await orgsRepo.updateCredits(trx, transaction.organizationId, transaction.credits)
       await trx.commit()
     } catch (err) {
       await trx.rollback()
@@ -234,32 +233,33 @@ export class WebhooksController implements BaseController {
       return
     }
 
-    const user = await usersRepo.findById(null, transaction.userId)
-    if (!user) {
-      log.error('update_payment: payment successful but could not find user')
+    const org = await usersRepo.findById(null, transaction.organizationId)
+    if (!org) {
+      log.error('update_payment: payment successful but could not find org')
       return
     }
-    if (!user.ppCustomerId) {
-      log.error('update_payment: payment successful but user has no customerId')
+    if (!org.ppCustomerId) {
+      log.error('update_payment: payment successful but org has no customerId')
       return
     }
-    if (!user.subscriptionId) {
-      log.error('update_payment: payment successful but user has no associated subscription')
+    if (!org.subscriptionId) {
+      log.error('update_payment: payment successful but org has no associated subscription')
       return
     }
-    if (!user.ppSubscriptionId) {
-      log.error('update_payment: payment successful but user has no ppSubscriptionId')
+    if (!org.ppSubscriptionId) {
+      log.error('update_payment: payment successful but org has no ppSubscriptionId')
       return
     }
 
-    const subscription = await subscriptionsRepo.findById(null, user.subscriptionId)
+    const subId = transaction.organizationId
+    const subscription = await subscriptionsRepo.findById(null, subId)
     if (!subscription) {
       log.error('update_payment: payment successful but could not find subscription')
       return
     }
 
-    await updateSubscription(user.ppSubscriptionId, {
-      customerId: user.ppCustomerId,
+    await updateSubscription(subId.toString(), {
+      customerId: org.ppCustomerId,
       mandateId: payment.mandateId,
     })
   }

@@ -39,7 +39,7 @@ export const introspect = async (req: Request, res: Response, next: NextFunction
         return res.status(401).json({ errors: ['invalid authentication cookie'] })
       }
 
-      res.locals.authenticatedUser = await response.json()
+      res.locals.authenticatedUser = (await response.json()) as Introspection
     } catch (err) {
       log.error(err, '[introspect]')
       return res.status(500).json({ errors: ['could not introspect'] })
@@ -57,6 +57,19 @@ export const authenticated = (req: Request, res: Response, next: NextFunction): 
   }
 
   next()
+}
+
+export interface Introspection {
+  id: number
+  name: string
+  email: string
+  organizations: {
+    id: number
+    role: {
+      id: number
+      name: string
+    }
+  }[]
 }
 
 const isSelfCheck = (req: Request, res: Response) => Number(res.locals.authenticatedUser.id) === Number(req.params.id)
@@ -83,5 +96,15 @@ export const isSelfOrAdmin = (req: Request, res: Response, next: NextFunction): 
     return next()
   }
 
+  return res.status(403).json({ errors: ['forbidden'] })
+}
+
+export const isOrgOwner = (req: Request, res: Response, next: NextFunction): HandlerResponse => {
+  const reqOrgId = Number(req.params.id)
+  const introspect: Introspection = res.locals.authenticatedUser
+  const isOrgOwner = introspect.organizations.some((o) => {
+    return o.id === reqOrgId && (o.role.name === 'organizationOwner' || o.role.name === 'admin')
+  })
+  if (isOrgOwner) return next()
   return res.status(403).json({ errors: ['forbidden'] })
 }
