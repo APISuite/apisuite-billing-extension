@@ -1,9 +1,11 @@
 import log from '../log'
 import { db } from '../db'
-import { user as usersRepo } from '../models'
+import {
+  user as usersRepo,
+} from '../models'
 import { cancelSubscription } from '../payment-processing'
 
-export const handleUserDelete = async (userId: number): Promise<void> => {
+export const handleOrganizationDelete = async (userId: number): Promise<void> => {
   const trx = await db.transaction()
   try {
     const user = await usersRepo.findById(trx, userId)
@@ -16,8 +18,4 @@ export const handleUserDelete = async (userId: number): Promise<void> => {
     log.error(err, '[handleUserDelete]')
     await trx.rollback()
   }
-}
-
-export const handleUserCreate = async (userId: number): Promise<void> => {
-  await usersRepo.getOrBootstrapUser(null, userId)
 }
