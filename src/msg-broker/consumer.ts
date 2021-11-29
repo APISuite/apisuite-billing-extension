@@ -18,7 +18,7 @@ export const onMessage = (data: amqplib.ConsumeMessage | null): void => {
           log.warn('could not delete organization', msg)
           break
         }
-        handleOrganizationDelete(msg.user_id).catch()
+        handleOrganizationDelete(msg.organization_id).catch()
         break
       }
     }
