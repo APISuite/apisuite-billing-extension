@@ -82,7 +82,7 @@ export class OrgPurchasesController implements BaseController {
     if (!org) return next(new NotFoundError('organization'))
     if (!org.ppCustomerId) {
       org.ppCustomerId = await createCustomer(res.locals.authenticatedUser.name, res.locals.authenticatedUser.email)
-      await orgsRepo.update(null, res.locals.authenticatedUser.id, { ppCustomerId: org.ppCustomerId })
+      await orgsRepo.update(null, org.id, { ppCustomerId: org.ppCustomerId })
     }
 
     const pkg = await pkgsRepo.findById(null, Number(req.params.pid))
@@ -129,7 +129,7 @@ export class OrgPurchasesController implements BaseController {
 
     if (!org.ppCustomerId) {
       org.ppCustomerId = await createCustomer(res.locals.authenticatedUser.name, res.locals.authenticatedUser.email)
-      await orgsRepo.update(null, res.locals.authenticatedUser.id, { ppCustomerId: org.ppCustomerId })
+      await orgsRepo.update(null, org.id, { ppCustomerId: org.ppCustomerId })
     }
 
     const vat = config.get('vatRate')
@@ -139,7 +139,7 @@ export class OrgPurchasesController implements BaseController {
 
     if (!org.ppCustomerId) {
       org.ppCustomerId = await createCustomer(res.locals.authenticatedUser.name, res.locals.authenticatedUser.email)
-      await orgsRepo.update(null, res.locals.authenticatedUser.id, { ppCustomerId: org.ppCustomerId })
+      await orgsRepo.update(null, org.id, { ppCustomerId: org.ppCustomerId })
     }
 
     if (org.ppSubscriptionId) {

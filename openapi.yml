@@ -259,10 +259,10 @@ paths:
           $ref: '#/components/responses/NotFound'
     patch:
       tags: [ organizations ]
-      summary: Update organization credits
+      summary: Update organization
       description: >
-        Only accessible to admins.
-        Used primarily to manage (add/subtract) user's credits.
+        Only accessible to organization owners.
+        Used to add/subtract credits and update other organization data.
       security:
         - cookieAuth: [ ]
         - bearerAuth: [ ]
@@ -283,7 +283,9 @@ paths:
               properties:
                 credits:
                   type: number
-                  description: A positive number will cause the credits to be added, a negative will deduct
+                  description: WARNING! A positive number will cause the credits to be added, a negative will deduct
+                invoiceNotes:
+                  type: string
       responses:
         '200':
           description: Organization model
@@ -324,45 +326,6 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-  /organizations/{id}/invoice-notes:
-    patch:
-      tags: [ organizations ]
-      summary: Update invoice data
-      description: >
-        Used primarily to manage invoice data.
-      security:
-        - cookieAuth: [ ]
-        - bearerAuth: [ ]
-      parameters:
-        - name: id
-          in: path
-          description: Organization ID
-          required: true
-          schema:
-            type: number
-      requestBody:
-        description: Organization invoice notes
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InvoiceNotes'
-      responses:
-        '200':
-          description: Organization model
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/Organization'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
   /organizations/{id}/purchases:
     get:
       tags: [ purchases ]

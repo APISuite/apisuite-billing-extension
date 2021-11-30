@@ -16,11 +16,10 @@ export class OrganizationsController implements BaseController {
     router.post(this.path, authenticated, isAdmin, this.createOrgValidation, validator, aw(this.createOrganization))
     router.get(`${this.path}/:id`, authenticated, isAdmin, aw(this.getOrganizationDetails))
     router.delete(`${this.path}/:id/subscriptions`, authenticated, isAdmin, aw(this.cancelSubscription))
-    router.patch(`${this.path}/:id`, authenticated, isAdmin, this.updOrgValidation, validator, aw(this.updateOrganizationCredits))
-    router.patch(`${this.path}/:id/invoice-notes`, authenticated, isAdmin, this.updOrgInvoiceNotesValidation, validator, aw(this.updateOrganizationInvoiceNotes))
+    router.patch(`${this.path}/:id`, authenticated, isAdmin, this.updOrgValidation, validator, aw(this.updateOrganization))
 
     const or = new OrgPurchasesController()
-    router.use('/:id/purchases', authenticated, isOrgOwner, or.getRouter())
+    router.use(`${this.path}/:id/purchases`, authenticated, isOrgOwner, or.getRouter())
     return router
   }
 
@@ -31,10 +30,7 @@ export class OrganizationsController implements BaseController {
 
   readonly updOrgValidation: ValidationChain[] = [
     body('credits').optional().isNumeric(),
-  ]
-
-  readonly updOrgInvoiceNotesValidation: ValidationChain[] = [
-    body('invoiceNotes').exists(),
+    body('invoiceNotes').optional().isString(),
   ]
 
   public createOrganization = async (req: Request, res: Response): AsyncHandlerResponse => {
@@ -56,9 +52,7 @@ export class OrganizationsController implements BaseController {
       nextPaymentDate = await getSubscriptionNextPaymentDate(org.ppSubscriptionId, org.ppCustomerId)
     }
     return res.status(200).json(responseBase({
-      id: org.id,
-      subscriptionId: org.subscriptionId,
-      credits: org.credits,
+      ...org,
       nextPaymentDate,
     }))
   }
@@ -78,24 +72,15 @@ export class OrganizationsController implements BaseController {
     return res.sendStatus(204)
   }
 
-  public updateOrganizationCredits = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
+  public updateOrganization = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
     let org = await orgsRepo.findById(null, Number(req.params.id))
     if (!org) return next(new NotFoundError('organization'))
 
-    org = await orgsRepo.update(null, org.id, {
-      credits: org.credits + Number(req.body.credits || 0),
-    })
+    if (req.body.credits !== undefined) {
+      req.body.credits = org.credits + Number(req.body.credits || 0)
+    }
 
-    return res.status(200).json(responseBase(org))
-  }
-
-  public updateOrganizationInvoiceNotes = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
-    let org = await orgsRepo.findById(null, Number(req.params.id))
-    if (!org) return next(new NotFoundError('organization'))
-
-    org = await orgsRepo.update(null, org.id, {
-      invoiceNotes: req.body.invoiceNotes,
-    })
+    org = await orgsRepo.update(null, org.id, req.body)
 
     return res.status(200).json(responseBase(org))
   }

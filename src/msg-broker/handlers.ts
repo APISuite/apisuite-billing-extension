@@ -9,9 +9,10 @@ export const handleOrganizationDelete = async (orgId: number): Promise<void> => 
   const trx = await db.transaction()
   try {
     const org = await orgsRepo.findById(trx, orgId)
-    if (!org || !org.ppSubscriptionId || !org.ppCustomerId) return
-
-    await cancelSubscription(org.ppSubscriptionId, org.ppCustomerId)
+    if (!org) return
+    if (org.ppSubscriptionId && org.ppCustomerId) {
+      await cancelSubscription(org.ppSubscriptionId, org.ppCustomerId)
+    }
     await orgsRepo.del(trx, orgId)
     await trx.commit()
   } catch(err) {

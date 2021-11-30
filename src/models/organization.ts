@@ -1,5 +1,7 @@
 import { db, OptTransaction } from '../db'
 import { Optional } from '../types'
+import log from '../log'
+import { dbErrorParser } from './errors'
 
 const TABLE = 'organizations'
 
@@ -37,6 +39,10 @@ const create = async (trx: OptTransaction, org: OrganizationBase): Promise<Organ
     .insert(org)
     .into(TABLE)
     .returning('*')
+    .catch((err) => {
+      log.error(err)
+      throw dbErrorParser(err)
+    })
 
   return rows[0]
 }
@@ -48,6 +54,10 @@ const update = async (trx: OptTransaction, id: number, org: OrganizationUpdate):
     .update(org)
     .where('id', id)
     .returning('*')
+    .catch((err) => {
+      log.error(err)
+      throw dbErrorParser(err)
+    })
 
   return rows[0]
 }
