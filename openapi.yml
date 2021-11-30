@@ -534,6 +534,13 @@ paths:
       security:
         - cookieAuth: [ ]
         - bearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: Organization ID
+          required: true
+          schema:
+            type: number
       responses:
         '204':
           description: No content
