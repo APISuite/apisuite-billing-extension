@@ -122,6 +122,7 @@ export default function run(): void {
       ppMandateId: null,
       ppSubscriptionId: null,
       invoiceNotes: null,
+      billingOrganizationId: 1,
     }
 
     const trx = await db.transaction()
