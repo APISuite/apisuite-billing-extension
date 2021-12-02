@@ -682,7 +682,6 @@ paths:
           $ref: '#/components/responses/NotFound'
   /users/{id}:
     get:
-      deprecated: true
       tags: [ users ]
       summary: Retrieve a user
       description: >
@@ -715,12 +714,13 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
     patch:
-      deprecated: true
       tags: [ users ]
       summary: Update user credits
       description: >
         Only accessible to admin users (user can't manage their own credits).
-        Used primarily to manage (add/subtract) user's credits.
+        Used exclusively to manage (add/subtract) user's credits.
+        By using this method of deducting credits directly via the user, the credits are in truth being deducted
+        from the user's active billing organization.
       security:
         - cookieAuth: [ ]
         - bearerAuth: [ ]
@@ -758,6 +758,36 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /users/{id}/organizations/{oid}:
+    put:
+      tags: [ users ]
+      summary: Set billing organization
+      description: Sets the user's active billing organization (from which credits will be deducted)
+      security:
+        - cookieAuth: [ ]
+        - bearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: User ID
+          required: true
+          schema:
+            type: number
+        - name: oid
+          in: path
+          description: Organization ID
+          required: true
+          schema:
+            type: number
+      responses:
+        '204':
+          description: No content
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /users/{id}/subscriptions:
     delete:
       deprecated: true
@@ -783,79 +813,6 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-  /users/{id}/invoice-notes:
-    get:
-      deprecated: true
-      tags: [ users ]
-      summary: User's invoice notes
-      description: >
-        Returns invoice data based on the ID.
-        Usable by the user to get information about itself or by admins to retrieve any user.
-      security:
-        - cookieAuth: [ ]
-        - bearerAuth: [ ]
-      parameters:
-        - name: id
-          in: path
-          description: ID of user to fetch
-          required: true
-          schema:
-            type: number
-      responses:
-        '200':
-          description: Invoice Notes model
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/InvoiceNotes'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-    patch:
-      deprecated: true
-      tags: [ users ]
-      summary: Update invoice data
-      description: >
-        Used primarily to manage invoice data.
-      security:
-        - cookieAuth: [ ]
-        - bearerAuth: [ ]
-      parameters:
-        - name: id
-          in: path
-          description: User ID
-          required: true
-          schema:
-            type: number
-      requestBody:
-        description: User invoice notes
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InvoiceNotes'
-      responses:
-        '200':
-          description: User model
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/InvoiceNotes'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
   /webhooks/subscription:
     post:
       tags: [ webhooks ]
@@ -929,7 +886,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
   /webhooks/update_payment_method:
-    patch:
+    post:
       tags: [ webhooks ]
       summary: Payment Update webhook
       description: Called by the payment processing provider on subscription payment method changes.

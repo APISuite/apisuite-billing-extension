@@ -2,6 +2,8 @@ import { db, OptTransaction } from '../db'
 import { Optional } from '../types'
 import { setting as settingsRepo } from './index'
 import { SettingKeys } from './setting'
+import log from '../log'
+import { dbErrorParser } from './errors'
 
 const TABLE = 'users'
 
@@ -13,24 +15,20 @@ export interface User {
   ppMandateId: string | null
   ppSubscriptionId: string | null
   invoiceNotes: string | null
+  billingOrganizationId: number | null
 }
 
 export type UserBase = Omit<User, 'ppCustomerId' | 'ppMandateId' | 'ppSubscriptionId'>
 export type UserUpdate = Omit<Optional<User>, 'id'>
 
-// take an object instead?s
 const getOrBootstrapUser = async (trx: OptTransaction, userID: number): Promise<User> => {
   const _db = trx ? trx : db
   const user = await findById(trx, userID)
   if (user) return user
 
-  const defaultCredits = Number(await settingsRepo.findByName(trx, SettingKeys.DefaultCredits))
-
   const rows = await _db
     .insert({
       id: userID,
-      credits: defaultCredits,
-      subscriptionId: null,
     })
     .into(TABLE)
     .onConflict('id')
@@ -62,6 +60,10 @@ const create = async (trx: OptTransaction, user: UserBase): Promise<User> => {
     .insert(user)
     .into(TABLE)
     .returning('*')
+    .catch((err) => {
+      log.error(err)
+      throw dbErrorParser(err)
+    })
 
   return rows[0]
 }
@@ -103,7 +105,7 @@ const findByPPSubscriptionId = async(trx: OptTransaction, subscriptionId: string
   return null
 }
 
-const deleteUser = async (trx: OptTransaction, id: number): Promise<number> => {
+const del = async (trx: OptTransaction, id: number): Promise<number> => {
   const _db = trx ? trx : db
 
   await _db(TABLE)
@@ -118,7 +120,7 @@ export {
   findById,
   create,
   update,
-  deleteUser,
+  del,
   incrementCredits,
   findByPPSubscriptionId,
 }

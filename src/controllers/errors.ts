@@ -19,7 +19,7 @@ export class NotFoundError extends Error {
 }
 
 export class ForbiddenError extends Error {
-  constructor() {
-    super()
+  constructor(message = 'forbidden') {
+    super(message)
   }
 }
