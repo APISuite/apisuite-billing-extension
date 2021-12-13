@@ -11,6 +11,12 @@ describe('organizations controller', () => {
   const injectUser = (req: Request, res: Response, next: NextFunction) => {
     res.locals.authenticatedUser = {
       id: 1,
+      organizations: [
+        {
+          id: 9,
+          role: { name: 'admin' },
+        },
+      ],
       role: { name: 'admin' },
     }
     next()

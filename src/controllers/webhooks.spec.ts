@@ -4,7 +4,6 @@ import request from 'supertest'
 import { WebhooksController } from './webhooks'
 import { error } from '../middleware'
 import {
-  user as usersRepo,
   transaction as txnRepo,
   subscription as subscriptionsRepo,
   organization as orgsRepo,

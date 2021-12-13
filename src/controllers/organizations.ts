@@ -2,7 +2,7 @@ import { NextFunction, Request, Response, Router } from 'express'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController, responseBase } from './base'
 import { organization as orgsRepo } from '../models'
-import { authenticated, asyncWrap as aw, isAdmin, validator, isOrgOwner } from '../middleware'
+import { authenticated, asyncWrap as aw, isAdmin, validator, isOrgOwner, Introspection } from '../middleware'
 import { cancelSubscription, getSubscriptionNextPaymentDate } from '../payment-processing'
 import { body, ValidationChain } from 'express-validator'
 import { NotFoundError } from './errors'
@@ -16,7 +16,7 @@ export class OrganizationsController implements BaseController {
     router.post(this.path, authenticated, isAdmin, this.createOrgValidation, validator, aw(this.createOrganization))
     router.get(`${this.path}/:id`, authenticated, isAdmin, aw(this.getOrganizationDetails))
     router.delete(`${this.path}/:id/subscriptions`, authenticated, isAdmin, aw(this.cancelSubscription))
-    router.patch(`${this.path}/:id`, authenticated, isAdmin, this.updOrgValidation, validator, aw(this.updateOrganization))
+    router.patch(`${this.path}/:id`, authenticated, isOrgOwner, this.updOrgValidation, validator, aw(this.updateOrganization))
 
     const or = new OrgPurchasesController()
     router.use(`${this.path}/:id/purchases`, authenticated, isOrgOwner, or.getRouter())
@@ -78,6 +78,12 @@ export class OrganizationsController implements BaseController {
 
     if (req.body.credits !== undefined) {
       req.body.credits = org.credits + Number(req.body.credits || 0)
+    }
+
+    const usr: Introspection = res.locals.authenticatedUser
+    const isAdmin = usr.organizations.some((o) => o.role.name === 'admin')
+    if (!isAdmin) {
+      delete req.body.credits
     }
 
     org = await orgsRepo.update(null, org.id, req.body)

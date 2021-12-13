@@ -100,6 +100,10 @@ export const isSelfOrAdmin = (req: Request, res: Response, next: NextFunction): 
 }
 
 export const isOrgOwner = (req: Request, res: Response, next: NextFunction): HandlerResponse => {
+  if (isAdminCheck(res)) {
+    return next()
+  }
+
   const reqOrgId = Number(req.params.id)
   const introspect: Introspection = res.locals.authenticatedUser
   const isOrgOwner = introspect.organizations.some((o) => {

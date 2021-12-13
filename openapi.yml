@@ -416,17 +416,6 @@ paths:
           required: true
           schema:
             type: number
-      requestBody:
-        description: Organization ID
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                organizationId:
-                  type: number
-                  description: Organization ID
       responses:
         '200':
           description: Payment processor checkout page url

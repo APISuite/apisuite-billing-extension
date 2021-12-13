@@ -1,7 +1,5 @@
 import { db, OptTransaction } from '../db'
 import { Optional } from '../types'
-import { setting as settingsRepo } from './index'
-import { SettingKeys } from './setting'
 import log from '../log'
 import { dbErrorParser } from './errors'
 

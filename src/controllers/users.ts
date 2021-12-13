@@ -45,6 +45,7 @@ export class UsersController implements BaseController {
       subscriptionId: user.subscriptionId,
       credits: user.credits,
       nextPaymentDate,
+      billingOrganizationId: user.billingOrganizationId,
     }))
   }
 
