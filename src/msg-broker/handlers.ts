@@ -1,23 +1,22 @@
 import log from '../log'
 import { db } from '../db'
-import { user as usersRepo } from '../models'
+import {
+  organization as orgsRepo,
+} from '../models'
 import { cancelSubscription } from '../payment-processing'
 
-export const handleUserDelete = async (userId: number): Promise<void> => {
+export const handleOrganizationDelete = async (orgId: number): Promise<void> => {
   const trx = await db.transaction()
   try {
-    const user = await usersRepo.findById(trx, userId)
-    if (!user || !user.ppSubscriptionId || !user.ppCustomerId) return
-
-    await cancelSubscription(user.ppSubscriptionId, user.ppCustomerId)
-    await usersRepo.deleteUser(trx, userId)
+    const org = await orgsRepo.findById(trx, orgId)
+    if (!org) return
+    if (org.ppSubscriptionId && org.ppCustomerId) {
+      await cancelSubscription(org.ppSubscriptionId, org.ppCustomerId)
+    }
+    await orgsRepo.del(trx, orgId)
     await trx.commit()
   } catch(err) {
-    log.error(err, '[handleUserDelete]')
+    log.error(err, '[handleOrganizationDelete]')
     await trx.rollback()
   }
-}
-
-export const handleUserCreate = async (userId: number): Promise<void> => {
-  await usersRepo.getOrBootstrapUser(null, userId)
 }

@@ -1,50 +1,37 @@
 import { NextFunction, Request, Response, Router } from 'express'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController, responseBase } from './base'
-import { user as usersRepo } from '../models'
-import { authenticated, isSelf, asyncWrap as aw, isAdmin, validator, isSelfOrAdmin } from '../middleware/'
+import {
+  user as usersRepo,
+  organization as orgsRepo,
+} from '../models'
+import {
+  authenticated,
+  isSelf,
+  asyncWrap as aw,
+  isAdmin,
+  validator,
+  isSelfOrAdmin,
+  Introspection,
+} from '../middleware/'
 import { cancelSubscription, getSubscriptionNextPaymentDate } from '../payment-processing'
 import { body, ValidationChain } from 'express-validator'
-import { NotFoundError } from './errors'
+import { ForbiddenError, NotFoundError, UserInputError } from './errors'
 
 export class UsersController implements BaseController {
   private readonly path = '/users'
 
   public getRouter(): Router {
     const router = Router()
-    router.get(`${this.path}/:id`,
-      authenticated,
-      isSelfOrAdmin,
-      aw(this.getUserDetails))
-    router.delete(`${this.path}/:id/subscriptions`,
-      authenticated,
-      isSelf,
-      aw(this.cancelSubscription))
-    router.patch(`${this.path}/:id`,
-      authenticated,
-      isAdmin,
-      this.updateUserValidation,
-      validator,
-      aw(this.updateUser))
-    router.get(`${this.path}/:id/invoice-notes`,
-      authenticated,
-      isSelfOrAdmin,
-      aw(this.getUserInvoiceNotes))
-    router.patch(`${this.path}/:id/invoice-notes`,
-      authenticated,
-      isSelf,
-      this.updateUserInvoiceNotesValidation,
-      validator,
-      aw(this.updateUserInvoiceNotes))
+    router.get(`${this.path}/:id`, authenticated, isSelfOrAdmin, aw(this.getUserDetails))
+    router.patch(`${this.path}/:id`, authenticated, isAdmin, this.updateUserValidation, validator, aw(this.updateUser))
+    router.put(`${this.path}/:id/organizations/:oid`, authenticated, isSelf, aw(this.setBillingOrganization))
+    router.delete(`${this.path}/:id/subscriptions`, authenticated, isSelf, aw(this.cancelSubscription))
     return router
   }
 
   readonly updateUserValidation: ValidationChain[] = [
     body('credits').optional().isNumeric(),
-  ]
-
-  readonly updateUserInvoiceNotesValidation: ValidationChain[] = [
-    body('invoiceNotes').exists(),
   ]
 
   public getUserDetails = async (req: Request, res: Response): AsyncHandlerResponse => {
@@ -58,6 +45,7 @@ export class UsersController implements BaseController {
       subscriptionId: user.subscriptionId,
       credits: user.credits,
       nextPaymentDate,
+      billingOrganizationId: user.billingOrganizationId,
     }))
   }
 
@@ -75,38 +63,37 @@ export class UsersController implements BaseController {
     return res.sendStatus(204)
   }
 
-  public updateUser = async (req: Request, res: Response): AsyncHandlerResponse => {
+  public updateUser = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
     if (Number(req.params.id) === res.locals.authenticatedUser.id) {
-      return res.status(403).json({ errors: ['unable to manage own data'] })
+      return next(new ForbiddenError('unable to manage own data'))
     }
 
-    let user = await usersRepo.getOrBootstrapUser(null, Number(req.params.id))
-    user = await usersRepo.update(null, user.id, {
-      credits: user.credits + Number(req.body.credits || 0),
-    })
+    const user = await usersRepo.getOrBootstrapUser(null, Number(req.params.id))
+    if (!user.billingOrganizationId) return next(new UserInputError(['missing billing organization']))
+
+    await orgsRepo.updateCredits(null, user.billingOrganizationId, Number(req.body.credits || 0))
 
     return res.status(200).json(responseBase(user))
   }
 
-  public updateUserInvoiceNotes = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
-    const invoiceUpdate = await usersRepo.update(null, Number(req.params.id), {
-      invoiceNotes: req.body.invoiceNotes,
+  public setBillingOrganization = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
+    const authUser = res.locals.authenticatedUser as Introspection
+    const userID = Number(req.params.id)
+    const organizationID = Number(req.params.oid)
+
+    if (userID !== authUser.id) return next(new ForbiddenError())
+    if (!authUser.organizations.some((o) => o.id === organizationID)) return next(new ForbiddenError())
+
+    const org = await orgsRepo.findById(null, organizationID)
+    if (!org) return next(new NotFoundError('organization'))
+
+    const user = await usersRepo.getOrBootstrapUser(null, userID)
+    if (!user) return next(new NotFoundError('user'))
+
+    await usersRepo.update(null, userID, {
+      billingOrganizationId: organizationID,
     })
 
-    if (!invoiceUpdate) {
-      return next (new NotFoundError('users'))
-    }
-
-    return res.status(200).json(responseBase({ invoiceNotes: invoiceUpdate.invoiceNotes }))
-  }
-
-  public getUserInvoiceNotes = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
-    const invoiceData = await usersRepo.findById (null, Number(req.params.id))
-
-    if (!invoiceData) {
-      return next (new NotFoundError('users'))
-    }
-
-    return res.status(200).json(responseBase({ invoiceNotes: invoiceData.invoiceNotes }))
+    return res.sendStatus(204)
   }
 }

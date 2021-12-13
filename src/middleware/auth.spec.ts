@@ -2,7 +2,6 @@ import sinon from 'sinon'
 import express from 'express'
 import fetch from 'node-fetch'
 import request from 'supertest'
-import config from '../config'
 import { introspect, authenticated, isSelf, isAdmin, isSelfOrAdmin } from './auth'
 import { error } from './error'
 

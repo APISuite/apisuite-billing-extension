@@ -97,18 +97,14 @@ export class PackagesController implements BaseController {
     return res.status(200).json(responseBase(pkg))
   }
 
-  public createPackage = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
-    try {
-      const pkg = await pkgsRepo.create(null, {
-        name: req.body.name,
-        price: req.body.price,
-        credits: req.body.credits,
-      })
+  public createPackage = async (req: Request, res: Response): AsyncHandlerResponse => {
+    const pkg = await pkgsRepo.create(null, {
+      name: req.body.name,
+      price: req.body.price,
+      credits: req.body.credits,
+    })
 
-      return res.status(201).json(responseBase(pkg))
-    } catch (err) {
-      next(err)
-    }
+    return res.status(201).json(responseBase(pkg))
   }
 
   public updatePackage = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {

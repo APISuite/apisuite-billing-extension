@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  version: 1.0.0
+  version: 2.0.0
   title: APISuite Billing Extension
   description: APISuite Billing Extension REST API
   license:
@@ -185,6 +185,326 @@ paths:
       responses:
         '204':
           description: No content
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /organizations:
+    post:
+      tags: [ organizations ]
+      summary: Setup an organization
+      security:
+        - cookieAuth: [ ]
+        - bearerAuth: [ ]
+      requestBody:
+        description: Initial organization data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: number
+                credits:
+                  type: number
+      responses:
+        '201':
+          description: Organization model
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Organization'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /organizations/{id}:
+    get:
+      tags: [ organizations ]
+      summary: Retrieve an organization
+      description: >
+        Returns an organization based on the ID.
+        Usable by admins.
+      security:
+        - cookieAuth: [ ]
+        - bearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: ID of organization to fetch
+          required: true
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Organization model
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Organization'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [ organizations ]
+      summary: Update organization
+      description: >
+        Only accessible to organization owners.
+        Used to add/subtract credits and update other organization data.
+      security:
+        - cookieAuth: [ ]
+        - bearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: Organization ID
+          required: true
+          schema:
+            type: number
+      requestBody:
+        description: Organization info payload
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                credits:
+                  type: number
+                  description: WARNING! A positive number will cause the credits to be added, a negative will deduct
+                invoiceNotes:
+                  type: string
+      responses:
+        '200':
+          description: Organization model
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Organization'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /organizations/{id}/subscriptions:
+    delete:
+      tags: [ organizations ]
+      summary: Cancels an organization subscription
+      description: Invoked by a user when it wants to cancel the (only) active credit subscription
+      security:
+        - cookieAuth: [ ]
+        - bearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: Organization ID
+          required: true
+          schema:
+            type: number
+      responses:
+        '204':
+          description: No content
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /organizations/{id}/purchases:
+    get:
+      tags: [ purchases ]
+      summary: List organization's transactions
+      security:
+        - cookieAuth: [ ]
+        - bearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: Organization ID
+          required: true
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Purchase model list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Purchase'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /organizations/{id}/purchases/{pid}:
+    get:
+      tags: [ purchases ]
+      summary: Retrieve transaction details
+      security:
+        - cookieAuth: [ ]
+        - bearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: Organization ID
+          required: true
+          schema:
+            type: number
+        - name: pid
+          in: path
+          description: Purchase ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Purchase model list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Purchase'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /organizations/{id}/purchases/packages/{pid}:
+    post:
+      tags: [ purchases ]
+      summary: Purchase a credits package
+      description: >
+        This creates a new payment object in the payment processing provider (PPP).
+        The return of this endpoint is an URL to the payment provider where the user can complete the payment.
+        Only after the provider confirms the payment's success (via webhook) will the credits be available.
+      security:
+        - cookieAuth: [ ]
+        - bearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: Organization ID
+          required: true
+          schema:
+            type: number
+        - name: pid
+          in: path
+          description: Package ID
+          required: true
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Payment processor checkout page url
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /organizations/{id}/purchases/subscriptions/{sid}:
+    post:
+      tags: [ purchases ]
+      summary: Purchase a subscription
+      description: >
+        This endpoint allows a user to start or change a subscription.
+        If the user has no valid mandate for recurring charges in the payment processing provider, the first payment
+        will require the user's consent. In this case the endpoint returns an URL.
+        Otherwise, if a valid mandate exists, everything happens on the backend and the user has to take no further action (response is 204).
+      security:
+        - cookieAuth: [ ]
+        - bearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: Organization ID
+          required: true
+          schema:
+            type: number
+        - name: sid
+          in: path
+          description: Subscription ID
+          required: true
+          schema:
+            type: number
+      responses:
+        '204':
+          description: No content
+        '200':
+          description: Payment processor checkout page url
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /organizations/{id}/purchases/method:
+    patch:
+      tags: [ purchases ]
+      summary: Update subscription payment
+      description:
+        This endpoint allows a user to update the payment method in use for the active subscription.
+        will require the user's consent. In this case the endpoint returns an URL.
+        It will update the mandateId on the backend for further use.
+      security:
+        - cookieAuth: [ ]
+        - bearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: Organization ID
+          required: true
+          schema:
+            type: number
+      responses:
+        '204':
+          description: No content
+        '200':
+          description: Payment processor checkout page url
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -387,7 +707,9 @@ paths:
       summary: Update user credits
       description: >
         Only accessible to admin users (user can't manage their own credits).
-        Used primarily to manage (add/subtract) user's credits.
+        Used exclusively to manage (add/subtract) user's credits.
+        By using this method of deducting credits directly via the user, the credits are in truth being deducted
+        from the user's active billing organization.
       security:
         - cookieAuth: [ ]
         - bearerAuth: [ ]
@@ -425,8 +747,39 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /users/{id}/organizations/{oid}:
+    put:
+      tags: [ users ]
+      summary: Set billing organization
+      description: Sets the user's active billing organization (from which credits will be deducted)
+      security:
+        - cookieAuth: [ ]
+        - bearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: User ID
+          required: true
+          schema:
+            type: number
+        - name: oid
+          in: path
+          description: Organization ID
+          required: true
+          schema:
+            type: number
+      responses:
+        '204':
+          description: No content
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /users/{id}/subscriptions:
     delete:
+      deprecated: true
       tags: [ users ]
       summary: Cancels a user subscription
       description: Called by the user when it wants to cancel the (only) active credit subscription
@@ -443,252 +796,6 @@ paths:
       responses:
         '204':
           description: No content
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-  /users/{id}/invoice-notes:
-    get:
-      tags: [ users ]
-      summary: User's invoice notes
-      description: >
-        Returns invoice data based on the ID.
-        Usable by the user to get information about itself or by admins to retrieve any user.
-      security:
-        - cookieAuth: [ ]
-        - bearerAuth: [ ]
-      parameters:
-        - name: id
-          in: path
-          description: ID of user to fetch
-          required: true
-          schema:
-            type: number
-      responses:
-        '200':
-          description: Invoice Notes model
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/InvoiceNotes'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-    patch:
-      tags: [ users ]
-      summary: Update invoice data
-      description: >
-        Used primarily to manage invoice data.
-      security:
-        - cookieAuth: [ ]
-        - bearerAuth: [ ]
-      parameters:
-        - name: id
-          in: path
-          description: User ID
-          required: true
-          schema:
-            type: number
-      requestBody:
-        description: User invoice notes
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InvoiceNotes'
-      responses:
-        '200':
-          description: User model
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/InvoiceNotes'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-  /purchases:
-    get:
-      tags: [ purchases ]
-      summary: List user's transactions
-      security:
-        - cookieAuth: [ ]
-        - bearerAuth: [ ]
-      responses:
-        '200':
-          description: Purchase model list
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Purchase'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-  /purchases/{id}:
-    get:
-      tags: [ purchases ]
-      summary: Retrieve transaction details
-      security:
-        - cookieAuth: [ ]
-        - bearerAuth: [ ]
-      parameters:
-        - name: id
-          in: path
-          description: Purchase ID
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Purchase model list
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/Purchase'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-  /purchases/packages/{id}:
-    post:
-      tags: [ purchases ]
-      summary: Purchase a credits package
-      description: >
-        This creates a new payment object in the payment processing provider (PPP).
-        The return of this endpoint is an URL to the payment provider where the user can complete the payment.
-        Only after the provider confirms the payment's success (via webhook) will the credits be available.
-      security:
-        - cookieAuth: [ ]
-        - bearerAuth: [ ]
-      parameters:
-        - name: id
-          in: path
-          description: Package ID
-          required: true
-          schema:
-            type: number
-      requestBody:
-        description: Organization ID
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                organizationId:
-                  type: number
-                  description: Organization ID
-      responses:
-        '200':
-          description: Payment processor checkout page url
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: string
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-  /purchases/subscriptions/{id}:
-    post:
-      tags: [ purchases ]
-      summary: Purchase a subscription
-      description: >
-        This endpoint allows a user to start or change a subscription.
-        If the user has no valid mandate for recurring charges in the payment processing provider, the first payment
-        will require the user's consent. In this case the endpoint returns an URL.
-        Otherwise, if a valid mandate exists, everything happens on the backend and the user has to take no further action (response is 204).
-      security:
-        - cookieAuth: [ ]
-        - bearerAuth: [ ]
-      parameters:
-        - name: id
-          in: path
-          description: Subscription ID
-          required: true
-          schema:
-            type: number
-      requestBody:
-        description: Organization ID
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                organizationId:
-                  type: number
-                  description: Organization ID
-      responses:
-        '204':
-          description: No content
-        '200':
-          description: Payment processor checkout page url
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: string
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-  /purchases/subscriptions/:
-    patch:
-      tags: [ purchases ]
-      summary: Update subscription payment
-      description:
-        This endpoint allows a user to update the payment method in use for the active subscription.
-        will require the user's consent. In this case the endpoint returns an URL.
-        It will update the mandateId on the backend for further use.
-      security:
-        - cookieAuth: [ ]
-        - bearerAuth: [ ]
-      responses:
-        '204':
-          description: No content
-        '200':
-          description: Payment processor checkout page url
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: string
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -768,7 +875,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
   /webhooks/update_payment_method:
-    patch:
+    post:
       tags: [ webhooks ]
       summary: Payment Update webhook
       description: Called by the payment processing provider on subscription payment method changes.
@@ -817,6 +924,19 @@ paths:
           $ref: '#/components/responses/Unauthorized'
 components:
   schemas:
+    Organization:
+      type: object
+      properties:
+        id:
+          type: number
+        credits:
+          type: number
+        subscriptionId:
+          type: string
+        nextPaymentDate:
+          type: string
+        invoiceNotes:
+          type: string
     User:
       type: object
       properties:

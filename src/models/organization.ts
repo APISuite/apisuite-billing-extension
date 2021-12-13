@@ -3,40 +3,21 @@ import { Optional } from '../types'
 import log from '../log'
 import { dbErrorParser } from './errors'
 
-const TABLE = 'users'
+const TABLE = 'organizations'
 
-export interface User {
+export interface Organization {
   id: number
   credits: number
   subscriptionId: number | null
   ppCustomerId: string | null
-  ppMandateId: string | null
   ppSubscriptionId: string | null
   invoiceNotes: string | null
-  billingOrganizationId: number | null
 }
 
-export type UserBase = Omit<User, 'ppCustomerId' | 'ppMandateId' | 'ppSubscriptionId'>
-export type UserUpdate = Omit<Optional<User>, 'id'>
+export type OrganizationBase = Pick<Organization, 'id' | 'credits'>
+export type OrganizationUpdate = Omit<Optional<Organization>, 'id'>
 
-const getOrBootstrapUser = async (trx: OptTransaction, userID: number): Promise<User> => {
-  const _db = trx ? trx : db
-  const user = await findById(trx, userID)
-  if (user) return user
-
-  const rows = await _db
-    .insert({
-      id: userID,
-    })
-    .into(TABLE)
-    .onConflict('id')
-    .ignore()
-    .returning('*')
-
-  return rows[0]
-}
-
-const findById = async(trx: OptTransaction, id: number): Promise<User | null> => {
+const findById = async(trx: OptTransaction, id: number): Promise<Organization | null> => {
   const _db = trx ? trx : db
 
   const rows = await _db
@@ -51,11 +32,11 @@ const findById = async(trx: OptTransaction, id: number): Promise<User | null> =>
   return null
 }
 
-const create = async (trx: OptTransaction, user: UserBase): Promise<User> => {
+const create = async (trx: OptTransaction, org: OrganizationBase): Promise<Organization> => {
   const _db = trx ? trx : db
 
   const rows = await _db
-    .insert(user)
+    .insert(org)
     .into(TABLE)
     .returning('*')
     .catch((err) => {
@@ -66,18 +47,22 @@ const create = async (trx: OptTransaction, user: UserBase): Promise<User> => {
   return rows[0]
 }
 
-const update = async (trx: OptTransaction, id: number, user: UserUpdate): Promise<User> => {
+const update = async (trx: OptTransaction, id: number, org: OrganizationUpdate): Promise<Organization> => {
   const _db = trx ? trx : db
 
   const rows = await _db(TABLE)
-    .update(user)
+    .update(org)
     .where('id', id)
     .returning('*')
+    .catch((err) => {
+      log.error(err)
+      throw dbErrorParser(err)
+    })
 
   return rows[0]
 }
 
-const incrementCredits = async (trx: OptTransaction, id: number, amount: number): Promise<number> => {
+const updateCredits = async (trx: OptTransaction, id: number, amount: number): Promise<number> => {
   const _db = trx ? trx : db
 
   const rows = await _db(TABLE)
@@ -88,7 +73,7 @@ const incrementCredits = async (trx: OptTransaction, id: number, amount: number)
   return rows[0].credits
 }
 
-const findByPPSubscriptionId = async(trx: OptTransaction, subscriptionId: string): Promise<User | null> => {
+const findByPPSubscriptionId = async(trx: OptTransaction, subscriptionId: string): Promise<Organization | null> => {
   const _db = trx ? trx : db
 
   const rows = await _db
@@ -114,11 +99,10 @@ const del = async (trx: OptTransaction, id: number): Promise<number> => {
 }
 
 export {
-  getOrBootstrapUser,
   findById,
   create,
   update,
   del,
-  incrementCredits,
+  updateCredits,
   findByPPSubscriptionId,
 }

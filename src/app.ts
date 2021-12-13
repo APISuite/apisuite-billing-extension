@@ -16,10 +16,10 @@ import {
   HealthController,
   WebhooksController,
   PackagesController,
-  PurchasesController,
   SubscriptionsController,
   SettingsController,
   NotFoundError,
+  OrganizationsController,
 } from './controllers'
 
 export default class App {
@@ -73,8 +73,8 @@ export default class App {
     return [
       new HealthController(),
       new UsersController(),
+      new OrganizationsController(),
       new PackagesController(),
-      new PurchasesController(),
       new SubscriptionsController(),
       new SettingsController(),
       new WebhooksController(),
