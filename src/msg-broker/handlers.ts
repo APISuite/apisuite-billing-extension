@@ -1,9 +1,23 @@
 import log from '../log'
 import { db } from '../db'
+import config from '../config'
 import {
   organization as orgsRepo,
 } from '../models'
 import { cancelSubscription } from '../payment-processing'
+
+export const handleOrganizationCreate = async (orgId: number): Promise<void> => {
+  if (!config.get('autoSyncOrganizations')) return
+
+  try {
+    await orgsRepo.create(null, {
+      id: orgId,
+      credits: 0,
+    })
+  } catch(err) {
+    log.error(err, '[handleOrganizationDelete]')
+  }
+}
 
 export const handleOrganizationDelete = async (orgId: number): Promise<void> => {
   const trx = await db.transaction()

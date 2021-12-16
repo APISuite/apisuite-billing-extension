@@ -1,7 +1,7 @@
 import amqplib from 'amqplib'
 import log from '../log'
 import { routingKeys } from './types'
-import { handleOrganizationDelete } from './handlers'
+import { handleOrganizationCreate, handleOrganizationDelete } from './handlers'
 
 export const onMessage = (data: amqplib.ConsumeMessage | null): void => {
   if (!data || !data.fields || !data.fields.routingKey) {
@@ -13,6 +13,14 @@ export const onMessage = (data: amqplib.ConsumeMessage | null): void => {
     const msg = JSON.parse(data.content.toString())
 
     switch (data.fields.routingKey) {
+      case routingKeys.ORG_CREATED: {
+        if (!msg || !msg.organization_id) {
+          log.warn('could not create organization', msg)
+          break
+        }
+        handleOrganizationCreate(msg.organization_id).catch()
+        break
+      }
       case routingKeys.ORG_DELETED: {
         if (!msg || !msg.organization_id) {
           log.warn('could not delete organization', msg)

@@ -17,6 +17,12 @@ export const schema = {
     default: 'debug',
     env: 'LOG_LEVEL',
   },
+  autoSyncOrganizations: {
+    doc: 'Automatically create organizations in this backend database as they are created in the core',
+    format: Boolean,
+    default: false,
+    env: 'SYNC_ORGANIZATIONS',
+  },
   cors: {
     origin: {
       doc: 'Sets the Access-Control-Allow-Origin header value. This should usually be the portal URL.',
