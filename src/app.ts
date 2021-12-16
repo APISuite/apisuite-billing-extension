@@ -50,11 +50,11 @@ export default class App {
   }
 
   private setupSystemRoutes(): void {
-    this.app.use('/', (req: Request, res: Response) => {
+    this.app.get('/', (req: Request, res: Response) => {
       res.json({ version })
     })
 
-    this.app.use('*', (req: Request, res: Response, next: NextFunction) => {
+    this.app.all('*', (req: Request, res: Response, next: NextFunction) => {
       next(new NotFoundError('route'))
     })
   }
