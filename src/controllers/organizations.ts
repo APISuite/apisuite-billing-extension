@@ -1,10 +1,11 @@
 import { NextFunction, Request, Response, Router } from 'express'
+import { decorateRouter } from '@awaitjs/express'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController, responseBase } from './base'
 import { organization as orgsRepo } from '../models'
-import { authenticated, asyncWrap as aw, isAdmin, validator, isOrgOwner, Introspection } from '../middleware'
+import { authenticated, isAdmin, validate, isOrgOwner, Introspection } from '../middleware'
 import { cancelSubscription, getSubscriptionNextPaymentDate } from '../payment-processing'
-import { body, ValidationChain } from 'express-validator'
+import { body, param, ValidationChain } from 'express-validator'
 import { NotFoundError } from './errors'
 import { OrgPurchasesController } from './organizations.purchases'
 
@@ -12,16 +13,44 @@ export class OrganizationsController implements BaseController {
   private readonly path = '/organizations'
 
   public getRouter(): Router {
-    const router = Router()
-    router.post(this.path, authenticated, isAdmin, this.createOrgValidation, validator, aw(this.createOrganization))
-    router.get(`${this.path}/:id`, authenticated, isAdmin, aw(this.getOrganizationDetails))
-    router.delete(`${this.path}/:id/subscriptions`, authenticated, isAdmin, aw(this.cancelSubscription))
-    router.patch(`${this.path}/:id`, authenticated, isOrgOwner, this.updOrgValidation, validator, aw(this.updateOrganization))
+    const router = decorateRouter(Router())
+
+    router.postAsync(
+      this.path,
+      authenticated, isAdmin,
+      validate(this.createOrgValidation),
+      this.createOrganization,
+    )
+
+    router.getAsync(
+      `${this.path}/:id`,
+      authenticated, isAdmin,
+      validate(this.idValidation),
+      this.getOrganizationDetails,
+    )
+
+    router.deleteAsync(
+      `${this.path}/:id/subscriptions`,
+      authenticated, isAdmin,
+      validate(this.idValidation),
+      this.cancelSubscription,
+    )
+
+    router.patch(
+      `${this.path}/:id`,
+      authenticated, isOrgOwner,
+      validate(this.updOrgValidation),
+      this.updateOrganization,
+    )
 
     const or = new OrgPurchasesController()
     router.use(`${this.path}/:id/purchases`, authenticated, isOrgOwner, or.getRouter())
     return router
   }
+
+  readonly idValidation: ValidationChain[] = [
+    param('id').isNumeric(),
+  ]
 
   readonly createOrgValidation: ValidationChain[] = [
     body('id').isNumeric(),
@@ -29,6 +58,7 @@ export class OrganizationsController implements BaseController {
   ]
 
   readonly updOrgValidation: ValidationChain[] = [
+    ...this.idValidation,
     body('credits').optional().isNumeric(),
     body('invoiceNotes').optional().isString(),
   ]
@@ -41,7 +71,6 @@ export class OrganizationsController implements BaseController {
 
     return res.status(201).json(responseBase(org))
   }
-
 
   public getOrganizationDetails = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
     const org = await orgsRepo.findById(null, Number(req.params.id))

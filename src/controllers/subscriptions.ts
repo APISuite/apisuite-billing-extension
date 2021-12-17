@@ -1,11 +1,12 @@
 import { NextFunction, Request, Response, Router } from 'express'
+import { decorateRouter } from '@awaitjs/express'
 import { db, SortOrder } from '../db'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController, responseBase } from './base'
 import { NotFoundError } from './errors'
 import { subscription as subscriptionsRepo } from '../models'
-import { authenticated, isAdmin, asyncWrap as aw, validator } from '../middleware'
-import { body, query, ValidationChain } from 'express-validator'
+import { authenticated, isAdmin, validate } from '../middleware'
+import { body, param, query, ValidationChain } from 'express-validator'
 import { SortFields } from '../models/subscription'
 import config from "../config"
 import { applyVAT } from "../vat"
@@ -14,44 +15,55 @@ export class SubscriptionsController implements BaseController {
   private readonly path = '/subscriptions'
 
   public getRouter(): Router {
-    const router = Router()
+    const router = decorateRouter(Router())
 
-    router.get(
+    router.getAsync(
       this.path,
       authenticated,
-      this.subscriptionsParamsValidation,
-      validator,
-      aw(this.getSubscriptions))
+      validate(this.subscriptionsParamsValidation),
+      this.getSubscriptions,
+    )
 
-    router.get(
+    router.getAsync(
       `${this.path}/:id`,
       authenticated,
-      aw(this.getSubscription))
+      validate(this.idValidation),
+      this.getSubscription,
+    )
 
-    router.post(
+    router.postAsync(
       this.path,
       authenticated,
       isAdmin,
-      this.subscriptionPayloadValidation,
-      validator,
-      aw(this.createSubscription))
+      validate(this.subscriptionPayloadValidation),
+      this.createSubscription,
+    )
 
-    router.put(
+    router.putAsync(
       `${this.path}/:id`,
       authenticated,
       isAdmin,
-      this.subscriptionPayloadValidation,
-      validator,
-      aw(this.updateSubscription))
+      validate([
+        ...this.idValidation,
+        ...this.subscriptionPayloadValidation,
+      ]),
+      this.updateSubscription,
+    )
 
-    router.delete(
+    router.deleteAsync(
       `${this.path}/:id`,
       authenticated,
       isAdmin,
-      aw(this.deleteSubscription))
+      validate(this.idValidation),
+      this.deleteSubscription,
+    )
 
     return router
   }
+
+  readonly idValidation: ValidationChain[] = [
+    param('id').isNumeric(),
+  ]
 
   readonly subscriptionsParamsValidation: ValidationChain[] = [
     query('sort_by').optional().isIn(['name', 'price', 'credits']),

@@ -1,5 +1,6 @@
 import log from '../log'
 import { NextFunction, Request, Response, Router } from 'express'
+import { decorateRouter } from '@awaitjs/express'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController, responseBase } from './base'
 import { sendPaymentConfirmation } from '../email'
@@ -21,7 +22,6 @@ import {
   updateSubscription,
   VerifiedPayment,
 } from '../payment-processing'
-import { asyncWrap as aw } from '../middleware'
 import { db } from '../db'
 import { Transaction, TransactionType } from '../models/transaction'
 import moment from "moment"
@@ -30,11 +30,11 @@ export class WebhooksController implements BaseController {
   private readonly path = '/webhooks'
 
   public getRouter(): Router {
-    const router = Router()
-    router.post(`${this.path}/subscription`, aw(this.subscriptionPaymentSuccess))
-    router.post(`${this.path}/subscription_first`, aw(this.subscriptionFirstPaymentHandler))
-    router.post(`${this.path}/topup`, aw(this.topUpPaymentWebhookHandler))
-    router.post(`${this.path}/update_payment_method`, aw(this.updatePaymentInformationHandler))
+    const router = decorateRouter(Router())
+    router.postAsync(`${this.path}/subscription`, this.subscriptionPaymentSuccess)
+    router.postAsync(`${this.path}/subscription_first`, this.subscriptionFirstPaymentHandler)
+    router.postAsync(`${this.path}/topup`, this.topUpPaymentWebhookHandler)
+    router.postAsync(`${this.path}/update_payment_method`, this.updatePaymentInformationHandler)
     return router
   }
 
@@ -68,43 +68,46 @@ export class WebhooksController implements BaseController {
     }
 
     const payment = await verifySubscriptionPaymentSuccess(req.body.id)
-    if (payment) {
-      const trx = await db.transaction()
-      try {
-        const org = await orgsRepo.findByPPSubscriptionId(trx, payment.subscriptionId)
-        if (!org) throw new Error('invalid subscription organization')
-
-        const subId = org.subscriptionId
-        if (!subId) throw new Error('invalid subscription id')
-
-        const subscription = await subscriptionsRepo.findById(trx, subId)
-        if (!subscription) throw new Error('invalid subscription')
-
-        const [, transaction] = await Promise.all([
-          await orgsRepo.updateCredits(trx, org.id, subscription.credits),
-          await txnRepo.create(trx, {
-            userId: null,
-            organizationId: org.id,
-            paymentId: req.body.id,
-            credits: subscription.credits,
-            verified: true,
-            type: TransactionType.Subscription,
-            amount: payment.amount,
-          }),
-        ])
-
-        await trx.commit()
-
-        if (transaction) {
-          this.sendConfirmationEmail('Subscription payment', transaction, payment)
-        }
-      } catch (err) {
-        await trx.rollback()
-        next(err)
-      }
+    if (!payment) {
+      log.info(`subscriptionPaymentSuccess: payment ${req.body.id} not verified as successful`)
+      return res.status(200).json(responseBase('ok'))
     }
 
-    return res.status(200).json(responseBase('ok'))
+    const trx = await db.transaction()
+    try {
+      const org = await orgsRepo.findByPPSubscriptionId(trx, payment.subscriptionId)
+      if (!org) throw new Error('invalid subscription organization')
+
+      const subId = org.subscriptionId
+      if (!subId) throw new Error('invalid subscription id')
+
+      const subscription = await subscriptionsRepo.findById(trx, subId)
+      if (!subscription) throw new Error('invalid subscription')
+
+      const [, transaction] = await Promise.all([
+        await orgsRepo.updateCredits(trx, org.id, subscription.credits),
+        await txnRepo.create(trx, {
+          userId: null,
+          organizationId: org.id,
+          paymentId: req.body.id,
+          credits: subscription.credits,
+          verified: true,
+          type: TransactionType.Subscription,
+          amount: payment.amount,
+        }),
+      ])
+
+      await trx.commit()
+
+      res.status(200).json(responseBase('ok'))
+
+      if (transaction) {
+        this.sendConfirmationEmail('Subscription payment', transaction, payment)
+      }
+    } catch (err) {
+      await trx.rollback()
+      next(err)
+    }
   }
 
   public subscriptionFirstPaymentHandler = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {

@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response, Router } from 'express'
+import { decorateRouter } from '@awaitjs/express'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController, responseBase } from './base'
 import {
@@ -8,30 +9,64 @@ import {
 import {
   authenticated,
   isSelf,
-  asyncWrap as aw,
   isAdmin,
-  validator,
+  validate,
   isSelfOrAdmin,
   Introspection,
 } from '../middleware/'
 import { cancelSubscription, getSubscriptionNextPaymentDate } from '../payment-processing'
-import { body, ValidationChain } from 'express-validator'
+import { body, param, ValidationChain } from 'express-validator'
 import { ForbiddenError, NotFoundError, UserInputError } from './errors'
 
 export class UsersController implements BaseController {
   private readonly path = '/users'
 
   public getRouter(): Router {
-    const router = Router()
-    router.get(`${this.path}/:id`, authenticated, isSelfOrAdmin, aw(this.getUserDetails))
-    router.patch(`${this.path}/:id`, authenticated, isAdmin, this.updateUserValidation, validator, aw(this.updateUser))
-    router.put(`${this.path}/:id/organizations/:oid`, authenticated, isSelf, aw(this.setBillingOrganization))
-    router.delete(`${this.path}/:id/subscriptions`, authenticated, isSelf, aw(this.cancelSubscription))
+    const router = decorateRouter(Router())
+
+    router.getAsync(
+      `${this.path}/:id`,
+      authenticated, isSelfOrAdmin,
+      validate(this.idValidation),
+      this.getUserDetails,
+    )
+
+    router.patchAsync(
+      `${this.path}/:id`,
+      authenticated, isAdmin,
+      validate(this.updateValidation),
+      this.updateUser,
+    )
+
+    router.putAsync(
+      `${this.path}/:id/organizations/:oid`,
+      authenticated, isSelf,
+      validate(this.setBillingOrgValidation),
+      this.setBillingOrganization,
+    )
+
+    router.deleteAsync(
+      `${this.path}/:id/subscriptions`,
+      authenticated, isSelf,
+      validate(this.idValidation),
+      this.cancelSubscription,
+    )
+
     return router
   }
 
-  readonly updateUserValidation: ValidationChain[] = [
+  readonly idValidation: ValidationChain[] = [
+    param('id').isNumeric(),
+  ]
+
+  readonly updateValidation: ValidationChain[] = [
+    ...this.idValidation,
     body('credits').optional().isNumeric(),
+  ]
+
+  readonly setBillingOrgValidation: ValidationChain[] = [
+    ...this.idValidation,
+    param('oid').isNumeric(),
   ]
 
   public getUserDetails = async (req: Request, res: Response): AsyncHandlerResponse => {

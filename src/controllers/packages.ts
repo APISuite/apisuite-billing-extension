@@ -1,11 +1,12 @@
 import { NextFunction, Request, Response, Router } from 'express'
+import { decorateRouter } from '@awaitjs/express'
 import { db, SortOrder } from '../db'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController, responseBase } from './base'
 import { NotFoundError } from './errors'
 import { pkg as pkgsRepo } from '../models'
-import { asyncWrap as aw, authenticated, isAdmin, validator } from '../middleware'
-import { query, body, ValidationChain } from 'express-validator'
+import { authenticated, isAdmin, validate } from '../middleware'
+import { query, body, ValidationChain, param } from 'express-validator'
 import { SortFields } from '../models/package'
 import config from '../config'
 import { applyVAT } from '../vat'
@@ -14,43 +15,54 @@ export class PackagesController implements BaseController {
   private readonly path = '/packages'
 
   public getRouter(): Router {
-    const router = Router()
+    const router = decorateRouter(Router())
 
-    router.get(
+    router.getAsync(
       this.path,
       authenticated,
-      this.packagesParamsValidations,
-      validator,
-      aw(this.getPackages))
+      validate(this.packagesParamsValidations),
+      this.getPackages,
+    )
 
-    router.get(
+    router.getAsync(
       `${this.path}/:id`,
       authenticated,
-      aw(this.getPackage))
+      validate(this.idValidation),
+      this.getPackage,
+    )
 
-    router.post(
+    router.postAsync(
       this.path,
       authenticated,
       isAdmin,
-      this.packagePayloadValidation,
-      validator,
-      aw(this.createPackage))
+      validate(this.packagePayloadValidation),
+      this.createPackage,
+    )
 
-    router.put(
+    router.putAsync(
       `${this.path}/:id`,
       authenticated,
       isAdmin,
-      this.packagePayloadValidation,
-      validator,
-      aw(this.updatePackage))
+      validate([
+        ...this.idValidation,
+        ...this.packagePayloadValidation,
+      ]),
+      this.updatePackage,
+    )
 
-    router.delete(`${this.path}/:id`,
+    router.deleteAsync(`${this.path}/:id`,
       authenticated,
       isAdmin,
-      aw(this.deletePackage))
+      validate(this.idValidation),
+      this.deletePackage,
+    )
 
     return router
   }
+
+  readonly idValidation: ValidationChain[] = [
+    param('id').isNumeric(),
+  ]
 
   readonly packagesParamsValidations: ValidationChain[] = [
     query('sort_by').optional().isIn(['name', 'price', 'credits']),
@@ -84,10 +96,7 @@ export class PackagesController implements BaseController {
 
   public getPackage = async (req: Request, res: Response, next: NextFunction): AsyncHandlerResponse => {
     const pkg = await pkgsRepo.findById(null, Number(req.params.id))
-
-    if (!pkg) {
-      return next(new NotFoundError('package'))
-    }
+    if (!pkg) return next(new NotFoundError('package'))
 
     const vat = config.get('vatRate')
     if (vat) {

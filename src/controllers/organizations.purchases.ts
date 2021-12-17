@@ -1,9 +1,10 @@
 import { NextFunction, Request, Response, Router } from 'express'
+import { decorateRouter } from '@awaitjs/express'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController, responseBase } from './base'
 import config from '../config'
 import { NotFoundError, PurchasePreconditionError, ForbiddenError } from './errors'
-import { asyncWrap as aw, Introspection } from '../middleware'
+import { Introspection, validate } from '../middleware'
 import {
   pkg as pkgsRepo,
   subscription as subscriptionsRepo,
@@ -22,6 +23,7 @@ import {
 import { TransactionType } from '../models/transaction'
 import { getPaymentRedirectURL } from '../core'
 import { applyVAT } from '../vat'
+import { param, ValidationChain } from "express-validator"
 
 function extractUserOrgRole(orgId: number, authUser: Introspection) {
   const org = authUser.organizations.find((o) => o.id === orgId)
@@ -30,16 +32,21 @@ function extractUserOrgRole(orgId: number, authUser: Introspection) {
 
 export class OrgPurchasesController implements BaseController {
   public getRouter(): Router {
-    const router = Router({
+    const router = decorateRouter(Router({
       mergeParams: true,
-    })
-    router.get('/', aw(this.listPurchases))
-    router.get('/:pid', aw(this.getPurchase))
-    router.post('/packages/:pid', aw(this.purchasePackage))
-    router.post('/subscriptions/:sid', aw(this.purchaseSubscription))
-    router.patch('/method', aw(this.updatePaymentInformation))
+    }))
+
+    router.getAsync('/', this.listPurchases)
+    router.getAsync('/:pid', validate(this.idValidation('pid')), this.getPurchase)
+    router.postAsync('/packages/:pid', validate(this.idValidation('pid')), this.purchasePackage)
+    router.postAsync('/subscriptions/:sid', validate(this.idValidation('sid')), this.purchaseSubscription)
+    router.patchAsync('/method', this.updatePaymentInformation)
     return router
   }
+
+  readonly idValidation = (idStr: string): ValidationChain[] => ([
+    param(idStr).isNumeric(),
+  ])
 
   public listPurchases = async (req: Request, res: Response): AsyncHandlerResponse => {
     const org = await orgsRepo.findById(null, Number(req.params.id))

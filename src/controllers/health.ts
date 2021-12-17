@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response, Router } from 'express'
+import { decorateRouter } from '@awaitjs/express'
 import { AsyncHandlerResponse } from '../types'
 import { BaseController } from './base'
 import { db } from '../db'
@@ -17,8 +18,8 @@ export class HealthController implements BaseController {
   private readonly path = '/health'
 
   public getRouter(): Router {
-    const router = Router()
-    router.get(`${this.path}/`, this.getHealth)
+    const router = decorateRouter(Router())
+    router.getAsync(`${this.path}/`, this.getHealth)
     return router
   }
 

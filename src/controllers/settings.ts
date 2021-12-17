@@ -1,19 +1,20 @@
 import { Request, Response, Router } from 'express'
+import { decorateRouter } from '@awaitjs/express'
 import { AsyncHandlerResponse } from '../types'
 import config from '../config'
 import { BaseController, responseBase } from './base'
-import { asyncWrap as aw, authenticated } from '../middleware'
+import { authenticated } from '../middleware'
 
 export class SettingsController implements BaseController {
   private readonly path = '/settings'
 
   public getRouter(): Router {
-    const router = Router()
+    const router = decorateRouter(Router())
 
-    router.get(
+    router.getAsync(
       this.path,
       authenticated,
-      aw(this.getSettings))
+      this.getSettings)
 
     return router
   }
