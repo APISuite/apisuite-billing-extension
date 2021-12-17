@@ -24,14 +24,14 @@ export class OrganizationsController implements BaseController {
 
     router.getAsync(
       `${this.path}/:id`,
-      authenticated, isAdmin,
+      authenticated, isOrgOwner,
       validate(this.idValidation),
       this.getOrganizationDetails,
     )
 
     router.deleteAsync(
       `${this.path}/:id/subscriptions`,
-      authenticated, isAdmin,
+      authenticated, isOrgOwner,
       validate(this.idValidation),
       this.cancelSubscription,
     )
