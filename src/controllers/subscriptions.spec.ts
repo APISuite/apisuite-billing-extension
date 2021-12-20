@@ -11,7 +11,9 @@ import { db } from '../db'
 describe('subscriptions controller', () => {
   const injectUser = (req: Request, res: Response, next: NextFunction) => {
     res.locals.authenticatedUser = {
-      role: { name: 'admin' },
+      organizations: [
+        { id: 1, role: { id: 1, name: 'admin' } },
+      ],
     }
     next()
   }

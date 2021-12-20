@@ -230,7 +230,12 @@ describe('error handler middleware', () => {
     it('should return 403 when user role is not "admin"', (done) => {
       const testApp = express()
         .use((req, res, next) => {
-          res.locals.authenticatedUser = { role: { name: 'developer' } }
+          res.locals.authenticatedUser = {
+            organizations: [
+              { id: 2, role: { id: 2, name: 'organizationOwner' } },
+              { id: 3, role: { id: 3, name: 'developer' } },
+            ],
+          }
           next()
         })
         .get('/test/:id', isAdmin, (req, res) => {
@@ -248,7 +253,13 @@ describe('error handler middleware', () => {
     it('should continue to route when there user is admin', (done) => {
       const testApp = express()
         .use((req, res, next) => {
-          res.locals.authenticatedUser = { role: { name: 'admin' } }
+          res.locals.authenticatedUser = {
+            organizations: [
+              { id: 1, role: { id: 1, name: 'admin' } },
+              { id: 2, role: { id: 2, name: 'organizationOwner' } },
+              { id: 3, role: { id: 3, name: 'developer' } },
+            ],
+          }
           next()
         })
         .get('/test/:id', isAdmin, (req, res) => {
@@ -267,7 +278,12 @@ describe('error handler middleware', () => {
     it('should return 403 when user role is not "admin" and not self', (done) => {
       const testApp = express()
         .use((req, res, next) => {
-          res.locals.authenticatedUser = { id: 1, role: { name: 'developer' } }
+          res.locals.authenticatedUser = {
+            id: 1,
+            organizations: [
+              { id: 3, role: { id: 3, name: 'developer' } },
+            ],
+          }
           next()
         })
         .get('/test/:id', isSelfOrAdmin, (req, res) => {
@@ -285,7 +301,13 @@ describe('error handler middleware', () => {
     it('should continue to route when there user is admin', (done) => {
       const testApp = express()
         .use((req, res, next) => {
-          res.locals.authenticatedUser = { role: { name: 'admin' } }
+          res.locals.authenticatedUser = {
+            organizations: [
+              { id: 1, role: { id: 1, name: 'admin' } },
+              { id: 2, role: { id: 2, name: 'organizationOwner' } },
+              { id: 3, role: { id: 3, name: 'developer' } },
+            ],
+          }
           next()
         })
         .get('/test/:id', isSelfOrAdmin, (req, res) => {

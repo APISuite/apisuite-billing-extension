@@ -73,7 +73,10 @@ export interface Introspection {
 }
 
 const isSelfCheck = (req: Request, res: Response) => Number(res.locals.authenticatedUser.id) === Number(req.params.id)
-export const isAdminCheck = (res: Response) => res.locals.authenticatedUser.role && res.locals.authenticatedUser.role.name === 'admin'
+export const isAdminCheck = (res: Response) => {
+  const introspect: Introspection = res.locals.authenticatedUser
+  return introspect.organizations.some((o) => o.role.name === 'admin')
+}
 
 export const isSelf = (req: Request, res: Response, next: NextFunction): HandlerResponse => {
   if (isSelfCheck(req, res)) {

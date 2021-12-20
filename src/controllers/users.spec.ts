@@ -242,10 +242,7 @@ describe('users controller', () => {
         .use((req: Request, res: Response, next: NextFunction) => {
           res.locals.authenticatedUser = {
             id: 1,
-            role: { name: 'developer' },
             organizations: [
-              { id: 1, role: { id: 1, name: 'admin' } },
-              { id: 2, role: { id: 2, name: 'organizationOwner' } },
               { id: 3, role: { id: 3, name: 'developer' } },
             ],
           }
@@ -266,15 +263,13 @@ describe('users controller', () => {
         .catch((err: Error) => done(err))
     })
 
-    it('should return 403 when user tries to set a billing org when has no access to it', (done) => {
+    it('should return 403 when non admin user tries to set a billing org when has no access to it', (done) => {
       const app = express()
         .use((req: Request, res: Response, next: NextFunction) => {
           res.locals.authenticatedUser = {
             id: 1,
             role: { name: 'developer' },
             organizations: [
-              { id: 1, role: { id: 1, name: 'admin' } },
-              { id: 2, role: { id: 2, name: 'organizationOwner' } },
               { id: 3, role: { id: 3, name: 'developer' } },
             ],
           }
