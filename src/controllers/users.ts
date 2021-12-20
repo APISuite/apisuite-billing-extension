@@ -40,7 +40,7 @@ export class UsersController implements BaseController {
 
     router.putAsync(
       `${this.path}/:id/organizations/:oid`,
-      authenticated, isSelf,
+      authenticated, isSelfOrAdmin,
       validate(this.setBillingOrgValidation),
       this.setBillingOrganization,
     )
