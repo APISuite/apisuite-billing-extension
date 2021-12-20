@@ -237,30 +237,63 @@ describe('users controller', () => {
       .use(controller.getRouter())
       .use(error)
 
-    // FIXME fix these tests
-    // it('should return 403 when user tries to update other users data', (done) => {
-    //   request(testApp)
-    //     .put('/users/999/organizations/1')
-    //     .expect('Content-Type', /json/)
-    //     .expect(403)
-    //     .then((res) => {
-    //       expect(res.body.errors).to.be.an('array')
-    //       done()
-    //     })
-    //     .catch((err: Error) => done(err))
-    // })
+    it('should return 403 when non admin user tries to update other users data', (done) => {
+      const app = express()
+        .use((req: Request, res: Response, next: NextFunction) => {
+          res.locals.authenticatedUser = {
+            id: 1,
+            role: { name: 'developer' },
+            organizations: [
+              { id: 1, role: { id: 1, name: 'admin' } },
+              { id: 2, role: { id: 2, name: 'organizationOwner' } },
+              { id: 3, role: { id: 3, name: 'developer' } },
+            ],
+          }
+          next()
+        })
+        .use(express.json())
+        .use(controller.getRouter())
+        .use(error)
 
-    // it('should return 403 when user tries to set a billing org when has no access to it', (done) => {
-    //   request(testApp)
-    //     .put('/users/1/organizations/999')
-    //     .expect('Content-Type', /json/)
-    //     .expect(403)
-    //     .then((res) => {
-    //       expect(res.body.errors).to.be.an('array')
-    //       done()
-    //     })
-    //     .catch((err: Error) => done(err))
-    // })
+      request(app)
+        .put('/users/999/organizations/1')
+        .expect('Content-Type', /json/)
+        .expect(403)
+        .then((res) => {
+          expect(res.body.errors).to.be.an('array')
+          done()
+        })
+        .catch((err: Error) => done(err))
+    })
+
+    it('should return 403 when user tries to set a billing org when has no access to it', (done) => {
+      const app = express()
+        .use((req: Request, res: Response, next: NextFunction) => {
+          res.locals.authenticatedUser = {
+            id: 1,
+            role: { name: 'developer' },
+            organizations: [
+              { id: 1, role: { id: 1, name: 'admin' } },
+              { id: 2, role: { id: 2, name: 'organizationOwner' } },
+              { id: 3, role: { id: 3, name: 'developer' } },
+            ],
+          }
+          next()
+        })
+        .use(express.json())
+        .use(controller.getRouter())
+        .use(error)
+
+      request(app)
+        .put('/users/1/organizations/999')
+        .expect('Content-Type', /json/)
+        .expect(403)
+        .then((res) => {
+          expect(res.body.errors).to.be.an('array')
+          done()
+        })
+        .catch((err: Error) => done(err))
+    })
 
     it('should return 404 when organization does not exist', (done) => {
       sinon.stub(orgsRepo, 'findById').resolves()
