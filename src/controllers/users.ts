@@ -17,6 +17,7 @@ import {
 import { cancelSubscription, getSubscriptionNextPaymentDate } from '../payment-processing'
 import { body, param, ValidationChain } from 'express-validator'
 import { ForbiddenError, NotFoundError, UserInputError } from './errors'
+import { isAdminCheck } from '../middleware'
 
 export class UsersController implements BaseController {
   private readonly path = '/users'
@@ -116,8 +117,10 @@ export class UsersController implements BaseController {
     const userID = Number(req.params.id)
     const organizationID = Number(req.params.oid)
 
-    if (userID !== authUser.id) return next(new ForbiddenError())
-    if (!authUser.organizations.some((o) => o.id === organizationID)) return next(new ForbiddenError())
+    if (!isAdminCheck(res)) {
+      if (userID !== authUser.id) return next(new ForbiddenError())
+      if (!authUser.organizations.some((o) => o.id === organizationID)) return next(new ForbiddenError())
+    }
 
     const org = await orgsRepo.findById(null, organizationID)
     if (!org) return next(new NotFoundError('organization'))
