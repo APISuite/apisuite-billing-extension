@@ -1,6 +1,6 @@
 {
   "name": "apisuite-billing-extension",
-  "version": "2.2.1",
+  "version": "2.3.0",
   "description": "",
   "scripts": {
     "start": "ts-node dist/src/index.js",
