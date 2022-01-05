@@ -13,4 +13,6 @@ COPY --from=build_phase /usr/src/app/dist ./dist
 COPY --from=build_phase /usr/src/app/migrations ./migrations
 COPY src/email/templates/* /usr/src/app/templates/
 
+USER node
+
 ENTRYPOINT ["npm", "run"]
