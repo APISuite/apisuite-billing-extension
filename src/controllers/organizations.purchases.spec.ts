@@ -225,6 +225,42 @@ describe('organization purchases controller', () => {
   describe('purchase top up', () => {
     const testApp = prepareApp()
 
+    it('should return 404 when organization does not exist', (done) => {
+      sinon.stub(orgsRepo, 'findById').resolves()
+
+      request(testApp)
+        .post('/organizations/1/purchases/packages/333')
+        .expect('Content-Type', /json/)
+        .expect(404)
+        .then((res) => {
+          expect(res.body.errors).to.be.an('array')
+          done()
+        })
+        .catch((err: Error) => done(err))
+    })
+
+    it('should return 500 when core organization does not exist', (done) => {
+      sinon.stub(orgsRepo, 'findById').resolves({
+        id: 1,
+        credits: 100,
+        subscriptionId: null,
+        ppCustomerId: 'x-customer-id-123',
+        ppSubscriptionId: null,
+        invoiceNotes: null,
+      })
+      sinon.stub(core, 'getOrganizationData').resolves()
+
+      request(testApp)
+        .post('/organizations/1/purchases/packages/333')
+        .expect('Content-Type', /json/)
+        .expect(500)
+        .then((res) => {
+          expect(res.body.errors).to.be.an('array')
+          done()
+        })
+        .catch((err: Error) => done(err))
+    })
+
     it('should return 404 when plan does not exist', (done) => {
       sinon.stub(orgsRepo, 'findById').resolves({
         id: 1,
@@ -234,6 +270,7 @@ describe('organization purchases controller', () => {
         ppSubscriptionId: null,
         invoiceNotes: null,
       })
+      sinon.stub(core, 'getOrganizationData').resolves({ name: 'org', taxExempt: false })
       sinon.stub(pkgsRepo, 'findById').resolves(null)
 
       request(testApp)
@@ -257,6 +294,7 @@ describe('organization purchases controller', () => {
         ppSubscriptionId: null,
         invoiceNotes: null,
       })
+      sinon.stub(core, 'getOrganizationData').resolves({ name: 'org', taxExempt: false })
       sinon.stub(pkgsRepo, 'findById').resolves({
         id: 333,
         name: '5k creds',
@@ -287,6 +325,7 @@ describe('organization purchases controller', () => {
         ppSubscriptionId: null,
         invoiceNotes: null,
       })
+      sinon.stub(core, 'getOrganizationData').resolves({ name: 'org', taxExempt: false })
       sinon.stub(paymentProcessing, 'createCustomer').resolves('custmr-id')
       sinon.stub(orgsRepo, 'update').resolves()
       sinon.stub(pkgsRepo, 'findById').resolves({
@@ -322,6 +361,42 @@ describe('organization purchases controller', () => {
       periodicity: '1 month',
     }
 
+    it('should return 404 when organization does not exist', (done) => {
+      sinon.stub(orgsRepo, 'findById').resolves()
+
+      request(testApp)
+        .post('/organizations/1/purchases/subscriptions/99')
+        .expect('Content-Type', /json/)
+        .expect(404)
+        .then((res) => {
+          expect(res.body.errors).to.be.an('array')
+          done()
+        })
+        .catch((err: Error) => done(err))
+    })
+
+    it('should return 500 when core organization does not exist', (done) => {
+      sinon.stub(orgsRepo, 'findById').resolves({
+        id: 1,
+        credits: 100,
+        subscriptionId: null,
+        ppCustomerId: null,
+        ppSubscriptionId: null,
+        invoiceNotes: null,
+      })
+      sinon.stub(core, 'getOrganizationData').resolves()
+
+      request(testApp)
+        .post('/organizations/1/purchases/subscriptions/99')
+        .expect('Content-Type', /json/)
+        .expect(500)
+        .then((res) => {
+          expect(res.body.errors).to.be.an('array')
+          done()
+        })
+        .catch((err: Error) => done(err))
+    })
+
     it('should return 404 when subscription does not exist', (done) => {
       sinon.stub(orgsRepo, 'findById').resolves({
         id: 1,
@@ -331,6 +406,7 @@ describe('organization purchases controller', () => {
         ppSubscriptionId: null,
         invoiceNotes: null,
       })
+      sinon.stub(core, 'getOrganizationData').resolves({ name: 'org', taxExempt: false })
       sinon.stub(subscriptionsRepo, 'findById').resolves(null)
 
       request(testApp)
@@ -353,6 +429,7 @@ describe('organization purchases controller', () => {
         ppSubscriptionId: 'x-subscription-1234',
         invoiceNotes: null,
       })
+      sinon.stub(core, 'getOrganizationData').resolves({ name: 'org', taxExempt: false })
 
       request(testApp)
         .post('/organizations/1/purchases/subscriptions/99')
@@ -363,6 +440,7 @@ describe('organization purchases controller', () => {
     })
 
     it('should return 200 when first subscription payment is successfully created', (done) => {
+      sinon.stub(core, 'getOrganizationData').resolves({ name: 'org', taxExempt: false })
       sinon.stub(core, 'getPaymentRedirectURL').resolves(new URL('http://localhost:3000'))
       sinon.stub(orgsRepo, 'findById').resolves({
         id: 1,
@@ -391,6 +469,7 @@ describe('organization purchases controller', () => {
     })
 
     it('should return 200 when first subscription payment is successfully created (existing customer)', (done) => {
+      sinon.stub(core, 'getOrganizationData').resolves({ name: 'org', taxExempt: false })
       sinon.stub(core, 'getPaymentRedirectURL').resolves(new URL('http://localhost:3000'))
       sinon.stub(orgsRepo, 'findById').resolves({
         id: 1,
@@ -418,6 +497,7 @@ describe('organization purchases controller', () => {
     })
 
     it('should return 200 when first subscription payment is successfully created (existing customer) and organization ID in body', (done) => {
+      sinon.stub(core, 'getOrganizationData').resolves({ name: 'org', taxExempt: false })
       sinon.stub(core, 'getPaymentRedirectURL').resolves(new URL('http://localhost:3000'))
       sinon.stub(orgsRepo, 'findById').resolves({
         id: 1,
@@ -446,6 +526,7 @@ describe('organization purchases controller', () => {
     })
 
     it('should return 500 when subscription payment fails', (done) => {
+      sinon.stub(core, 'getOrganizationData').resolves({ name: 'org', taxExempt: false })
       sinon.stub(subscriptionsRepo, 'findById').resolves(mockSubscription)
       sinon.stub(orgsRepo, 'findById').resolves({
         id: 1,

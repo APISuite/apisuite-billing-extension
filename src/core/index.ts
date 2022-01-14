@@ -116,3 +116,32 @@ export const getPortalSettings = async (): Promise<CoreSettingsData|null> => {
 
   return null
 }
+
+interface CoreOrganizationData {
+  name: string
+  taxExempt: boolean
+}
+
+export const getOrganizationData = async (orgId: string|number): Promise<CoreOrganizationData|null> => {
+  const url = new URL(`/organizations/${orgId}`, config.get('apisuite.api')).href
+
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {},
+    })
+    if (!response || response.status !== 200) {
+      return null
+    }
+
+    const data = await response.json()
+    return {
+      name: data.name,
+      taxExempt: data.taxExempt,
+    }
+  } catch (err) {
+    log.error(err, '[getOrganizationData]')
+  }
+
+  return null
+}

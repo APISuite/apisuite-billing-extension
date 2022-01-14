@@ -21,7 +21,7 @@ import {
   getPaymentDetails,
 } from '../payment-processing'
 import { TransactionType } from '../models/transaction'
-import { getPaymentRedirectURL } from '../core'
+import { getOrganizationData, getPaymentRedirectURL } from '../core'
 import { applyVAT } from '../vat'
 import { param, ValidationChain } from "express-validator"
 
@@ -92,11 +92,14 @@ export class OrgPurchasesController implements BaseController {
       await orgsRepo.update(null, org.id, { ppCustomerId: org.ppCustomerId })
     }
 
+    const coreOrg = await getOrganizationData(org.id)
+    if (!coreOrg) return next(new Error('core organization not found'))
+
     const pkg = await pkgsRepo.findById(null, Number(req.params.pid))
     if (!pkg) return next(new NotFoundError('package'))
 
     const vat = config.get('vatRate')
-    if (vat) {
+    if (vat && !coreOrg.taxExempt) {
       pkg.price = applyVAT(pkg.price, vat)
     }
 
@@ -126,6 +129,9 @@ export class OrgPurchasesController implements BaseController {
     const org = await orgsRepo.findById(null, Number(req.params.id))
     if (!org) return next(new NotFoundError('organization'))
 
+    const coreOrg = await getOrganizationData(org.id)
+    if (!coreOrg) return next(new Error('core organization not found'))
+
     const subscriptionID = Number(req.params.sid)
     if (org.subscriptionId === subscriptionID) {
       return next(new PurchasePreconditionError('subscription already active'))
@@ -140,7 +146,7 @@ export class OrgPurchasesController implements BaseController {
     }
 
     const vat = config.get('vatRate')
-    if (vat) {
+    if (vat && !coreOrg.taxExempt) {
       subscription.price = applyVAT(subscription.price, vat)
     }
 
