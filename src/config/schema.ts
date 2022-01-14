@@ -149,6 +149,20 @@ export const schema = {
       env: 'EDIT_PAYMENT_REDIRECT_PATH',
     },
   },
+  auth: {
+    metricsBasicAuthUser: {
+      doc: 'Prometheus metrics endpoint basic auth user',
+      format: String,
+      default: '',
+      env: 'METRICS_AUTH_USER',
+    },
+    metricsBasicAuthPassword: {
+      doc: 'Prometheus metrics endpoint basic auth password',
+      format: String,
+      default: '',
+      env: 'METRICS_AUTH_PASSWORD',
+    },
+  },
   msgBroker: {
     url: {
       doc: 'APISuite Message Broker URL',

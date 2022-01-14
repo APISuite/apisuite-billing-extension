@@ -7,6 +7,7 @@ import helmet from 'helmet'
 import morgan from 'morgan'
 import cors from 'cors'
 import promBundle from 'express-prom-bundle'
+import basicAuth from 'express-basic-auth'
 import config from './config'
 import { version } from '../package.json'
 import { introspect, error } from './middleware/'
@@ -44,6 +45,10 @@ export default class App {
     morgan.token('body', (req: Request) => JSON.stringify(req.body))
     this.app.use(morgan(':method :url :status - :body'))
 
+    this.app.use('/metrics', basicAuth({
+      users: { [config.get('auth.metricsBasicAuthUser')]: config.get('auth.metricsBasicAuthPassword') },
+      challenge: true,
+    }))
     this.app.use(promBundle({ includeMethod: true }))
 
     this.app.use(introspect)
