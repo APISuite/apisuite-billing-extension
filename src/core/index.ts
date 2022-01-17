@@ -122,14 +122,29 @@ interface CoreOrganizationData {
   taxExempt: boolean
 }
 
-export const getOrganizationData = async (orgId: string|number): Promise<CoreOrganizationData|null> => {
+export interface CoreRequestOptions {
+  authorizationHeader?: string
+  cookieHeader?: string
+}
+
+export const getOrganizationData = async (orgId: string|number, options: CoreRequestOptions|null): Promise<CoreOrganizationData|null> => {
   const url = new URL(`/organizations/${orgId}`, config.get('apisuite.api')).href
 
+  const reqOptions = {
+    method: 'GET',
+    headers: {},
+  }
+
+  if (options?.authorizationHeader) {
+    reqOptions.headers = { authorization: options.authorizationHeader }
+  }
+
+  if (options?.cookieHeader) {
+    reqOptions.headers = { cookie: options.cookieHeader }
+  }
+
   try {
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {},
-    })
+    const response = await fetch(url, reqOptions)
     if (!response || response.status !== 200) {
       return null
     }

@@ -21,7 +21,7 @@ import {
   getPaymentDetails,
 } from '../payment-processing'
 import { TransactionType } from '../models/transaction'
-import { getOrganizationData, getPaymentRedirectURL } from '../core'
+import { getOrganizationData, getPaymentRedirectURL, CoreRequestOptions } from '../core'
 import { applyVAT } from '../vat'
 import { param, ValidationChain } from "express-validator"
 
@@ -92,7 +92,11 @@ export class OrgPurchasesController implements BaseController {
       await orgsRepo.update(null, org.id, { ppCustomerId: org.ppCustomerId })
     }
 
-    const coreOrg = await getOrganizationData(org.id)
+    const coreOptions: CoreRequestOptions = {}
+    if (req.headers.authorization) coreOptions.authorizationHeader = req.headers.authorization
+    if (req.headers.cookie) coreOptions.cookieHeader = req.headers.cookie
+
+    const coreOrg = await getOrganizationData(org.id, coreOptions)
     if (!coreOrg) return next(new Error('core organization not found'))
 
     const pkg = await pkgsRepo.findById(null, Number(req.params.pid))
@@ -129,7 +133,11 @@ export class OrgPurchasesController implements BaseController {
     const org = await orgsRepo.findById(null, Number(req.params.id))
     if (!org) return next(new NotFoundError('organization'))
 
-    const coreOrg = await getOrganizationData(org.id)
+    const coreOptions: CoreRequestOptions = {}
+    if (req.headers.authorization) coreOptions.authorizationHeader = req.headers.authorization
+    if (req.headers.cookie) coreOptions.cookieHeader = req.headers.cookie
+
+    const coreOrg = await getOrganizationData(org.id, coreOptions)
     if (!coreOrg) return next(new Error('core organization not found'))
 
     const subscriptionID = Number(req.params.sid)
